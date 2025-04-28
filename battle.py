@@ -23,15 +23,15 @@ class Monster:
         self.ad = int(self.adD + self.level * self.adW)
         self.sp = int(self.spD + self.level * self.spW)
 
-    def take_damage(self, enemy, skill):
+    def take_damage(self, enemy, skill, reflected=None):
         # FIFO 스킬 처리
         if skill.name == "FIFO":
-            print(f"{self.name}가 {enemy.name}의 {skill.name} 스킬을 반사했습니다!")
-            damage = skill.damage(self, enemy)  # 적의 스킬 데미지를 계산
-            enemy.nowhp -= damage  # 적에게 데미지를 반사
-            if enemy.nowhp < 0:
-                enemy.nowhp = 0
-            print(f"{enemy.name}가 {self.name}의 반사로 {damage}의 데미지를 받았습니다! 현재 체력: {enemy.nowhp}/{enemy.Maxhp}")
+            print(f"{enemy.name}가 {self.name}의 {reflected.name} 스킬을 반사했습니다!")
+            damage = reflected.damage(self, enemy)  # 적의 스킬 데미지를 계산
+            self.nowhp -= damage  # 적에게 데미지를 반사
+            if self.nowhp < 0:
+                self.nowhp = 0
+            print(f"{self.name}가 {enemy.name}의 반사로 {damage}의 데미지를 받았습니다! 현재 체력: {self.nowhp}/{self.Maxhp}")
             return  # 자신은 피해를 입지 않음
 
         # 일반 스킬 처리
@@ -45,30 +45,30 @@ class Monster:
         return self.nowhp > 0
 
     class Skill:
-        def __init__(self, name, dom="", dmgD=0, dmgW=1, priority=0):
+        def __init__(self, name, dom="", mp=1, dmgD=0, dmgW=1, priority=0):
             self.name = name
             self.dmgD = dmgD
             self.dmgW = dmgW
             self.dom = dom
+            self.mp = mp
             self.priority = priority
 
         def damage(self, target, attacker):
             # 데미지 계산
-            multiplier = self.Comp(target)
+            multiplier = self.Comp(target, self.mp)  # 상성에 따라 데미지 배율 조정
             return int(multiplier * (self.dmgD + self.dmgW * attacker.ad))
 
-        def Comp(self, target):
+        def Comp(self, target, mp):
             # 상성 계산
             if target.name == self.dom:
-                return 1.5
-            return 1.0
+                return mp  # 상성에 따라 데미지 배율 조정
+            return 1  # 기본 상성은 1
 
 def display_status(player, enemy):
     """플레이어와 적의 상태를 출력"""
     def health_bar(monster):
         bar_length = 10
         filled_length = int(bar_length * monster.nowhp / monster.Maxhp)
-        empty_length = bar_length - filled_length
         return f"{'■' * monster.nowhp}{'□' * (monster.Maxhp-monster.nowhp)} ({monster.nowhp}/{monster.Maxhp})"
 
     print(f"\n{enemy.name}(lv {enemy.level})")
@@ -78,12 +78,19 @@ def display_status(player, enemy):
     print(f"{player.name}(lv {player.level})\n")
 
 def display_skills(player):
-    """플레이어의 스킬 목록 출력"""
+    """플레이어의 스킬 목록 출력 (가로 정렬, 위력은 아래로 출력, 순서 유지)"""
     print(f"{player.name}의 스킬:")
-    for skill_name, skill in player.skills.items():
-        power = int(skill.dmgD + skill.dmgW * player.ad)
-        print(f"{skill_name} (위력 {power})")
+
+    # 스킬 이름 출력 (가로 정렬, 순서 유지)
+    for skill_name, _ in player.skills.items():
+        print(f"{skill_name}\t", end="")  # 탭으로 간격 조정
     print()
+
+    # 위력 출력 (가로 정렬, 순서 유지)
+    for _, skill in player.skills.items():
+        power = int(skill.dmgD + skill.dmgW * player.ad) * 10  # 위력 계산
+        print(f"위력 {power}\t\t", end="")  # 탭으로 간격 조정
+    print("\n")
 
 def battle(player, enemy):
     print(f"야생의 {enemy.name}가 나타났다!")
@@ -113,7 +120,7 @@ def battle(player, enemy):
             # 플레이어 스킬 먼저 발동
             print(f"\n{player.name}는 {player_skill.name}를 사용했다!")
             if player_skill.name == "FIFO":
-                enemy.take_damage(player, enemy_skill)
+                enemy.take_damage(player, player_skill, enemy_skill)
             else:
                 enemy.take_damage(player, player_skill)
 
@@ -125,7 +132,7 @@ def battle(player, enemy):
             # 적 스킬 먼저 발동
             print(f"{enemy.name}는 {enemy_skill.name}를 사용했다!")
             if enemy_skill.name == "FIFO":
-                player.take_damage(enemy, player_skill)
+                player.take_damage(enemy, enemy_skill, player_skill)
             else:
                 player.take_damage(enemy, enemy_skill)
 
@@ -147,7 +154,7 @@ cs101 = Monster(name="프밍기", level=5, hpD=5, hpW=1, adD=2, adW=1, spD=2, sp
 cs101.skills = {
     'Hello, World!': Monster.Skill(name='Hello, World!', dmgD=0, dmgW=0.3, priority=1),
     '휴보는 내 친구': Monster.Skill(name='휴보는 내 친구', dmgD=2, dmgW=0.2),
-    'CSV 접근': Monster.Skill(name='CSV 접근', dom="데이타구조", dmgD=4, dmgW=0)
+    'CSV 접근': Monster.Skill(name='CSV 접근', dom="데이타구조", mp=2, dmgD=4, dmgW=0)
 }
 
 cs206 = Monster(name="데이타구조", level=5, hpD=7, hpW=0.8, adD=3, adW=0.8, spD=5, spW=1)
