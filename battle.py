@@ -117,12 +117,9 @@ def battle(player, enemy):
             else:
                 enemy.take_damage(player, player_skill)
 
-            # 적이 살아있으면 반격
-            if enemy.is_alive():
-                print(f"{enemy.name}는 {enemy_skill.name}를 사용했다!")
-                if enemy_skill.name == "FIFO":
-                    player.take_damage(enemy, player_skill)
-                else:
+                # 적이 살아있으면 반격
+                if enemy.is_alive():
+                    print(f"{enemy.name}는 {enemy_skill.name}를 사용했다!")
                     player.take_damage(enemy, enemy_skill)
         else:
             # 적 스킬 먼저 발동
@@ -132,12 +129,9 @@ def battle(player, enemy):
             else:
                 player.take_damage(enemy, enemy_skill)
 
-            # 플레이어가 살아있으면 반격
-            if player.is_alive():
-                print(f"\n{player.name}는 {player_skill.name}를 사용했다!")
-                if player_skill.name == "FIFO":
-                    enemy.take_damage(player, enemy_skill)
-                else:
+                # 플레이어가 살아있으면 반격
+                if player.is_alive():
+                    print(f"\n{player.name}는 {player_skill.name}를 사용했다!")
                     enemy.take_damage(player, player_skill)
         
 
