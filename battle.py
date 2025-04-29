@@ -28,7 +28,7 @@ def animate_health_bar(stdscr, y, x, current_hp, target_hp, max_hp, color_pair_f
     target_ratio = int(target_hp * 20 / max_hp)
     steps = current_ratio-target_ratio  # 애니메이션 단계 수
     if steps == 0:
-        addstr_with_korean_support(stdscr, y, x, f" {'█' * target_ratio}{' ' * (20 - target_ratio)} ", curses.color_pair(3 - target_ratio // 7))
+        addstr_with_korean_support(stdscr, y, x, f" {'█' * current_ratio}{' ' * (20 - current_ratio)} ", curses.color_pair(3 - target_ratio // 7))
         return
 
     for step in range(steps + 1):
@@ -82,6 +82,7 @@ def display_status_with_skills(stdscr, player, enemy, skills, current_index):
     for i, skill_name in enumerate(skills):
         if i == current_index:
             addstr_with_korean_support(stdscr, 14 + int(i/2), 27*(i%2), f"> {skill_name}", curses.A_REVERSE)  # 선택된 스킬 강조
+            addstr_with_korean_support(stdscr, 17, 0, f"  {player.skills[skill_name].description}")
         else:
             addstr_with_korean_support(stdscr, 14 + int(i/2), 27*(i%2), f"  {skill_name}")
 
@@ -92,64 +93,65 @@ def use_skill(user, target, skill, counter_skill=None):
     # reflect 스킬 처리
     if skill.effect_type == "reflect":
         if counter_skill and counter_skill.effect_type == "damage":
-            damage = counter_skill.damage(user, target)
+            damage = counter_skill.damage(user, target)*skill.skW
             target.nowhp -= damage
             if target.nowhp < 0:
                 target.nowhp = 0
-            return True, damage
+            return True
         else:
-            return False, 0
+            return False
 
     # damage 스킬 처리
     if skill.effect_type == "damage":
         damage = skill.damage(target, user)
         target.nowhp = max(0, target.nowhp - damage)
-        return False, damage
+        return False
 
     # halve_hp 스킬 처리
     if skill.effect_type == "halve_hp":
-        old_hp = target.nowhp
         target.nowhp = max(0, target.nowhp // 2)
-        return False, old_hp - target.nowhp
+        return False
 
     # heal 스킬 처리
     if skill.effect_type == "heal":
         heal_amount = skill.skW * user.Maxhp
-        old_hp = user.nowhp
         user.nowhp = min(user.Maxhp, user.nowhp + heal_amount)
-        return False, user.nowhp - old_hp
+        return False
 
     # buff 스킬 처리
     if skill.effect_type == "buff":
         user.ad *= skill.skW
-        return False, 0
+        return False
 
-    return False, 0
+    return False
 
 def skill_message(stdscr, user, target, skill, counter_skill=None):
     """스킬 메시지를 출력하기 전에 상태를 먼저 출력"""
     # 스킬 메시지 출력
     if skill.effect_type == "reflect":
-        if counter_skill and counter_skill.effect_type == "damage":
-            damage = counter_skill.damage(user, target)
-            addstr_with_korean_support(stdscr, 14, 0, f"{user.name}가 {target.name}의 {counter_skill.name}을 반사!")
-            addstr_with_korean_support(stdscr, 15, 0, f"{target.name}가 {damage}의 데미지를 입었다!")
+        if counter_skill.effect_type == "damage":
+            if skill.skW == 0:
+                addstr_with_korean_support(stdscr, 14, 0, f"  {user.name}가 {target.name}의 {counter_skill.name}을 방어했다.")
+            else:
+                damage = counter_skill.damage(user, target)
+                addstr_with_korean_support(stdscr, 14, 0, f"  {user.name}가 {target.name}의 {counter_skill.name}을 반사!")
+                addstr_with_korean_support(stdscr, 15, 0, f"  {target.name}가 {damage}의 데미지를 입었다!")
         else:
-            addstr_with_korean_support(stdscr, 14, 0, "그러나 아무 일도 일어나지 않았다!")
+            addstr_with_korean_support(stdscr, 14, 0, "  그러나 아무 일도 일어나지 않았다!")
 
     elif skill.effect_type == "damage":
         damage = skill.damage(target, user)
-        addstr_with_korean_support(stdscr, 14, 0, f"{target.name}가 {damage}의 데미지를 입었다!")
+        addstr_with_korean_support(stdscr, 14, 0, f"  {target.name}가 {damage}의 데미지를 입었다!")
 
     elif skill.effect_type == "halve_hp":
-        addstr_with_korean_support(stdscr, 14, 0, f"{target.name}의 체력이 반으로 줄었다!")
+        addstr_with_korean_support(stdscr, 14, 0, f"  {target.name}의 체력이 반으로 줄었다!")
 
     elif skill.effect_type == "heal":
         heal_amount = skill.skW * user.Maxhp
-        addstr_with_korean_support(stdscr, 14, 0, f"{user.name}의 체력이 {heal_amount} 회복되었다!")
+        addstr_with_korean_support(stdscr, 14, 0, f"  {user.name}의 체력이 {heal_amount} 회복되었다!")
 
     elif skill.effect_type == "buff":
-        addstr_with_korean_support(stdscr, 14, 0, f"{user.name}의 공격력이 {skill.skW}배가 되었다!")
+        addstr_with_korean_support(stdscr, 14, 0, f"  {user.name}의 공격력이 {skill.skW}배가 되었다!")
 
     stdscr.refresh()
     stdscr.getch()  # 메시지를 잠시 보여줌
@@ -182,14 +184,14 @@ def battle(player, enemy):
         nowCSmon = player[0]
         display_status(stdscr, nowCSmon, enemy)  # 초기 상태 출력
 
-        addstr_with_korean_support(stdscr, 14, 0, f"야생의 {enemy.name}가 나타났다!")
+        addstr_with_korean_support(stdscr, 14, 0, f"  야생의 {enemy.name}가 나타났다!")
         stdscr.refresh()
         stdscr.getch()
 
         while nowCSmon.is_alive() and enemy.is_alive():
             # 전투 상태 출력
             display_status(stdscr, nowCSmon, enemy)
-
+            
             # 플레이어 스킬 선택
             selected_skill = select_skill_with_arrows(stdscr, nowCSmon, enemy)
             nowCSmon_skill = nowCSmon.skills[selected_skill]
@@ -200,53 +202,65 @@ def battle(player, enemy):
 
             display_status(stdscr, nowCSmon, enemy)
             # 우선순위 비교
-            if nowCSmon_skill.priority > enemy_skill.priority or (nowCSmon_skill.priority == enemy_skill.priority and nowCSmon.sp > enemy.sp):
+            if nowCSmon_skill.priority > enemy_skill.priority or (nowCSmon_skill.priority == enemy_skill.priority and nowCSmon.sp >= enemy.sp):
                 # 플레이어 스킬 먼저 발동
-                addstr_with_korean_support(stdscr, 14, 0, f"{nowCSmon.name}의 {nowCSmon_skill.name}!")
+                playerCurrentHP = nowCSmon.nowhp
+                enemyCurrentHP = enemy.nowhp
+                addstr_with_korean_support(stdscr, 14, 0, f"  {nowCSmon.name}의 {nowCSmon_skill.name}!")
                 stdscr.refresh()
                 stdscr.getch()
 
-                stop, damage = use_skill(nowCSmon, enemy, nowCSmon_skill, enemy_skill)
-                animate_health_bar(stdscr, 3, 32, enemy.nowhp + damage, enemy.nowhp, enemy.Maxhp, 1, 2, 3)
+                stop = use_skill(nowCSmon, enemy, nowCSmon_skill, enemy_skill)
+                animate_health_bar(stdscr, 3, 32, enemyCurrentHP, enemy.nowhp, enemy.Maxhp, 1, 2, 3)
+                animate_health_bar(stdscr, 10, 4, playerCurrentHP, nowCSmon.nowhp, nowCSmon.Maxhp, 1, 2, 3)    
                 skill_message(stdscr, nowCSmon, enemy, nowCSmon_skill, enemy_skill)
 
                 # 적이 살아있으면 반격
                 if enemy.is_alive() and not stop:
+                    playerCurrentHP = nowCSmon.nowhp
+                    enemyCurrentHP = enemy.nowhp
                     display_status(stdscr, nowCSmon, enemy)
-                    addstr_with_korean_support(stdscr, 14, 0, f"{enemy.name}의 {enemy_skill.name}!")
+                    addstr_with_korean_support(stdscr, 14, 0, f"  {enemy.name}의 {enemy_skill.name}!")
                     stdscr.refresh()
                     stdscr.getch()
 
-                    stop, damage = use_skill(enemy, nowCSmon, enemy_skill)
-                    animate_health_bar(stdscr, 10, 4, nowCSmon.nowhp + damage, nowCSmon.nowhp, nowCSmon.Maxhp, 1, 2, 3)
+                    stop = use_skill(enemy, nowCSmon, enemy_skill)
+                    animate_health_bar(stdscr, 3, 32, enemyCurrentHP, enemy.nowhp, enemy.Maxhp, 1, 2, 3)
+                    animate_health_bar(stdscr, 10, 4, playerCurrentHP, nowCSmon.nowhp, nowCSmon.Maxhp, 1, 2, 3)    
                     skill_message(stdscr, enemy, nowCSmon, enemy_skill)
             else:
                 # 적 스킬 먼저 발동
-                addstr_with_korean_support(stdscr, 14, 0, f"{enemy.name}의 {enemy_skill.name}!")
+                playerCurrentHP = nowCSmon.nowhp
+                enemyCurrentHP = enemy.nowhp
+                addstr_with_korean_support(stdscr, 14, 0, f"  {enemy.name}의 {enemy_skill.name}!")
                 stdscr.refresh()
                 stdscr.getch()
 
-                stop, damage = use_skill(enemy, nowCSmon, enemy_skill, nowCSmon_skill)
-                animate_health_bar(stdscr, 10, 4, nowCSmon.nowhp + damage, nowCSmon.nowhp, nowCSmon.Maxhp, 1, 2, 3)
+                stop = use_skill(enemy, nowCSmon, enemy_skill, nowCSmon_skill)
+                animate_health_bar(stdscr, 3, 32, enemyCurrentHP, enemy.nowhp, enemy.Maxhp, 1, 2, 3)
+                animate_health_bar(stdscr, 10, 4, playerCurrentHP, nowCSmon.nowhp, nowCSmon.Maxhp, 1, 2, 3)    
                 skill_message(stdscr, enemy, nowCSmon, enemy_skill, nowCSmon_skill)
 
                 # 플레이어가 살아있으면 반격
                 if nowCSmon.is_alive() and not stop:
+                    playerCurrentHP = nowCSmon.nowhp
+                    enemyCurrentHP = enemy.nowhp
                     display_status(stdscr, nowCSmon, enemy)
-                    addstr_with_korean_support(stdscr, 14, 0, f"{nowCSmon.name}의 {nowCSmon_skill.name}!")
+                    addstr_with_korean_support(stdscr, 14, 0, f"  {nowCSmon.name}의 {nowCSmon_skill.name}!")
                     stdscr.refresh()
                     stdscr.getch()
 
-                    stop, damage = use_skill(nowCSmon, enemy, nowCSmon_skill)
-                    animate_health_bar(stdscr, 3, 32, enemy.nowhp + damage, enemy.nowhp, enemy.Maxhp, 1, 2, 3)
+                    stop = use_skill(nowCSmon, enemy, nowCSmon_skill)
+                    animate_health_bar(stdscr, 3, 32, enemyCurrentHP, enemy.nowhp, enemy.Maxhp, 1, 2, 3)
+                    animate_health_bar(stdscr, 10, 4, playerCurrentHP, nowCSmon.nowhp, nowCSmon.Maxhp, 1, 2, 3)    
                     skill_message(stdscr, nowCSmon, enemy, nowCSmon_skill)
 
         # 전투 결과 출력
         display_status(stdscr, nowCSmon, enemy)
         if not nowCSmon.is_alive():
-            addstr_with_korean_support(stdscr, 14, 0, f"{nowCSmon.name}가 쓰러졌다!")
+            addstr_with_korean_support(stdscr, 14, 0, f"  {nowCSmon.name}가 쓰러졌다!")
         elif not enemy.is_alive():
-            addstr_with_korean_support(stdscr, 14, 0, f"{enemy.name}가 쓰러졌다!")
+            addstr_with_korean_support(stdscr, 14, 0, f"  {enemy.name}가 쓰러졌다!")
         stdscr.refresh()
         stdscr.getch()
         addstr_with_korean_support(stdscr, 17, 0, "아무 키나 눌러 계속하기...")
