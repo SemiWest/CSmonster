@@ -33,7 +33,7 @@ def animate_health_bar(stdscr, y, x, current_hp, target_hp, max_hp, color_pair_f
 
     for step in range(steps + 1):
         # 현재 체력 비율 계산
-        interpolated_ratio = current_ratio + (target_ratio - current_ratio) * step // steps
+        interpolated_ratio = current_ratio + int((target_ratio - current_ratio) * step / steps)
 
         # 체력 상태에 따른 색상 선택
         if interpolated_ratio >= 14:  # 풀피 (70% 이상)
