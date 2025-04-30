@@ -14,6 +14,7 @@ class Monster:
 
     def update(self):
         self.Maxhp = int(self.hpD + self.level * self.hpW)
+        self.nowhp = self.Maxhp
         self.ad = int(self.adD + self.level * self.adW)
         self.sp = int(self.spD + self.level * self.spW)
 
@@ -116,8 +117,34 @@ cs204.skills = {
         description="무한 루프 그래프를 만들어 상대의 공격을 흘려보낸다."),
 }
 
+cs230 = Monster(name="시프", level=5, hpD=7, hpW=0.6, adD=3, adW=1, spD=6, spW=1.8)
+cs230.skills = {
+    'BufferOverflow': Monster.Skill(
+        name='BufferOverflow', 
+        effect_type="damage", 
+        skD=0, skW=1, 
+        description="버퍼 오버플로우를 일으켜 공격한다."),
+    '페이지 폴트': Monster.Skill(
+        name='페이지 폴트', 
+        effect_type="damage", 
+        skD=6, skW=0,
+        dom="아키", mp=2, 
+        description="상대가 사용중인 페이지를 페이징 파일로 옮겨버린다. 아키에게 두 배의 데미지를 준다."),
+    '시프 스킬 3': Monster.Skill(
+        name='미정', 
+        effect_type="damage", 
+        skD=5, skW=0.1, 
+        description="어떻게 해서 공격한다. OS에게 두 배의 데미지를 준다."),
+    '셀프 디버그': Monster.Skill(
+        name='셀프 디버그', 
+        effect_type="heal", 
+        skD=0, skW=0.5, 
+        description="자기 자신을 디버깅해 에러를 고친다. 체력을 최대 체력의 절반만큼 회복한다."),
+}
+
 monsters = {
     "프밍기": cs101,
     "이산구조": cs204,
-    "데이타구조": cs206
+    "데이타구조": cs206,
+    "시프": cs230,
 }

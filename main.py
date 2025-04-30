@@ -14,23 +14,44 @@ class player:
         self.csMons = csMons
         self.items = items  # 아이템 슬롯
 
-def wild_monster():
+def wild_monster(lists):
     # 랜덤으로 야생 몬스터 선택
-    return copy.deepcopy(random.choice(list(monsters.values())))
+    return copy.deepcopy(random.choice(lists))
 
 Me = player([copy.deepcopy(monsters["데이타구조"]), None, None, None, None, None], [copy.deepcopy(items["아메리카노"]), None, None, None, None, None])
 
 # 전투 시작
 now_CSmon = Me.csMons[0]
+turn = 1
 while Me.csMons.count(None) > 0:
-    met_monster = wild_monster()
-    
-    now_CSmon = battle(Me, met_monster, now_CSmon)  # 첫 번째 몬스터와 전투 시작
     for mymon in Me.csMons:
         if mymon is not None:
-            mymon.level += 1  # 레벨업
             mymon.update()
-            mymon.nowhp = mymon.Maxhp
+
+    if now_CSmon is False:
+        break
+
+    meetable_monsters = []
+    
+    for i in range(100):
+        if i%5 == 0: meetable_monsters.append(copy.deepcopy(monsters["데이타구조"]))
+        elif i%5 == 1: meetable_monsters.append(copy.deepcopy(monsters["프밍기"]))
+        elif i%5 == 2: meetable_monsters.append(copy.deepcopy(monsters["이산구조"]))
+        elif i%5 == 3: meetable_monsters.append(copy.deepcopy(monsters["시프"]))
+        elif i%5 == 4: meetable_monsters.append(copy.deepcopy(monsters["프밍기"]))
+        
+    met_monster = wild_monster(meetable_monsters)
+    met_monster.level = turn//3 + 5
+    if turn % 10 == 0:
+        met_monster.level = turn
+    met_monster.update()
+
+    now_CSmon = battle(Me, met_monster, now_CSmon, turn)
+    for mymon in Me.csMons:
+        if mymon is not None:
+            mymon.level += 1 
+    turn += 1
+    
 
 print(f"\n\n잡은 몬스터들: {[m.name for m in Me.csMons if m is not None]}")
 
