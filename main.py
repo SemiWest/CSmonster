@@ -23,7 +23,7 @@ Me = player([copy.deepcopy(monsters["데이타구조"]), None, None, None, None,
 # 전투 시작
 now_CSmon = Me.csMons[0]
 turn = 1
-while Me.csMons.count(None) > 0:
+while turn <=30:
     for mymon in Me.csMons:
         if mymon is not None:
             mymon.update()
