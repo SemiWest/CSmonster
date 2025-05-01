@@ -18,7 +18,20 @@ def wild_monster(lists):
     # 랜덤으로 야생 몬스터 선택
     return copy.deepcopy(random.choice(lists))
 
-Me = player([copy.deepcopy(monsters["데이타구조"]), None, None, None, None, None], [copy.deepcopy(items["아메리카노"]), None, None, None, None, None])
+Me = player([copy.deepcopy(monsters["데이타구조"]), 
+             copy.deepcopy(monsters["빈 슬롯"]), 
+             copy.deepcopy(monsters["빈 슬롯"]), 
+             copy.deepcopy(monsters["빈 슬롯"]), 
+             copy.deepcopy(monsters["빈 슬롯"]), 
+             copy.deepcopy(monsters["빈 슬롯"])], 
+            
+            [copy.deepcopy(items["아메리카노"]),
+             copy.deepcopy(items["빈 슬롯"]),
+             copy.deepcopy(items["빈 슬롯"]),
+             copy.deepcopy(items["빈 슬롯"]),
+             copy.deepcopy(items["빈 슬롯"]),
+             copy.deepcopy(items["빈 슬롯"])
+            ])
 
 # 전투 시작
 now_CSmon = Me.csMons[0]

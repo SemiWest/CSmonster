@@ -45,6 +45,8 @@ class Monster:
         
 
 # 플레이어와 적 전산몬스터 생성
+Nonemonster = Monster(name="빈 슬롯")
+
 cs101 = Monster(name="프밍기", level=5, hpD=5, hpW=1, adD=2, adW=1, spD=2, spW=2)
 cs101.skills = {
     'Hello, World!': Monster.Skill(
@@ -143,6 +145,7 @@ cs230.skills = {
 }
 
 monsters = {
+    "빈 슬롯": Nonemonster,
     "프밍기": cs101,
     "이산구조": cs204,
     "데이타구조": cs206,
