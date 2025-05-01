@@ -1,4 +1,10 @@
-import curses
+import subprocess
+import sys
+try:
+    import curses
+except ImportError:    
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "windows-curses"])
+    import curses
 import unicodedata
 import random
 import time
@@ -16,7 +22,7 @@ def addstr_with_korean_support(stdscr, y, x, text, attr=0):
         for char in text:
             if unicodedata.east_asian_width(char) in ['F', 'W']:  # Fullwidth, Wide (한글)
                 stdscr.addstr(y, current_x, char, attr)
-                stdscr.addstr(y, current_x + 1, " ", attr)  # 한글 뒤에 공백 추가
+                #stdscr.addstr(y, current_x + 1, " ", attr)  # 한글 뒤에 공백 추가
                 current_x += 2
             else:
                 stdscr.addstr(y, current_x, char, attr)
