@@ -9,6 +9,13 @@ americano = Items(name="아메리카노",
                   description="카페인의 힘으로 체력을 회복한다. 5 또는 최대 체력의 20% 중 큰 값을 회복한다.", 
                   effect="heal")
 
+monsterZERO = Items(name="몬스터 제로",
+                  description="고농도 카페인의 힘으로 체력을 회복한다. 10 또는 최대 체력의 30% 중 큰 값을 회복한다.", 
+                  effect="heal")
+
+ 
+
+
 
 
 items = {
