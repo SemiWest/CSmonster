@@ -644,4 +644,4 @@ def battle(player, enemy, now_csMon, turn):
                 stdscr.getch()
 
         return now_CSmon
-    return curses.wrapper(winOrLose, now_csMon, winOrLose)
+    return curses.wrapper(winOrLose, now_csMon)
