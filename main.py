@@ -18,7 +18,7 @@ def wild_monster(lists):
     # 랜덤으로 야생 몬스터 선택
     return copy.deepcopy(random.choice(lists))
 
-Me = player([copy.deepcopy(monsters["데이타구조"]), 
+Me = player([copy.deepcopy(monsters["프밍기"]), 
              copy.deepcopy(monsters["빈 슬롯"]), 
              copy.deepcopy(monsters["빈 슬롯"]), 
              copy.deepcopy(monsters["빈 슬롯"]), 
@@ -65,9 +65,12 @@ while turn <=30:
             mymon.level += 1 
     turn += 1
     
+print("The end")
+print("나의 전산몬스터: ")
 
-print(f"\n\n잡은 몬스터들: {[m.name for m in Me.csMons if m is not None]}")
+for mymon in Me.csMons:
+    if mymon.name != "빈 슬롯":
+        print(mymon.name, mymon.level)
 
 input("\n아무 키나 눌러 종료")
-clear_screen()
 
