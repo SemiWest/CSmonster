@@ -92,9 +92,10 @@ def option_choice(stdscr, options, nowCSmon, enemy, description=None, styles=Non
                     else:  # description[i]가 문자열인 경우
                         addstr_with_korean_support(stdscr, max(21, 17+int(len(options)/2)+2), 2, f"{description[i]}")
             else:
-                if option == nowCSmon:
-                    addstr_with_korean_support(stdscr, 17, int(i/2), 32 * (i % 2), f"  {option}", curses.color_pair(5))
-                addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option}")
+                if option == nowCSmon.name and option != "빈 슬롯":
+                    addstr_with_korean_support(stdscr, 17 + int(i/2), 32 * (i % 2), f"  {option}", curses.color_pair(5))
+                else :
+                    addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option}")
 
         stdscr.refresh()
         key = stdscr.getch()
@@ -578,7 +579,7 @@ def battle(player, enemy, now_csMon, turn):
             curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_WHITE)  # 반피 색상 (노란색)
             curses.init_pair(3, curses.COLOR_RED, curses.COLOR_WHITE)    # 딸피 색상 (빨간색)
             curses.init_pair(4, curses.COLOR_CYAN, curses.COLOR_MAGENTA)  # 기본 색상 (스테이지 색상)
-            curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_BLACK)  #
+            curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_BLACK)  # 현재 전산몬 (파란색)
             curses.curs_set(0)  # 커서를 숨김
 
             nowCSmon = now_csMon
@@ -588,8 +589,15 @@ def battle(player, enemy, now_csMon, turn):
             stdscr.refresh()
             stdscr.getch()
 
-            while enemy.is_alive():
-                # 행동 선택
+            while True:
+
+                if enemy.is_alive() == False:
+                    display_status(stdscr, nowCSmon, enemy)
+                    addstr_with_korean_support(stdscr, 17, 0, f"  {enemy.name}가 쓰러졌다!")
+                    stdscr.refresh()
+                    stdscr.getch()
+                    return nowCSmon, True
+                
                 if nowCSmon.is_alive() == False:
                     display_status(stdscr, nowCSmon, enemy)
                     addstr_with_korean_support(stdscr, 17, 0, f"  {nowCSmon.name}가 쓰러졌다!")
@@ -610,7 +618,9 @@ def battle(player, enemy, now_csMon, turn):
                     addstr_with_korean_support(stdscr, 17, 0, f"  잘 부탁해, {nowCSmon.name}!")
                     stdscr.refresh()
                     stdscr.getch()
+                
 
+                # 행동 선택
                 action = select_action(stdscr, nowCSmon, enemy)
                 if action == -1:
                     continue  # BACKSPACE 키를 누르면 취소
@@ -714,7 +724,7 @@ def battle(player, enemy, now_csMon, turn):
             # 전투에서 패배한 경우
             if now_CSmon.nowhp == 0:
                 display_status(stdscr, now_CSmon, enemy)
-                addstr_with_korean_support(stdscr, 17, 0, f"  패배했다...")
+                addstr_with_korean_support(stdscr, 17, 0, f"  눈 앞이 깜깜해졌다...")
                 stdscr.refresh()
                 stdscr.getch()
 
