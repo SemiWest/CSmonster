@@ -10,7 +10,6 @@ class Monster:
         self.spW = spW
         self.skills = {}  # 스킬 저장
         self.update()
-        self.nowhp = self.Maxhp  # 현재 체력 초기화
 
     def update(self):
         self.Maxhp = int(self.hpD + self.level * self.hpW)

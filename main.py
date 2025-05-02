@@ -15,6 +15,7 @@ def wild_monster(lists):
     return copy.deepcopy(random.choice(lists))
 
 # 전투 시작
+clear_screen()
 player_name = input("이름을 입력하세요: ")
 Me = player(
     name = player_name,
@@ -36,16 +37,17 @@ Me = player(
         ]
     )
 
-now_CSmon = Me.csMons[0]
 turn = 1
+totalhap = 0
 while turn <=30:
     for mymon in Me.csMons:
         if mymon is not None:
             mymon.update()
 
     if turn == 30:
-        met_monster = copy.deepcopy(monsters["졸업 GPA"])
-        gpa = battle(Me, met_monster, now_CSmon, turn)
+        met_monster = copy.deepcopy(monsters["졸업 연구"])
+        Me.gpa = battle(Me, met_monster, turn)
+    
     else:
         meetable_monsters = []
         
@@ -62,24 +64,29 @@ while turn <=30:
             met_monster.level = turn
         met_monster.update()
         
-    now_CSmon = battle(Me, met_monster, now_CSmon, turn)
-
+    battlehap = battle(Me, met_monster, turn)
+    totalhap += battlehap
     # 전투 종료 후 몬스터 상태 업데이트
     # 몬스터가 쓰러진 상태라면 게임오바
-    if now_CSmon.nowhp == 0:
+    if Me.nowCSmon.nowhp == 0:
         break
     # 아니면 레벨업
     for mymon in Me.csMons:
         if mymon is not None:
             mymon.level += 1 
     turn += 1
-    
-print("결과")
+
+clear_screen()    
+print("\n결과")
 if turn >30:
     print("클리어")
-    print("졸업 GPA:", gpa)
-else:           print("최종 스테이지: ", turn)
-print("나의 전산몬스터: ")
+    print("졸업 GPA: ", Me.gpa)
+else:
+    print("제적당하고 말았다...")           
+    print("최종 스테이지:", turn)
+print("\n총 전투 횟수:", totalhap)
+
+print("\n나의 전산몬스터: ")
 for mymon in Me.csMons:
     if mymon.name != "빈 슬롯":
         print(f"{mymon.name} lv{mymon.level}")

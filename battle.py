@@ -11,7 +11,9 @@ import time
 import copy
 from items import *
 
+
 battleturn = 0
+hap_num = 0
 
 '''디스플레이'''
 def addstr_with_korean_support(stdscr, y, x, text, attr=0):
@@ -60,14 +62,23 @@ def display_status(stdscr, player, enemy):
     stdscr.clear()
 
     addstr_with_korean_support(stdscr, 0, 0, "┌──────────────────────────────────────────────────────────────┐")
-    addstr_with_korean_support(stdscr, 1, 2, f"스테이지 {battleturn}", curses.color_pair(4))
+    addstr_with_korean_support(stdscr, 1, 2, f"플레이어: {player.name}", curses.color_pair(5))
+    addstr_with_korean_support(stdscr, 2, 2, f"스테이지 {battleturn}", curses.color_pair(4))
+    addstr_with_korean_support(stdscr, 3, 2, f"턴 {hap_num}", curses.color_pair(6))
     # 적 상태 출력
-    addstr_with_korean_support(stdscr, 2, 38, f"{enemy.name}(lv {enemy.level})")
-    animate_health_bar(stdscr, 3, 38, enemy.nowhp, enemy.nowhp, enemy.Maxhp)
+    if enemy.name == None:
+        addstr_with_korean_support(stdscr, 2, 46, "▗███████▖", curses.color_pair(7))
+        addstr_with_korean_support(stdscr, 3, 46, "███▛ ▜███", curses.color_pair(7))
+        addstr_with_korean_support(stdscr, 4, 46, "███▙▀▟███")
+        addstr_with_korean_support(stdscr, 5, 46, "▝███████▘")
+        addstr_with_korean_support(stdscr, 3, 50, "▃")
+    else:
+        addstr_with_korean_support(stdscr, 2, 38, f"{enemy.name}(lv {enemy.level})")
+        animate_health_bar(stdscr, 3, 38, enemy.nowhp, enemy.nowhp, enemy.Maxhp)
 
     # 플레이어 상태 출력
-    addstr_with_korean_support(stdscr, 12, 4, f"{player.name}(lv {player.level})")
-    animate_health_bar(stdscr, 13, 4, player.nowhp, player.nowhp, player.Maxhp)
+    addstr_with_korean_support(stdscr, 12, 4, f"{player.nowCSmon.name}(lv {player.nowCSmon.level})")
+    animate_health_bar(stdscr, 13, 4, player.nowCSmon.nowhp, player.nowCSmon.nowhp, player.nowCSmon.Maxhp)
 
     addstr_with_korean_support(stdscr, 15, 0, "└──────────────────────────────────────────────────────────────┘")
     for i in range(1, 15):
@@ -76,26 +87,32 @@ def display_status(stdscr, player, enemy):
     
     stdscr.refresh()
 
-def option_choice(stdscr, options, nowCSmon, enemy, description=None, styles=None):
+def option_choice(stdscr, options, player, enemy, description=None, styles=None, special_coloring=None):
     """옵션 선택 메뉴"""
     current_index = 0
 
     while True:
-        display_status(stdscr, nowCSmon, enemy)  # 상태 출력
+        display_status(stdscr, player, enemy)  # 상태 출력
         for i, option in enumerate(options):
             if i == current_index:
                 addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"> {option}", curses.A_REVERSE)  # 선택된 옵션 강조
                 if description is not None:
                     if isinstance(description[i], list):  # description[i]가 리스트인 경우
                         for j, line in enumerate(description[i]):
-                            addstr_with_korean_support(stdscr, 17+int(len(options)/2) + j, 2, f"{line}", styles[i][j] if styles else 0)
+                            addstr_with_korean_support(stdscr, max(21, 17+int(len(options)/2)+2) + j, 2, f"{line}", styles[i][j] if styles else 0)
                     else:  # description[i]가 문자열인 경우
                         addstr_with_korean_support(stdscr, max(21, 17+int(len(options)/2)+2), 2, f"{description[i]}")
+            elif special_coloring != None:
+                if special_coloring[i] != False:
+                    addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option}", curses.color_pair(special_coloring[i]))
+                else:
+                    if option == "빈 슬롯":
+                        addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option}", curses.color_pair(4))
+                    else: addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option}")
             else:
-                if option == nowCSmon.name and option != "빈 슬롯":
-                    addstr_with_korean_support(stdscr, 17 + int(i/2), 32 * (i % 2), f"  {option}", curses.color_pair(5))
-                else :
-                    addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option}")
+                if option == "빈 슬롯":
+                    addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option}", curses.color_pair(4))
+                else: addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option}")
 
         stdscr.refresh()
         key = stdscr.getch()
@@ -157,8 +174,8 @@ def select_skill_with_arrows(stdscr, player, enemy):
     stdscr.keypad(True)
     stdscr.clear()
 
-    skills = list(player.skills.keys())
-    descriptions = [player.skills[skill].description for skill in skills]  # 스킬 설명 리스트
+    skills = list(player.nowCSmon.skills.keys())
+    descriptions = [player.nowCSmon.skills[skill].description for skill in skills]  # 스킬 설명 리스트
     display_status(stdscr, player, enemy)
     index = option_choice(stdscr, skills, player, enemy, descriptions)  # 스킬 선택
     if index == -1:
@@ -203,85 +220,93 @@ def use_skill(user, target, skill, counter_skill=None):
 
     return False
 
-def skill_phase(stdscr, nowCSmon, enemy):
+def skill_phase(stdscr, player, enemy):
     # 플레이어 스킬 선택
-    selected_skill = select_skill_with_arrows(stdscr, nowCSmon, enemy)
+    selected_skill = select_skill_with_arrows(stdscr, player, enemy)
     if selected_skill == -1:
         return -1  # BACKSPACE 키를 누르면 취소
-    nowCSmon_skill = nowCSmon.skills[selected_skill]
+    nowCSmon_skill = player.nowCSmon.skills[selected_skill]
 
     # 적 스킬 랜덤 선택
     enemy_skill_name = random.choice(list(enemy.skills.keys()))
     enemy_skill = enemy.skills[enemy_skill_name]
 
-    display_status(stdscr, nowCSmon, enemy)
+    display_status(stdscr, player, enemy)
     # 우선순위 비교
-    if nowCSmon_skill.priority > enemy_skill.priority or (nowCSmon_skill.priority == enemy_skill.priority and nowCSmon.sp >= enemy.sp):
+    if nowCSmon_skill.priority > enemy_skill.priority or (nowCSmon_skill.priority == enemy_skill.priority and player.nowCSmon.sp >= enemy.sp):
         # 플레이어 스킬 먼저 발동
-        playerCurrentHP = nowCSmon.nowhp
+        playerCurrentHP = player.nowCSmon.nowhp
         enemyCurrentHP = enemy.nowhp
-        addstr_with_korean_support(stdscr, 17, 0, f"  {nowCSmon.name}의 {nowCSmon_skill.name}!")
+        addstr_with_korean_support(stdscr, 17, 0, f"  {player.nowCSmon.name}의 {nowCSmon_skill.name}!")
         stdscr.refresh()
         stdscr.getch()
 
-        stop = use_skill(nowCSmon, enemy, nowCSmon_skill, enemy_skill)
+        stop = use_skill(player.nowCSmon, enemy, nowCSmon_skill, enemy_skill)
         animate_health_bar(stdscr, 3, 38, enemyCurrentHP, enemy.nowhp, enemy.Maxhp)
-        animate_health_bar(stdscr, 13, 4, playerCurrentHP, nowCSmon.nowhp, nowCSmon.Maxhp)    
-        skill_message(stdscr, nowCSmon, enemy, nowCSmon_skill, enemy_skill)
+        animate_health_bar(stdscr, 13, 4, playerCurrentHP, player.nowCSmon.nowhp, player.nowCSmon.Maxhp)    
+        skill_message(stdscr, player.nowCSmon, enemy, nowCSmon_skill, enemy_skill)
 
         # 적이 살아있으면 반격
         if enemy.is_alive() and not stop:
-            playerCurrentHP = nowCSmon.nowhp
+            playerCurrentHP = player.nowCSmon.nowhp
             enemyCurrentHP = enemy.nowhp
-            display_status(stdscr, nowCSmon, enemy)
+            display_status(stdscr, player, enemy)
             addstr_with_korean_support(stdscr, 17, 0, f"  {enemy.name}의 {enemy_skill.name}!")
             stdscr.refresh()
             stdscr.getch()
 
-            stop = use_skill(enemy, nowCSmon, enemy_skill)
+            stop = use_skill(enemy, player.nowCSmon, enemy_skill)
             animate_health_bar(stdscr, 3, 38, enemyCurrentHP, enemy.nowhp, enemy.Maxhp)
-            animate_health_bar(stdscr, 13, 4, playerCurrentHP, nowCSmon.nowhp, nowCSmon.Maxhp)    
-            skill_message(stdscr, enemy, nowCSmon, enemy_skill)
+            animate_health_bar(stdscr, 13, 4, playerCurrentHP, player.nowCSmon.nowhp, player.nowCSmon.Maxhp)    
+            skill_message(stdscr, enemy, player.nowCSmon, enemy_skill)
     else:
         # 적 스킬 먼저 발동
-        playerCurrentHP = nowCSmon.nowhp
+        playerCurrentHP = player.nowCSmon.nowhp
         enemyCurrentHP = enemy.nowhp
         addstr_with_korean_support(stdscr, 17, 0, f"  {enemy.name}의 {enemy_skill.name}!")
         stdscr.refresh()
         stdscr.getch()
 
-        stop = use_skill(enemy, nowCSmon, enemy_skill, nowCSmon_skill)
+        stop = use_skill(enemy, player.nowCSmon, enemy_skill, nowCSmon_skill)
         animate_health_bar(stdscr, 3, 38, enemyCurrentHP, enemy.nowhp, enemy.Maxhp)
-        animate_health_bar(stdscr, 13, 4, playerCurrentHP, nowCSmon.nowhp, nowCSmon.Maxhp)    
-        skill_message(stdscr, enemy, nowCSmon, enemy_skill, nowCSmon_skill)
+        animate_health_bar(stdscr, 13, 4, playerCurrentHP, player.nowCSmon.nowhp, player.nowCSmon.Maxhp)    
+        skill_message(stdscr, enemy, player.nowCSmon, enemy_skill, nowCSmon_skill)
 
         # 플레이어가 살아있으면 반격
-        if nowCSmon.is_alive() and not stop:
-            playerCurrentHP = nowCSmon.nowhp
+        if player.nowCSmon.is_alive() and not stop:
+            playerCurrentHP = player.nowCSmon.nowhp
             enemyCurrentHP = enemy.nowhp
-            display_status(stdscr, nowCSmon, enemy)
-            addstr_with_korean_support(stdscr, 17, 0, f"  {nowCSmon.name}의 {nowCSmon_skill.name}!")
+            display_status(stdscr, player, enemy)
+            addstr_with_korean_support(stdscr, 17, 0, f"  {player.nowCSmon.name}의 {nowCSmon_skill.name}!")
             stdscr.refresh()
             stdscr.getch()
 
-            stop = use_skill(nowCSmon, enemy, nowCSmon_skill)
+            stop = use_skill(player.nowCSmon, enemy, nowCSmon_skill)
             animate_health_bar(stdscr, 3, 38, enemyCurrentHP, enemy.nowhp, enemy.Maxhp)
-            animate_health_bar(stdscr, 13, 4, playerCurrentHP, nowCSmon.nowhp, nowCSmon.Maxhp)    
-            skill_message(stdscr, nowCSmon, enemy, nowCSmon_skill)
+            animate_health_bar(stdscr, 13, 4, playerCurrentHP, player.nowCSmon.nowhp, player.nowCSmon.Maxhp)    
+            skill_message(stdscr, player.nowCSmon, enemy, nowCSmon_skill)
 
 ''' 교체 '''
-def select_monster_with_arrows(stdscr, player, enemy, nowCSmon):
+def select_monster_with_arrows(stdscr, player, enemy):
     """방향키로 전산몬 선택"""
     stdscr.keypad(True)
     stdscr.clear()
 
-    monsters = [m for m in player]  # None이 아닌 전산몬만 선택]
-    name_monsters = [m.name for m in monsters]  # 전산몬 이름 리스트
-    
+    name_monsters = [m.name for m in player.csMons]  # 전산몬 이름 리스트
+
+    # 현재 전산몬 표시
+    mons = [False, False, False, False, False, False]
+    for i in range(6):
+        if player.csMons[i].is_alive() == False:
+            mons[i] = 7  # 죽은 전산몬 표시
+        elif player.csMons[i] == player.nowCSmon:
+            mons[i] = 5  # 현재 전산몬 표시
+
+
     descriptions = []
     styles = []  # 전산몬 설명 리스트
     
-    for m in monsters:
+    for m in player.csMons:
         if m.name == "빈 슬롯": # 빈 슬롯인 경우
             descriptions.append(["", "", ""])
             styles.append([0, 0, 0])
@@ -290,81 +315,92 @@ def select_monster_with_arrows(stdscr, player, enemy, nowCSmon):
         descriptions.append([f"{m.name}", f"lv {m.level}", f" {'█' * hpratio}{' ' * (20 - hpratio)} "])
         styles.append([0, 0, curses.color_pair(3 - hpratio // 7)])
     
-    display_status(stdscr, nowCSmon, enemy)
-    index = option_choice(stdscr, name_monsters, nowCSmon, enemy, descriptions, styles)  # 전산몬 선택
+    display_status(stdscr, player, enemy)
+    index = option_choice(stdscr, name_monsters, player, enemy, descriptions, styles, mons)  # 전산몬 선택
     if index == -1:
         return -1  # BACKSPACE 키를 누르면 취소
-    if monsters[index].name == "빈 슬롯":
-        display_status(stdscr, nowCSmon, enemy)
+    if player.csMons[index].name == "빈 슬롯":
+        display_status(stdscr, player, enemy)
         addstr_with_korean_support(stdscr, 17, 0, f"  빈 슬롯이다!")
         stdscr.refresh()
         stdscr.getch()
-        return select_monster_with_arrows(stdscr, player, enemy, nowCSmon)
+        return select_monster_with_arrows(stdscr, player, enemy)
     return index  # 선택된 전산몬 인덱스 반환
 
-def swap_phase(stdscr, player, enemy, currentCSmon, must_swap=False):
+def swap_phase(stdscr, player, enemy, must_swap=False):
     """전산몬 교체 단계"""
-    # 플레이어 전산몬 선택
-    selected_monster = select_monster_with_arrows(stdscr, player, enemy, currentCSmon)
+    currentCSmon = player.nowCSmon  # 현재 전산몬
+
+    # 교체할 전산몬 선택
+    selected_monster = select_monster_with_arrows(stdscr, player, enemy)
+    
+    # 선택시 예외 처리
     if selected_monster == -1:
-        if currentCSmon.is_alive() == False:
-            display_status(stdscr, currentCSmon, enemy)
+        if must_swap:
+            display_status(stdscr, player, enemy)
             addstr_with_korean_support(stdscr, 17, 0, f"  {currentCSmon.name}는 쓰러져서 교체해야 해!")
             stdscr.refresh()
             stdscr.getch()
-            return swap_phase(stdscr, player, enemy, currentCSmon)  # 다시 선택
-        return currentCSmon  # BACKSPACE 키를 누르면 취소
-    if player[selected_monster].name == "빈 슬롯":
+            return swap_phase(stdscr, player, enemy, must_swap)  # 다시 선택
+        return
+    if player.csMons[selected_monster].name == "빈 슬롯":
         display_status(stdscr, currentCSmon, enemy)
         addstr_with_korean_support(stdscr, 17, 0, f"  빈 슬롯이다!")
         stdscr.refresh()
         stdscr.getch()
-        return swap_phase(stdscr, player, enemy, currentCSmon)
+        return swap_phase(stdscr, player, enemy, must_swap)  # 다시 선택
 
-    new_monster = player[selected_monster]
+    new_monster = player.csMons[selected_monster]
+    
+    # 교체할 전산몬 관련 예외 처리
     if new_monster.is_alive() == False:
-        display_status(stdscr, currentCSmon, enemy)
+        display_status(stdscr, player, enemy)
         addstr_with_korean_support(stdscr, 17, 0, f"  {new_monster.name}는 이미 쓰러졌어!")
         stdscr.refresh()
         stdscr.getch()
-        return swap_phase(stdscr, player, enemy, currentCSmon)  # 다시 선택
+        return swap_phase(stdscr, player, enemy, must_swap)  # 다시 선택
     elif new_monster == currentCSmon:
-        display_status(stdscr, currentCSmon, enemy)
+        display_status(stdscr, player, enemy)
         addstr_with_korean_support(stdscr, 17, 0, f"  {currentCSmon.name}는 이미 나와 있어!")
         stdscr.refresh()
         stdscr.getch()
-        return currentCSmon
+        return swap_phase(stdscr, player, enemy, must_swap)  # 다시 선택
     
-    if must_swap:
-        return new_monster  # 강제로 교체해야 하는 경우
-    
+    display_status(stdscr, player, enemy)
+    addstr_with_korean_support(stdscr, 17, 0, f"  수고했어, {currentCSmon.name}!")
+    stdscr.refresh()
+    stdscr.getch()
+
+    # 교체
+    player.nowCSmon = new_monster
+
+    display_status(stdscr, player, enemy)
+    addstr_with_korean_support(stdscr, 17, 0, f"  나와라, {new_monster.name}!")
+    stdscr.refresh()
+    stdscr.getch()
+
+    # 강제로 교체해야 했던 경우 턴 소모 없이 즉시 교체
+    if must_swap: 
+        return   
+
     # 적 스킬 랜덤 선택
     enemy_skill_name = random.choice(list(enemy.skills.keys()))
     enemy_skill = enemy.skills[enemy_skill_name]
 
-    display_status(stdscr, currentCSmon, enemy)
-    addstr_with_korean_support(stdscr, 17, 0, f"  수고했어, {currentCSmon.name}!")
-    stdscr.refresh()
-    stdscr.getch()
-    display_status(stdscr, new_monster, enemy)
-    addstr_with_korean_support(stdscr, 17, 0, f"  나와라, {new_monster.name}!")
-    stdscr.refresh()
-    stdscr.getch()
-    
-    playerCurrentHP = new_monster.nowhp
+    playerCurrentHP = player.nowCSmon.nowhp
     enemyCurrentHP = enemy.nowhp
-    display_status(stdscr, new_monster, enemy)
+    display_status(stdscr, player, enemy)
     addstr_with_korean_support(stdscr, 17, 0, f"  {enemy.name}의 {enemy_skill.name}!")
     stdscr.refresh()
     stdscr.getch()
 
-    use_skill(enemy, new_monster, enemy_skill)
+    use_skill(enemy, player.nowCSmon, enemy_skill)
     animate_health_bar(stdscr, 3, 38, enemyCurrentHP, enemy.nowhp, enemy.Maxhp)
-    animate_health_bar(stdscr, 13, 4, playerCurrentHP, new_monster.nowhp, new_monster.Maxhp)    
-    skill_message(stdscr, enemy, new_monster, enemy_skill)
+    animate_health_bar(stdscr, 13, 4, playerCurrentHP, player.nowCSmon.nowhp, player.nowCSmon.Maxhp)    
+    skill_message(stdscr, enemy, player.nowCSmon, enemy_skill)
     stdscr.refresh()
     stdscr.getch()
-    return new_monster
+    return
 
 ''' 아이템 사용 '''
 def use_item(item, target):
@@ -398,48 +434,46 @@ def item_message(stdscr, item, target):
     stdscr.refresh()
     stdscr.getch()  # 메시지를 잠시 보여줌
 
-def select_item_with_arrows(stdscr, player, enemy, items):
+def select_item_with_arrows(stdscr, player, enemy):
     """방향키로 아이템 선택"""
     stdscr.keypad(True)
     stdscr.clear()
-
-    myitems = [i for i in items if i]  # None이 아닌 아이템만 선택
-    items_name = [i.name for i in myitems]  # 예시 아이템 리스트
-    descriptions = [i.description for i in myitems]  # 아이템 설명 리스트
+    items_name = [i.name for i in player.items]  # 예시 아이템 리스트
+    descriptions = [i.description for i in player.items]  # 아이템 설명 리스트
     display_status(stdscr, player, enemy)
     index = option_choice(stdscr, items_name, player, enemy, descriptions)  # 아이템 선택
     if index == -1:
         return -1  # BACKSPACE 키를 누르면 취소
-    if myitems[index].name == "빈 슬롯":
+    if player.items[index].name == "빈 슬롯":
         display_status(stdscr, player, enemy)
         addstr_with_korean_support(stdscr, 17, 0, f"  빈 슬롯이다!")
         stdscr.refresh()
         stdscr.getch()
-        return select_item_with_arrows(stdscr, player, enemy, items)
+        return select_item_with_arrows(stdscr, player, enemy)
     return index  # 선택된 아이템 이름 반환
 
-def item_phase(stdscr, player, enemy, nowCSmon):
+def item_phase(stdscr, player, enemy):
     """아이템 사용 단계"""
     # 적 스킬 랜덤 선택
     enemy_skill_name = random.choice(list(enemy.skills.keys()))
     enemy_skill = enemy.skills[enemy_skill_name]
 
-    playerCurrentHP = nowCSmon.nowhp
+    playerCurrentHP = player.nowCSmon.nowhp
     enemyCurrentHP = enemy.nowhp
-    item_num = select_item_with_arrows(stdscr, nowCSmon, enemy, player.items)  # 아이템 선택
+    item_num = select_item_with_arrows(stdscr, player, enemy)  # 아이템 선택
     if item_num == -1:
         return -1  # BACKSPACE 키를 누르면 취소
-    mon_num = select_monster_with_arrows(stdscr, player.csMons, enemy, nowCSmon)  # 전산몬 선택
+    mon_num = select_monster_with_arrows(stdscr, player, enemy)  # 전산몬 선택
     if mon_num == -1:
         return -1  # BACKSPACE 키를 누르면 취소
     if player.csMons[mon_num].nowhp == 0:
         if player.items[item_num].canuse_on_fainted == False:
-            display_status(stdscr, nowCSmon, enemy)
+            display_status(stdscr, player, enemy)
             addstr_with_korean_support(stdscr, 17, 0, f"  쓰러진 전산몬에게는 이 아이템을 사용할 수 없다.")
             stdscr.refresh()
             stdscr.getch()
-            return item_phase(stdscr, player, enemy, nowCSmon)
-    display_status(stdscr, nowCSmon, enemy)  # 상태 출력
+            return item_phase(stdscr, player, enemy, player.nowCSmon)
+    display_status(stdscr, player, enemy)  # 상태 출력
     addstr_with_korean_support(stdscr, 17, 0, f"  {player.items[item_num].name}을 {player.csMons[mon_num].name}에게 사용했다!")
     stdscr.refresh()
     stdscr.getch()
@@ -447,34 +481,36 @@ def item_phase(stdscr, player, enemy, nowCSmon):
     use_item(player.items[item_num], player.csMons[mon_num])  # 아이템 사용
     
     animate_health_bar(stdscr, 3, 38, enemyCurrentHP, enemy.nowhp, enemy.Maxhp)
-    animate_health_bar(stdscr, 13, 4, playerCurrentHP, nowCSmon.nowhp, nowCSmon.Maxhp)
-    display_status(stdscr, nowCSmon, enemy)  # 상태 출력
+    animate_health_bar(stdscr, 13, 4, playerCurrentHP, player.nowCSmon.nowhp, player.nowCSmon.Maxhp)
+    display_status(stdscr, player, enemy)  # 상태 출력
     item_message(stdscr, player.items[item_num], player.csMons[mon_num])  # 아이템 메시지 출력
     player.items[item_num] = items["빈 슬롯"]  # 사용한 아이템 삭제
     stdscr.refresh()
     stdscr.getch()
 
 
-    playerCurrentHP = nowCSmon.nowhp
+    playerCurrentHP = player.nowCSmon.nowhp
     enemyCurrentHP = enemy.nowhp
-    display_status(stdscr, nowCSmon, enemy)
+    display_status(stdscr, player, enemy)
     addstr_with_korean_support(stdscr, 17, 0, f"  {enemy.name}의 {enemy_skill.name}!")
     stdscr.refresh()
     stdscr.getch()
 
-    use_skill(enemy, nowCSmon, enemy_skill)
+    use_skill(enemy, player.nowCSmon, enemy_skill)
 
     animate_health_bar(stdscr, 3, 38, enemyCurrentHP, enemy.nowhp, enemy.Maxhp)
-    animate_health_bar(stdscr, 13, 4, playerCurrentHP, nowCSmon.nowhp, nowCSmon.Maxhp)    
-    skill_message(stdscr, enemy, nowCSmon, enemy_skill)
+    animate_health_bar(stdscr, 13, 4, playerCurrentHP, player.nowCSmon.nowhp, player.nowCSmon.Maxhp)    
+    skill_message(stdscr, enemy, player.nowCSmon, enemy_skill)
     stdscr.refresh()
     stdscr.getch()
 
 ''' 포획 '''
-def catch_monster(stdscr, player, enemy, nowCSmon):
+def catch_monster(stdscr, player, enemy):
     """포획 시도"""
-    display_status(stdscr, nowCSmon, enemy)
-    addstr_with_korean_support(stdscr, 17, 0, f"  {enemy.name}를 포획 시도 중...")
+    enemy_normname = enemy.name  # 적 몬스터 이름
+    enemy.name = None
+    display_status(stdscr, player, enemy)
+    addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}를 포획 시도 중...")
     stdscr.refresh()
     stdscr.getch()
 
@@ -483,8 +519,8 @@ def catch_monster(stdscr, player, enemy, nowCSmon):
     success = random.randint(1, 100) <= catch_rate
 
     if success:
-        display_status(stdscr, nowCSmon, enemy)
-        addstr_with_korean_support(stdscr, 17, 0, f"  {enemy.name}를 포획했다!")
+        display_status(stdscr, player, enemy)
+        addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}를 포획했다!")
         stdscr.refresh()
         stdscr.getch()
 
@@ -492,69 +528,71 @@ def catch_monster(stdscr, player, enemy, nowCSmon):
         for i in range(len(player.csMons)):
             if player.csMons[i].name == "빈 슬롯":
                 player.csMons[i] = copy.deepcopy(enemy)
+                player.csMons[i].name = enemy_normname
                 break
         else:
             addstr_with_korean_support(stdscr, 17, 0, "  몬스터 슬롯이 가득 찼다!")
             stdscr.refresh()
             stdscr.getch()
-            display_status(stdscr, nowCSmon, enemy)
+            display_status(stdscr, player, enemy)
             addstr_with_korean_support(stdscr, 17, 0, f"  놓아줄 몬스터를 선택하자!")
             stdscr.refresh()
             stdscr.getch()
             # 몬스터 교체
-            selected_monster = select_monster_with_arrows(stdscr, player.csMons, enemy, nowCSmon)
+            selected_monster = select_monster_with_arrows(stdscr, player, enemy)
             if selected_monster == -1:
-                display_status(stdscr, nowCSmon, enemy)
+                display_status(stdscr, player, enemy)
                 addstr_with_korean_support(stdscr, 17, 0, f"  포획을 취소했다.")
                 stdscr.refresh()
                 stdscr.getch()
             else:
-                display_status(stdscr, nowCSmon, enemy)
+                display_status(stdscr, player, enemy)
                 addstr_with_korean_support(stdscr, 17, 0, f"  {player.csMons[selected_monster].name}, 그리울거야!")
-                if nowCSmon == player.csMons[selected_monster]:
+                if player.nowCSmon == player.csMons[selected_monster]:
                     player.csMons[selected_monster] = copy.deepcopy(enemy)
-                    nowCSmon = player.csMons[selected_monster]  # 교체된 몬스터로 변경
-                    stdscr.refresh()
-                    stdscr.getch()
-                    return nowCSmon
-                else: player.csMons[selected_monster] = copy.deepcopy(enemy)
+                    player.csMons[selected_monster].name = enemy_normname
+                    player.nowCSmon = player.csMons[selected_monster]  # 교체된 몬스터로 변경
+                else:
+                    player.csMons[selected_monster] = copy.deepcopy(enemy)
                 stdscr.refresh()
                 stdscr.getch()
-
         return True
     else:
+        # 포획 실패 시 적 몬스터 이름 복원
+        enemy.name = enemy_normname
+        display_status(stdscr, player, enemy)
+        # 포획 실패 메시지 출력
         addstr_with_korean_support(stdscr, 17, 0, f"  {enemy.name} 포획에 실패했다!")
         stdscr.refresh()
         stdscr.getch()
         return False
 
-def catch_phase(stdscr, player, enemy, nowCSmon):
+def catch_phase(stdscr, player, enemy):
     """포획 단계"""
     
-    res = catch_monster(stdscr, player, enemy, nowCSmon) 
-    if res != True and res != False:
-        return res
-    elif res is True: 
+    res = catch_monster(stdscr, player, enemy) 
+    if res:
         return True
     
     # 적 스킬 랜덤 선택
     enemy_skill_name = random.choice(list(enemy.skills.keys()))
     enemy_skill = enemy.skills[enemy_skill_name]
 
-    playerCurrentHP = nowCSmon.nowhp
+    playerCurrentHP = player.nowCSmon.nowhp
     enemyCurrentHP = enemy.nowhp
-    display_status(stdscr, nowCSmon, enemy)
+    display_status(stdscr, player, enemy)
     addstr_with_korean_support(stdscr, 17, 0, f"  {enemy.name}의 {enemy_skill.name}!")
     stdscr.refresh()
     stdscr.getch()
 
-    use_skill(enemy, nowCSmon, enemy_skill)
+    use_skill(enemy, player.nowCSmon, enemy_skill)
 
     animate_health_bar(stdscr, 3, 38, enemyCurrentHP, enemy.nowhp, enemy.Maxhp)
-    animate_health_bar(stdscr, 13, 4, playerCurrentHP, nowCSmon.nowhp, nowCSmon.Maxhp)    
-    skill_message(stdscr, enemy, nowCSmon, enemy_skill)
+    animate_health_bar(stdscr, 13, 4, playerCurrentHP, player.nowCSmon.nowhp, player.nowCSmon.Maxhp)    
+    skill_message(stdscr, enemy, player.nowCSmon, enemy_skill)
     stdscr.refresh()
     stdscr.getch()
+    return False  # 포획 실패
 
     # 포획 시도
 
@@ -569,108 +607,99 @@ def select_action(stdscr, player, enemy):
     return actions[index]
 
 
-def battle(player, enemy, now_csMon, turn):
+def battle(player, enemy, turn):
     global battleturn
     battleturn = turn 
-    def winOrLose(stdscr, now_CSmon):
+    def winOrLose(stdscr):
         def battle_logic(stdscr):
             curses.start_color()
             curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_WHITE) # 풀피 색상 (초록색)
             curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_WHITE)  # 반피 색상 (노란색)
             curses.init_pair(3, curses.COLOR_RED, curses.COLOR_WHITE)    # 딸피 색상 (빨간색)
-            curses.init_pair(4, curses.COLOR_CYAN, curses.COLOR_MAGENTA)  # 기본 색상 (스테이지 색상)
+            curses.init_pair(4, curses.COLOR_CYAN, curses.COLOR_BLACK)  # 기본 색상 (스테이지 색상)
             curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_BLACK)  # 현재 전산몬 (파란색)
+            curses.init_pair(6, curses.COLOR_GREEN, curses.COLOR_BLACK)  # 녹색
+            curses.init_pair(7, curses.COLOR_RED, curses.COLOR_BLACK)  # 빨간색
             curses.curs_set(0)  # 커서를 숨김
+            global hap_num
+            hap_num = 1
+            display_status(stdscr, player, enemy)  # 초기 상태 출력
 
-            nowCSmon = now_csMon
-            display_status(stdscr, nowCSmon, enemy)  # 초기 상태 출력
-
-            addstr_with_korean_support(stdscr, 17, 0, f"  야생의 {enemy.name}가 나타났다!")
+            addstr_with_korean_support(stdscr, 17, 0, f"  앗! 야생의 {enemy.name}가 나타났다!")
             stdscr.refresh()
             stdscr.getch()
 
             while True:
-
+                # 적 생존 여부 확인
                 if enemy.is_alive() == False:
-                    display_status(stdscr, nowCSmon, enemy)
+                    display_status(stdscr, player, enemy)
                     addstr_with_korean_support(stdscr, 17, 0, f"  {enemy.name}가 쓰러졌다!")
                     stdscr.refresh()
                     stdscr.getch()
-                    return nowCSmon, True
+                    return True
                 
-                if nowCSmon.is_alive() == False:
-                    display_status(stdscr, nowCSmon, enemy)
-                    addstr_with_korean_support(stdscr, 17, 0, f"  {nowCSmon.name}가 쓰러졌다!")
+                # 플레이어 현 전산몬 생존 여부 확인
+                if player.nowCSmon.is_alive() == False:
+                    display_status(stdscr, player, enemy)
+                    addstr_with_korean_support(stdscr, 17, 0, f"  {player.nowCSmon.name}가 쓰러졌다!")
                     stdscr.refresh()
                     stdscr.getch()
 
                     # 살아있는 전산몬이 있는지 확인
                     if not any(m.name != "빈 슬롯" and m.is_alive() for m in player.csMons):
-                        display_status(stdscr, nowCSmon, enemy)
+                        display_status(stdscr, player, enemy)
                         addstr_with_korean_support(stdscr, 17, 0, f"  더 이상 교체할 전산몬이 없다!")
                         stdscr.refresh()
                         stdscr.getch()
-                        return nowCSmon, False
+                        return False
 
                     # 교체 가능한 전산몬이 있으면 교체
-                    nowCSmon = swap_phase(stdscr, player.csMons, enemy, nowCSmon, must_swap=True)
-                    display_status(stdscr, nowCSmon, enemy)  # 상태 출력
-                    addstr_with_korean_support(stdscr, 17, 0, f"  잘 부탁해, {nowCSmon.name}!")
-                    stdscr.refresh()
-                    stdscr.getch()
+                    swap_phase(stdscr, player, enemy, must_swap=True)
                 
-
                 # 행동 선택
-                action = select_action(stdscr, nowCSmon, enemy)
-                if action == -1:
-                    continue  # BACKSPACE 키를 누르면 취소
-
+                action = select_action(stdscr, player, enemy)
                 if action == "스킬 사용":
-                    escape = skill_phase(stdscr, nowCSmon, enemy)
+                    escape = skill_phase(stdscr, player, enemy)
                     if escape == -1:
                         continue
+                    hap_num += 1
                 elif action == "전산몬 교체":
-                    nowCSmon = swap_phase(stdscr, player.csMons, enemy, nowCSmon)
+                    swap_phase(stdscr, player, enemy)
+                    hap_num += 1
                 elif action == "아이템 사용":
-                    
                     if not any(i.name != "빈 슬롯" for i in player.items):
-                        display_status(stdscr, nowCSmon, enemy)
+                        display_status(stdscr, player, enemy)
                         addstr_with_korean_support(stdscr, 17, 0, f"  아이템이 없다!")
                         stdscr.refresh()
                         stdscr.getch()
                     else:
-                        escape = item_phase(stdscr, player, enemy, nowCSmon)
+                        escape = item_phase(stdscr, player, enemy)
                         if escape == -1:
                             continue
+                        hap_num += 1
                 elif action == "전산몬 포획":
-                    res = catch_phase(stdscr, player, enemy, nowCSmon)
+                    res = catch_phase(stdscr, player, enemy)
                     if res:
-                        if res != True:
-                            nowCSmon = res
-                        return nowCSmon, True
+                        return True
+                    hap_num += 1
                 elif action == "도망가기":
-                    display_status(stdscr, nowCSmon, enemy)
-                    addstr_with_korean_support(stdscr, 17, 0, f"  {nowCSmon.name}가 도망쳤다!")
+                    display_status(stdscr, player, enemy)
+                    addstr_with_korean_support(stdscr, 17, 0, f"  {player.nowCSmon.name}가 도망쳤다!")
                     stdscr.refresh()
                     stdscr.getch()
-                    return nowCSmon, False
-                
-
-            # 전투 결과 출력
-            display_status(stdscr, nowCSmon, enemy)
-            addstr_with_korean_support(stdscr, 17, 0, f"  {enemy.name}가 쓰러졌다!")
-            stdscr.refresh()
-            stdscr.getch()
-            return nowCSmon, True
+                    return False
+                else: 
+                    continue
         
-        now_CSmon, battle_result = battle_logic(stdscr)
+        battle_result = battle_logic(stdscr)
         if battle_result:
             # 전투에서 승리한 경우
-            display_status(stdscr, now_CSmon, enemy)
+            display_status(stdscr, player, enemy)
             addstr_with_korean_support(stdscr, 17, 0, f"  승리했다!")
             stdscr.refresh()
             stdscr.getch()
 
+            # 아이템 드랍
             droppable_items = []
             for i in range(100):
                 if i%5 == 0: 
@@ -684,10 +713,10 @@ def battle(player, enemy, now_csMon, turn):
                 else: droppable_items.append(items["빈 슬롯"])
             droppedtem = copy.deepcopy(random.choice(droppable_items))
             if droppedtem.name == "빈 슬롯":
-                return now_CSmon
+                return hap_num  # 드랍된 아이템이 없는 경우
             
             # 드랍된 아이템 메시지 출력
-            display_status(stdscr, now_CSmon, enemy)
+            display_status(stdscr, player, enemy)
             addstr_with_korean_support(stdscr, 17, 0, f"  {droppedtem.name}를 획득했다!")
             stdscr.refresh()
             stdscr.getch()
@@ -699,34 +728,34 @@ def battle(player, enemy, now_csMon, turn):
                     break
             else:
                 # 아이템 슬롯이 가득 찼을 때
-                display_status(stdscr, now_CSmon, enemy)
+                display_status(stdscr, player, enemy)
                 addstr_with_korean_support(stdscr, 17, 0, "  그러나 아이템 슬롯이 가득 차있다!")
                 stdscr.refresh()
                 stdscr.getch()
-                display_status(stdscr, now_CSmon, enemy)
+                display_status(stdscr, player, enemy)
                 addstr_with_korean_support(stdscr, 17, 0, f"  버릴 아이템을 선택하자!")
                 stdscr.refresh()
                 stdscr.getch()
                 # 몬스터 교체
-                selected_item = select_item_with_arrows(stdscr, now_CSmon, enemy, player.items)
+                selected_item = select_item_with_arrows(stdscr, player, enemy)
                 if selected_item == -1:
-                    display_status(stdscr, now_CSmon, enemy)
+                    display_status(stdscr, player, enemy)
                     addstr_with_korean_support(stdscr, 17, 0, f"  {droppedtem.name}의 획득을 포기했다.")
                     stdscr.refresh()
                     stdscr.getch()
                 else:
-                    display_status(stdscr, now_CSmon, enemy)
+                    display_status(stdscr, player, enemy)
                     addstr_with_korean_support(stdscr, 17, 0, f"  {player.items[selected_item].name}을 버렸다!")
                     player.items[selected_item] = droppedtem  # 교체된 아이템으로 변경 
                     stdscr.refresh()
                     stdscr.getch()
         else:
             # 전투에서 패배한 경우
-            if now_CSmon.nowhp == 0:
-                display_status(stdscr, now_CSmon, enemy)
+            if player.nowCSmon.nowhp == 0:
+                display_status(stdscr, player, enemy)
                 addstr_with_korean_support(stdscr, 17, 0, f"  눈 앞이 깜깜해졌다...")
                 stdscr.refresh()
                 stdscr.getch()
 
-        return now_CSmon
-    return curses.wrapper(winOrLose, now_csMon)
+        return hap_num
+    return curses.wrapper(winOrLose)
