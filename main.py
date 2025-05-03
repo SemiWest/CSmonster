@@ -44,9 +44,9 @@ while turn <=30:
         if mymon is not None:
             mymon.update()
 
-    if turn == 30:
-        met_monster = copy.deepcopy(monsters["졸업 연구"])
-        Me.gpa = battle(Me, met_monster, turn)
+    # if turn == 30:
+    #     met_monster = copy.deepcopy(monsters["졸업 연구"])
+    #     Me.gpa = battle(Me, met_monster, turn)
     
     else:
         meetable_monsters = []
@@ -70,6 +70,11 @@ while turn <=30:
     # 몬스터가 쓰러진 상태라면 게임오바
     if Me.nowCSmon.nowhp == 0:
         break
+    if any(m.name == "monsterball" for m in Me.csMons): #플레이어 CS몬 중 몬스터볼이 있다면
+        print("버그 발생, 종료합니다")
+        print("몬스터볼이 CS몬 슬롯에 존재합니다.")
+        break
+            
     # 아니면 레벨업
     for mymon in Me.csMons:
         if mymon is not None:

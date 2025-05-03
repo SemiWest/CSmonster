@@ -55,6 +55,7 @@ def animate_health_bar(stdscr, y, x, current_hp, target_hp, max_hp):
         
         # 체력바 출력
         stdscr.addstr(y, x, f" {'█' * interpolated_ratio}{' ' * (20 - interpolated_ratio)} ", curses.color_pair(color_pair))
+
         stdscr.refresh()
         time.sleep(0.05)  # 애니메이션 속도 조절
 
@@ -66,12 +67,14 @@ def display_status(stdscr, player, enemy):
     addstr_with_korean_support(stdscr, 2, 2, f"스테이지 {battleturn}", curses.color_pair(4))
     addstr_with_korean_support(stdscr, 3, 2, f"턴 {hap_num}", curses.color_pair(6))
     # 적 상태 출력
-    if enemy.name == None:
+    if enemy.name == "monsterball":
         addstr_with_korean_support(stdscr, 2, 46, "▗███████▖", curses.color_pair(7))
         addstr_with_korean_support(stdscr, 3, 46, "███▛ ▜███", curses.color_pair(7))
         addstr_with_korean_support(stdscr, 4, 46, "███▙▀▟███")
         addstr_with_korean_support(stdscr, 5, 46, "▝███████▘")
         addstr_with_korean_support(stdscr, 3, 50, "▃")
+    elif enemy.name == "noneoutput":
+        pass
     else:
         addstr_with_korean_support(stdscr, 2, 38, f"{enemy.name}(lv {enemy.level})")
         animate_health_bar(stdscr, 3, 38, enemy.nowhp, enemy.nowhp, enemy.Maxhp)
@@ -342,7 +345,7 @@ def swap_phase(stdscr, player, enemy, must_swap=False):
             stdscr.refresh()
             stdscr.getch()
             return swap_phase(stdscr, player, enemy, must_swap)  # 다시 선택
-        return
+        return -1
     if player.csMons[selected_monster].name == "빈 슬롯":
         display_status(stdscr, currentCSmon, enemy)
         addstr_with_korean_support(stdscr, 17, 0, f"  빈 슬롯이다!")
@@ -507,12 +510,40 @@ def item_phase(stdscr, player, enemy):
 ''' 포획 '''
 def catch_monster(stdscr, player, enemy):
     """포획 시도"""
-    enemy_normname = enemy.name  # 적 몬스터 이름
-    enemy.name = None
-    display_status(stdscr, player, enemy)
-    addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}를 포획 시도 중...")
+    display_status(stdscr, player, enemy)  # 상태 출력
+    addstr_with_korean_support(stdscr, 17, 0, f"  가랏, 몬스터볼!")
     stdscr.refresh()
-    stdscr.getch()
+    time.sleep(0.5)  # 0.5초 대기
+
+    enemy_normname = enemy.name  # 적 몬스터 이름
+    enemy.name = "monsterball"  # 포획 중에는 몬스터볼로 표시
+    display_status(stdscr, player, enemy)  # 상태 출력
+    addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을 포획 시도 중")
+    # 몬스터볼 반짝거리는 연출
+    for i in range(6):  # 6번 반복 (반짝거림 효과)
+        time.sleep(0.3)  # 0.3초 대기
+        if i % 2 == 0:
+            blink_times = int(2**((6-i)/2))
+            for j in range(blink_times):  # 몬스터볼이 반짝이는 효과
+                enemy.name = "noneoutput"  # 반짝이는 상태
+                display_status(stdscr, player, enemy)
+                addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을 포획 시도 중{"."*(i//2+1)}")
+                stdscr.refresh()
+                time.sleep(0.3/blink_times)  # 몬스터볼이 반짝이는 효과
+                enemy.name = "monsterball"  # 반짝이는 상태
+                display_status(stdscr, player, enemy)
+                addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을 포획 시도 중{"."*(i//2+1)}")
+                stdscr.refresh()
+                time.sleep(0.3/blink_times)  # 몬스터볼이 반짝이는 효과
+        else:
+            enemy.name = "monsterball"  # 반짝이는 상태
+            display_status(stdscr, player, enemy)
+            addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을 포획 시도 중{"."*(i//2+1)}")
+            stdscr.refresh()
+        display_status(stdscr, player, enemy)
+        addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을 포획 시도 중{"."*(i//2+1)}")
+        stdscr.refresh()
+    time.sleep(0.5)  # 포획 시도 중 메시지 출력 후 대기
 
     # 포획 성공 확률 계산 (체력이 낮을수록 성공 확률 증가)
     catch_rate = 100 - int((enemy.nowhp / enemy.Maxhp) * 75)  # 최소 25%, 최대 100%
@@ -520,8 +551,9 @@ def catch_monster(stdscr, player, enemy):
 
     if success:
         display_status(stdscr, player, enemy)
-        addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}를 포획했다!")
+        addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}가 잡혔다!")
         stdscr.refresh()
+        curses.flushinp()
         stdscr.getch()
 
         # 플레이어 몬스터 슬롯에 추가
@@ -535,7 +567,7 @@ def catch_monster(stdscr, player, enemy):
             stdscr.refresh()
             stdscr.getch()
             display_status(stdscr, player, enemy)
-            addstr_with_korean_support(stdscr, 17, 0, f"  놓아줄 몬스터를 선택하자!")
+            addstr_with_korean_support(stdscr, 17, 0, f"  놓아줄 몬스터를 선택하자.")
             stdscr.refresh()
             stdscr.getch()
             # 몬스터 교체
@@ -554,6 +586,7 @@ def catch_monster(stdscr, player, enemy):
                     player.nowCSmon = player.csMons[selected_monster]  # 교체된 몬스터로 변경
                 else:
                     player.csMons[selected_monster] = copy.deepcopy(enemy)
+                    player.csMons[selected_monster].name = enemy_normname
                 stdscr.refresh()
                 stdscr.getch()
         return True
@@ -562,7 +595,7 @@ def catch_monster(stdscr, player, enemy):
         enemy.name = enemy_normname
         display_status(stdscr, player, enemy)
         # 포획 실패 메시지 출력
-        addstr_with_korean_support(stdscr, 17, 0, f"  {enemy.name} 포획에 실패했다!")
+        addstr_with_korean_support(stdscr, 17, 0, f"  앗, {enemy.name}가가 몬스터볼에서 나왔다!")
         stdscr.refresh()
         stdscr.getch()
         return False
@@ -630,6 +663,49 @@ def battle(player, enemy, turn):
             stdscr.getch()
 
             while True:
+                # 행동 선택
+                action = select_action(stdscr, player, enemy)
+                if action == "스킬 사용":
+                    esc = skill_phase(stdscr, player, enemy)
+                    if esc == -1:
+                        display_status(stdscr, player, enemy)
+                        addstr_with_korean_support(stdscr, 17, 0, f"  스킬 사용을 취소했다.")
+                        stdscr.refresh()
+                        stdscr.getch()
+                        continue
+                elif action == "전산몬 교체":
+                    esc = swap_phase(stdscr, player, enemy)
+                    if esc == -1:
+                        display_status(stdscr, player, enemy)
+                        addstr_with_korean_support(stdscr, 17, 0, f"  전산몬 교체를 취소했다.")
+                        stdscr.refresh()
+                        stdscr.getch()
+                        continue
+                elif action == "아이템 사용":
+                    if not any(i.name != "빈 슬롯" for i in player.items):
+                        display_status(stdscr, player, enemy)
+                        addstr_with_korean_support(stdscr, 17, 0, f"  아이템이 없다!")
+                        stdscr.refresh()
+                        stdscr.getch()
+                    else:
+                        esc = item_phase(stdscr, player, enemy)
+                        if esc == -1:
+                            display_status(stdscr, player, enemy)
+                            addstr_with_korean_support(stdscr, 17, 0, f"  아이템 사용을 취소했다.")
+                            stdscr.refresh()
+                            stdscr.getch()
+                            continue
+                elif action == "전산몬 포획":
+                    res = catch_phase(stdscr, player, enemy)
+                    if res:
+                        return True
+                elif action == "도망가기":
+                    display_status(stdscr, player, enemy)
+                    addstr_with_korean_support(stdscr, 17, 0, f"  도망쳤다!")
+                    stdscr.refresh()
+                    stdscr.getch()
+                    return False
+                
                 # 적 생존 여부 확인
                 if enemy.is_alive() == False:
                     display_status(stdscr, player, enemy)
@@ -648,7 +724,7 @@ def battle(player, enemy, turn):
                     # 살아있는 전산몬이 있는지 확인
                     if not any(m.name != "빈 슬롯" and m.is_alive() for m in player.csMons):
                         display_status(stdscr, player, enemy)
-                        addstr_with_korean_support(stdscr, 17, 0, f"  더 이상 교체할 전산몬이 없다!")
+                        addstr_with_korean_support(stdscr, 17, 0, f"  더 이상 교체할 전산몬이 없다.")
                         stdscr.refresh()
                         stdscr.getch()
                         return False
@@ -656,40 +732,7 @@ def battle(player, enemy, turn):
                     # 교체 가능한 전산몬이 있으면 교체
                     swap_phase(stdscr, player, enemy, must_swap=True)
                 
-                # 행동 선택
-                action = select_action(stdscr, player, enemy)
-                if action == "스킬 사용":
-                    escape = skill_phase(stdscr, player, enemy)
-                    if escape == -1:
-                        continue
-                    hap_num += 1
-                elif action == "전산몬 교체":
-                    swap_phase(stdscr, player, enemy)
-                    hap_num += 1
-                elif action == "아이템 사용":
-                    if not any(i.name != "빈 슬롯" for i in player.items):
-                        display_status(stdscr, player, enemy)
-                        addstr_with_korean_support(stdscr, 17, 0, f"  아이템이 없다!")
-                        stdscr.refresh()
-                        stdscr.getch()
-                    else:
-                        escape = item_phase(stdscr, player, enemy)
-                        if escape == -1:
-                            continue
-                        hap_num += 1
-                elif action == "전산몬 포획":
-                    res = catch_phase(stdscr, player, enemy)
-                    if res:
-                        return True
-                    hap_num += 1
-                elif action == "도망가기":
-                    display_status(stdscr, player, enemy)
-                    addstr_with_korean_support(stdscr, 17, 0, f"  {player.nowCSmon.name}가 도망쳤다!")
-                    stdscr.refresh()
-                    stdscr.getch()
-                    return False
-                else: 
-                    continue
+                hap_num += 1
         
         battle_result = battle_logic(stdscr)
         if battle_result:
