@@ -11,7 +11,12 @@ class player:
                     copy.deepcopy(monsters["빈 슬롯"]), 
                     copy.deepcopy(monsters["빈 슬롯"]), 
                     copy.deepcopy(monsters["빈 슬롯"])], 
-            items = []
+            items = [copy.deepcopy(monsters["빈 슬롯"]), 
+                    copy.deepcopy(monsters["빈 슬롯"]), 
+                    copy.deepcopy(monsters["빈 슬롯"]), 
+                    copy.deepcopy(monsters["빈 슬롯"]), 
+                    copy.deepcopy(monsters["빈 슬롯"]), 
+                    copy.deepcopy(monsters["빈 슬롯"])]
     ):
         self.name = name
         self.csMons = csMons

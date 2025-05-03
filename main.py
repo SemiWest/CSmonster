@@ -27,6 +27,14 @@ Me = player(
         copy.deepcopy(monsters["빈 슬롯"]), 
         copy.deepcopy(monsters["빈 슬롯"])
         ],
+    items = [
+        copy.deepcopy(items["빈 슬롯"]),
+        copy.deepcopy(items["빈 슬롯"]),
+        copy.deepcopy(items["빈 슬롯"]),
+        copy.deepcopy(items["빈 슬롯"]),
+        copy.deepcopy(items["빈 슬롯"]),
+        copy.deepcopy(items["빈 슬롯"])
+        ]
     )
 
 turn = 1

@@ -113,7 +113,7 @@ def display_details(stdscr, target, case="몬스터"):
             f"속도      {target.sp}",
             "",
             f"등급      {target.grade}",
-            f"만난 곳:  스테이지 {target.stage}"if isinstance(target.stage, int) else f"만난 곳:  {target.stage}",
+            f"만난 곳   스테이지 {target.stage}"if isinstance(target.stage, int) else f"만난 곳   {target.stage}",
             f"설명      {target.description}",
         ]
         for i, detail in enumerate(details):
