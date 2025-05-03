@@ -26,15 +26,7 @@ Me = player(
         copy.deepcopy(monsters["빈 슬롯"]), 
         copy.deepcopy(monsters["빈 슬롯"]), 
         copy.deepcopy(monsters["빈 슬롯"])
-        ], 
-    items = [
-        copy.deepcopy(items["아메리카노"]),
-        copy.deepcopy(items["빈 슬롯"]),
-        copy.deepcopy(items["빈 슬롯"]),
-        copy.deepcopy(items["빈 슬롯"]),
-        copy.deepcopy(items["빈 슬롯"]),
-        copy.deepcopy(items["빈 슬롯"])
-        ]
+        ],
     )
 
 turn = 1
@@ -60,6 +52,7 @@ while turn <=30:
             
         met_monster = wild_monster(meetable_monsters)
         met_monster.level = turn//3 + 2
+        met_monster.stage = turn
         if turn % 10 == 0:
             met_monster.level = turn
         met_monster.update()
@@ -74,7 +67,7 @@ while turn <=30:
         print("버그 발생, 종료합니다")
         print("몬스터볼이 CS몬 슬롯에 존재합니다.")
         break
-            
+
     # 아니면 레벨업
     for mymon in Me.csMons:
         if mymon is not None:
@@ -82,19 +75,19 @@ while turn <=30:
     turn += 1
 
 clear_screen()    
-print("\n결과")
+print("결과\n")
 if turn >30:
     print("클리어")
-    print("졸업 GPA: ", Me.gpa)
+    print("\n졸업 GPA: ", Me.gpa)
 else:
     print("제적당하고 말았다...")           
-    print("최종 스테이지:", turn)
-print("\n총 전투 횟수:", totalhap)
+    print("\n최종 스테이지:", turn)
+print("총 전투 횟수:", totalhap)
 
 print("\n나의 전산몬스터: ")
 for mymon in Me.csMons:
     if mymon.name != "빈 슬롯":
-        print(f"{mymon.name} lv{mymon.level}")
+        print(f"{mymon.name} lv{mymon.level} 잡은 스테이지: {mymon.stage}")
 
 input("\n아무 키나 눌러 종료")
 
