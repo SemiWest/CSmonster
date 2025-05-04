@@ -145,6 +145,16 @@ cs230.skills = {
         description="자기 자신을 디버깅해 에러를 고친다. 체력을 최대 체력의 절반만큼 회복한다."),
 }
 
+# 졸업 연구
+# 졸업 연구는 특별한 몬스터로, 레벨과 스킬이 다름
+graudation = Monster(name="졸업 연구", level=99, hpD=9999, hpW=0, adD=0, adW=0, spD=9999, spW=0, grade="보스", description="졸업이 눈 앞이다. 그동안의 성과를 보이자.")
+graudation.skills = {
+    '시련': Monster.Skill(
+        name='시련', 
+        effect_type="halve_hp", 
+        description="졸업 연구를 통과하기 위한 시련을 준다. 상대의 HP를 반으로 줄인다."),
+}
+
 monsters = {
     "빈 슬롯": Nonemonster,
     "프밍기": cs101,

@@ -3,12 +3,27 @@ from player import *
 from monster import *
 from items import *
 from game_menu import *
+import option
 import random
 import copy
 import os
-import sys
 import csv
+import sys
+import threading
+try:
+    import pygame
+except ImportError:
+    os.system(f"{sys.executable} -m pip install pygame")
+    import pygame
 
+Me = player()
+music_volume = 50
+music_on = True
+# 전역 변수로 종료 플래그 선언
+music_thread_running = False
+# 현재 작업 디렉터리를 Python 파일이 위치한 디렉터리로 설정
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+ 
 def clear_screen():
     # 화면 지우기
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -25,7 +40,7 @@ def save_game_log_csv(filename, player, turn, totalhap):
 
     file_exists = os.path.isfile(filepath)  # 파일 존재 여부 확인
 
-    with open(filename, 'a', newline='', encoding='utf-8') as file:
+    with open(filepath, 'a', newline='', encoding='utf-8') as file:  # filepath 사용
         writer = csv.writer(file)
         
         # 파일이 없을 경우 헤더 작성
@@ -54,13 +69,54 @@ def save_game_log_csv(filename, player, turn, totalhap):
         
         writer.writerow(row)
 
-def thirty_turn_mode(turn, totalhap, Me):
+def play_alternating_music(file1, file2):
+    """두 개의 배경음악을 끊김 없이 번갈아가며 재생"""
+    global music_thread_running
+    music_thread_running = True
+
+    def music_loop():
+        while music_thread_running:
+            # 첫 번째 음악 재생
+            pygame.mixer.music.load(file1)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy() and music_thread_running:
+                pygame.time.Clock().tick(10)  # 음악 상태를 주기적으로 확인
+
+            if not music_thread_running:
+                break
+
+            # 두 번째 음악 재생
+            pygame.mixer.music.load(file2)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy() and music_thread_running:
+                pygame.time.Clock().tick(10)  # 음악 상태를 주기적으로 확인
+
+    # 스레드로 실행
+    music_thread = threading.Thread(target=music_loop, daemon=True)
+    music_thread.start()
+
+def stop_music():
+    """배경음악 정지"""
+    global music_thread_running
+    music_thread_running = False
+    pygame.mixer.music.stop()
+
+def thirty_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True):
+    # 배경음악 재생 시작
+    if music_on:
+        # 배경음악 파일 경로
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        music1 = os.path.join(base_dir, "music\Im_a_kaist_nonmelody.wav")
+        music2 = os.path.join(base_dir, "music\Im_a_kaist_melody.wav")
+        # pygame 초기화
+        pygame.mixer.init()
+        pygame.mixer.music.set_volume(music_volume/100)  # 볼륨 설정 (0.0 ~ 1.0)
+        play_alternating_music(music1, music2)
+
     while turn <=30:
         if turn == 30:
-            pass
-        # 졸업 연구 몬스터와 전투   
-        #     met_monster = copy.deepcopy(monsters["졸업 연구"])
-        #     Me.gpa = battle(Me, met_monster, turn)
+            # 졸업 연구   
+            met_monster = copy.deepcopy(graudation)
         else:
             meetable_monsters = []
             for i in range(100):
@@ -71,10 +127,11 @@ def thirty_turn_mode(turn, totalhap, Me):
                 elif i%5 == 4: meetable_monsters.append(copy.deepcopy(monsters["프밍기"]))
                 
             met_monster = wild_monster(meetable_monsters)
-            met_monster.level = turn//3 + 2
+            met_monster.level = random.randint((turn-1)//5*5+1, (turn-1)//5*5+5)
             met_monster.stage = turn
             if turn % 10 == 0:
-                met_monster.level = turn
+                met_monster.level = turn+5
+                met_monster.grade = "중간 보스"
             met_monster.update()
             
         battlehap = battle(Me, met_monster, turn)
@@ -116,12 +173,15 @@ def thirty_turn_mode(turn, totalhap, Me):
     sys.stdin.flush()
     input("\n아무 키나 눌러 종료")
 
-
-Me = player()
+    if music_on:
+        stop_music()
 
 os.system(f'mode con: cols={120} lines={30}')
-input("게임을 시작하기 전, 전체 화면으로 전환해주세요.\n\n아무 키나 눌러 계속")
+os.system(f"title 전산몬스터")
 
+print("F11키를 눌러 전체화면으로 전환해주세요.")
+print("폰트 설정: D2coding, 폰트 크기: 36")
+input("아무 키나 눌러 시작")
 while True:
     clear_screen()
     start = main_menu()
@@ -157,7 +217,7 @@ while True:
         
         Me.nowCSmon = Me.csMons[0]
         clear_screen()
-        thirty_turn_mode(turn, totalhap, Me)
+        thirty_turn_mode(turn, totalhap, Me, music_volume, music_on)
     elif start == "기록 보기":
         clear_screen()
         # 절대 경로 생성
@@ -187,13 +247,20 @@ while True:
         input("\n아무 키나 눌러 종료")
         clear_screen()    
     elif start == "무한 모드":
-        pass
+        print("개발중입니당")
+        input("아무 키나 눌러 종료")
+        clear_screen()
+    elif start == "환경 설정":
+        music_volume, music_on = option.set(music_volume, music_on)
+        clear_screen()
     elif start == " 제작자  ":
         clear_screen()
-        print("\n\n\n\n\n\n\n\n\n\n")
-        print("\t\t\t\t\t               제작자           ")
-        print("\t\t\t\t\t         이준서 == SemiWest     \n")
-        print("\t\t\t\t\t               감사링           ")
+        print("\n\n\n\n\n\n\n\n")
+        print("\t\t\t\t\t               제작자             ")
+        print("\t\t\t\t\t              SemiWest            \n")
+        print("\t\t\t\t\t          special thank to        ")
+        print("\t\t\t\t\t               eweRim             \n")
+        print("\t\t\t\t\t               감사링             ")
         getch = input("아무 키나 눌러 종료")
         clear_screen()
     else:

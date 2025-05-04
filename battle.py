@@ -66,7 +66,7 @@ def animate_health_bar(stdscr, y, x, current_hp, target_hp, max_hp):
 
 def display_status(stdscr, player, enemy, detail=False):
     stdscr.clear()
-
+    curses.flushinp()
     # 테두리
     addstr_with_korean_support(stdscr, 0, 0, "┌──────────────────────────────────────────────────────────────┐")
     addstr_with_korean_support(stdscr, 15, 0, "└──────────────────────────────────────────────────────────────┘")
@@ -74,7 +74,7 @@ def display_status(stdscr, player, enemy, detail=False):
         addstr_with_korean_support(stdscr, i, 0, "│")
         addstr_with_korean_support(stdscr, i, 63, "│")
     
-    # 배틀 정보 출력력
+    # 배틀 정보 출력
     addstr_with_korean_support(stdscr, 1, 2, f"플레이어: {player.name}", curses.color_pair(5))
     addstr_with_korean_support(stdscr, 2, 2, f"스테이지 {battleturn}", curses.color_pair(4))
     addstr_with_korean_support(stdscr, 3, 2, f"턴 {hap_num}", curses.color_pair(3))
@@ -92,8 +92,11 @@ def display_status(stdscr, player, enemy, detail=False):
         addstr_with_korean_support(stdscr, 4, 45, "███▙▀▟███")
         addstr_with_korean_support(stdscr, 5, 45, "▝███████▘")
         addstr_with_korean_support(stdscr, 3, 49, "▃")
-    elif enemy.grade == "boss":
+    elif enemy.grade == "보스":
         addstr_with_korean_support(stdscr, 2, 38, f"{enemy.name}(lv {enemy.level})", curses.color_pair(1))
+        animate_health_bar(stdscr, 3, 38, enemy.nowhp, enemy.nowhp, enemy.Maxhp)
+    elif enemy.grade == "중간 보스":
+        addstr_with_korean_support(stdscr, 2, 38, f"{enemy.name}(lv {enemy.level})", curses.color_pair(2))
         animate_health_bar(stdscr, 3, 38, enemy.nowhp, enemy.nowhp, enemy.Maxhp)
     else:
         addstr_with_korean_support(stdscr, 2, 38, f"{enemy.name}(lv {enemy.level})")
@@ -796,7 +799,30 @@ def battle(player, enemy, turn):
             stdscr.refresh()
             stdscr.getch()
             return 0
-        
+        if turn == 30:
+            stdscr.clear()
+            # 테두리
+            addstr_with_korean_support(stdscr, 0, 0, "┌──────────────────────────────────────────────────────────────┐")
+            addstr_with_korean_support(stdscr, 15, 0, "└──────────────────────────────────────────────────────────────┘")
+            for i in range(1, 15):
+                addstr_with_korean_support(stdscr, i, 0, "│")
+                addstr_with_korean_support(stdscr, i, 63, "│")
+
+            addstr_with_korean_support(stdscr, 17, 2, f"{player.name}은/는 전산 고수가 되기 위한 여정을 마쳤다.")
+            stdscr.refresh()
+            stdscr.getch()
+            stdscr.clear()
+            addstr_with_korean_support(stdscr, 0, 0, "┌──────────────────────────────────────────────────────────────┐")
+            addstr_with_korean_support(stdscr, 15, 0, "└──────────────────────────────────────────────────────────────┘")
+            for i in range(1, 15):
+                addstr_with_korean_support(stdscr, i, 0, "│")
+                addstr_with_korean_support(stdscr, i, 63, "│")
+
+            addstr_with_korean_support(stdscr, 17, 2, f"졸업 연구를 통해 그동안의 성과를 증명하자!")
+            stdscr.refresh()
+            stdscr.getch()
+            
+            
         def battle_logic(stdscr):
             curses.start_color()
             curses.init_pair(11, curses.COLOR_GREEN, curses.COLOR_WHITE) # 풀피 색상 (초록색)
@@ -825,19 +851,11 @@ def battle(player, enemy, turn):
                 if action == 0:
                     esc = skill_phase(stdscr, player, enemy)
                     if esc == -1:
-                        display_status(stdscr, player, enemy, detail=True)
-                        addstr_with_korean_support(stdscr, 17, 0, f"  스킬 사용을 취소했다.")
-                        stdscr.refresh()
-                        stdscr.getch()
                         continue
                 # 교체
                 elif action == 1:
                     esc = swap_phase(stdscr, player, enemy)
                     if esc == -1:
-                        display_status(stdscr, player, enemy)
-                        addstr_with_korean_support(stdscr, 17, 0, f"  전산몬 교체를 취소했다.")
-                        stdscr.refresh()
-                        stdscr.getch()
                         continue
                 # 아이템 사용
                 elif action == 2:
@@ -849,13 +867,22 @@ def battle(player, enemy, turn):
                     else:
                         esc = item_phase(stdscr, player, enemy)
                         if esc == -1:
-                            display_status(stdscr, player, enemy, detail=True)
-                            addstr_with_korean_support(stdscr, 17, 0, f"  아이템 사용을 취소했다.")
-                            stdscr.refresh()
-                            stdscr.getch()
                             continue
                 # 포획
                 elif action == 3:
+                    if enemy.grade == "보스":
+                        display_status(stdscr, player, enemy, detail=True)
+                        addstr_with_korean_support(stdscr, 17, 0, f"  보스는 포획할 수 없다!")
+                        stdscr.refresh()
+                        stdscr.getch()
+                        continue
+                    if enemy.grade == "중간 보스" and enemy.nowhp>enemy.Maxhp*0.5:
+                        display_status(stdscr, player, enemy, detail=True)
+                        addstr_with_korean_support(stdscr, 17, 0, f"  체력이 절반 이상 남은 중간 보스는 포획할 수 없다!")
+                        stdscr.refresh()
+                        stdscr.getch()
+                        continue
+
                     res = catch_phase(stdscr, player, enemy)
                     if res:
                         return True
@@ -866,6 +893,8 @@ def battle(player, enemy, turn):
                     stdscr.refresh()
                     stdscr.getch()
                     return False
+                elif action == -1:
+                    continue
                 
                 """종료여부 확인"""
                 # 적 생존 여부 확인
@@ -898,8 +927,12 @@ def battle(player, enemy, turn):
         
         battle_result = battle_logic(stdscr)
         
+        if turn == 30:
+            if enemy.grade == "보스":
+                player.gpa = f"{int((enemy.Maxhp-enemy.nowhp)/9999*4.3):.2f}"
+            return hap_num
         # 전투 결과에 따라 승리 또는 패배 처리
-        if battle_result:
+        elif battle_result:
             # 전투에서 승리한 경우
             display_status(stdscr, player, enemy)
             addstr_with_korean_support(stdscr, 17, 0, f"  승리했다!")
