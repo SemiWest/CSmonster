@@ -106,8 +106,8 @@ def thirty_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True):
     if music_on:
         # 배경음악 파일 경로
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        music1 = os.path.join(base_dir, "music\Im_a_kaist_nonmelody.wav")
-        music2 = os.path.join(base_dir, "music\Im_a_kaist_melody.wav")
+        music1 = os.path.join(base_dir, "..\music\Im_a_kaist_nonmelody.wav")
+        music2 = os.path.join(base_dir, "..\music\Im_a_kaist_melody.wav")
         # pygame 초기화
         pygame.mixer.init()
         pygame.mixer.music.set_volume(music_volume/100)  # 볼륨 설정 (0.0 ~ 1.0)
