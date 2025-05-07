@@ -12,16 +12,82 @@ class Monster:
         self.description = description
         self.stage = stage  # 등장한 스테이지
         self.skills = {}  # 스킬 저장
-        self.update()
+        self.participated = False  # 전투에 참여했는지 여부
+        self.Maxhp = int(self.hpD + self.level * self.hpW)  # 최대 체력
+        self.nowhp = self.Maxhp  # 현재 체력
+        self.exp = 0
+        if self.grade == "중간 보스":
+            self.hpSheild = True
+        else: self.hpSheild = False
+        self.update_fullhp()
 
     def update(self):
         self.Maxhp = int(self.hpD + self.level * self.hpW)
-        self.nowhp = self.Maxhp
+        self.nowhp = self.Maxhp  if self.nowhp > self.Maxhp else int(self.nowhp)
+        self.max_exp = int((self.level ** 3))  # 경험치 필요량
+        self.drop_exp = int(self.level * 10)  # 드랍 경험치
         self.ad = int(self.adD + self.level * self.adW)
         self.sp = int(self.spD + self.level * self.spW)
 
+    def update_fullhp(self):
+        self.update()
+        self.nowhp = self.Maxhp  # 현재 체력 회복
+
+    def level_up(self):
+        while self.exp >= self.max_exp:
+            if self.is_alive():
+                self.nowhp += self.hpW  # 레벨업 시 체력 회복
+            self.level += 1
+            self.exp -= self.max_exp  # 레벨업 시 경험치 차감
+        self.update()
+
     def is_alive(self):
         return self.nowhp > 0
+
+    def get_monster_max_level(self,turn):
+        """스테이지에 따른 몬스터 레벨 계산"""
+        if turn <= 10:
+            return 10
+        elif turn <= 20:
+            return 16
+        elif turn <= 30:
+            return 24
+        elif turn <= 40:
+            return 32
+        elif turn <= 50:
+            return 38
+        elif turn <= 60:
+            return 48
+        elif turn <= 70:
+            return 56
+        elif turn <= 80:
+            return 64
+        elif turn <= 90:
+            return 74
+        elif turn <= 100:
+            return 84
+        elif turn <= 110:
+            return 94
+        elif turn <= 120:
+            return 104
+        elif turn <= 130:
+            return 114
+        elif turn <= 140:
+            return 126
+        elif turn <= 150:
+            return 138
+        elif turn <= 160:
+            return 150
+        elif turn <= 170:
+            return 162
+        elif turn <= 180:
+            return 174
+        elif turn <= 190:
+            return 188
+        elif turn <= 200:
+            return 200
+        else:
+            return 200  # 200 이상의 스테이지는 최대 레벨 200
 
     class Skill:
         def __init__(self, name, effect_type, dom="", mp=1, skW=1, priority=0, description=""):
@@ -48,7 +114,8 @@ class Monster:
 # 플레이어와 적 전산몬스터 생성
 Nonemonster = Monster(name="빈 슬롯")
 
-cs101 = Monster(name="프밍기", level=5, hpD=5, hpW=1, adD=2, adW=1, spD=2, spW=2)
+cs101 = Monster(name="프밍기", level=5, hpD=5, hpW=1, adD=2, adW=1, spD=2, spW=2,
+                description="카이스트 입학 후 가장 먼저 듣게 되는 전산과 기필 과목이다. 시간표 브레이커로 유명하다.")
 cs101.skills = {
     'Hello, World!': Monster.Skill(
         name='Hello, World!', 
@@ -130,13 +197,13 @@ cs230.skills = {
     '페이지 폴트': Monster.Skill(
         name='페이지 폴트', 
         effect_type="damage", 
-        skW=0.3,
+        skW=0.6,
         dom="아키", mp=2, 
         description="상대가 사용중인 페이지를 페이징 파일로 옮겨버린다. 아키에게 두 배의 데미지를 준다."),
     '시프 스킬 3': Monster.Skill(
         name='미정', 
         effect_type="damage", 
-        skW=0.2, 
+        skW=0.7, 
         description="어떻게 해서 공격한다. OS에게 두 배의 데미지를 준다."),
     '셀프 디버그': Monster.Skill(
         name='셀프 디버그', 
