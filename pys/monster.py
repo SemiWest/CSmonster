@@ -16,9 +16,7 @@ class Monster:
         self.Maxhp = int(self.hpD + self.level * self.hpW)  # 최대 체력
         self.nowhp = self.Maxhp  # 현재 체력
         self.exp = 0
-        if self.grade == "중간 보스":
-            self.hpSheild = True
-        else: self.hpSheild = False
+        self.hpShield = False
         self.update_fullhp()
 
     def update(self):
@@ -33,12 +31,15 @@ class Monster:
         self.update()
         self.nowhp = self.Maxhp  # 현재 체력 회복
 
-    def level_up(self):
+    def level_up(self, turn):
         while self.exp >= self.max_exp:
             if self.is_alive():
                 self.nowhp += self.hpW  # 레벨업 시 체력 회복
             self.level += 1
             self.exp -= self.max_exp  # 레벨업 시 경험치 차감
+            if self.level >= self.get_monster_max_level(turn):
+                self.exp = 0
+                break
         self.update()
 
     def is_alive(self):

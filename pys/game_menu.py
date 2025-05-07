@@ -63,7 +63,7 @@ def main_menu():
             stdscr.addstr(6, 4, " ⣠⡴⠛⠳⣤⡈⠉⢹⣿  ⣀⡴⠛⠳⢦⡀ ⣿⡏⠉⠁", curses.color_pair(1))
             stdscr.addstr(7, 4, " ⢩⣥⠀⠀⠉⠁⠀⠈⠉⠀⠀⠉⣥⠀⠀⠈⠁⠀⠉⠁⠀⠀", curses.color_pair(1))
             stdscr.addstr(8, 4, " ⠘⠻⠤⠤⠤⠤⠤⠤⠤⠀⠀⠀⠻⠤⠤⠤⠤⠤⠤⠄⠀", curses.color_pair(1))
-            options = ["30턴 모드", "기록 보기", "무한 모드", " 제작자  ", "환경 설정"]
+            options = ["졸업 모드", "기록 보기", "무한 모드", " 제작자  ", "환경 설정"]
             for i, option in enumerate(options):
                 addstr_with_korean_support(stdscr, 16 + int(i // 2) * 2, 20 * (i % 2) + 44, f"  {option}")
                 if i == current_index:

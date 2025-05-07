@@ -105,6 +105,8 @@ def display_status(stdscr, player, enemy, detail=False):
     # 플레이어 상태 출력
     addstr_with_korean_support(stdscr, 11, 4, f"{player.nowCSmon.name}(lv {player.nowCSmon.level})")
     animate_health_bar(stdscr, 12, 4, player.nowCSmon.nowhp, player.nowCSmon.nowhp, player.nowCSmon.Maxhp)
+    for i, mymon in enumerate(player.csMons):
+            addstr_with_korean_support(stdscr, 10, 5+i*2, "◒", curses.color_pair(1 if not mymon.is_alive() else 5 if mymon.name == "빈 슬롯" else 99))
     if detail:
         display_details(stdscr, player.nowCSmon, 68, "몬스터")   
     
@@ -830,20 +832,59 @@ def drop_item(stdscr, player, enemy):
             stdscr.getch()
 
 def exp_gain(stdscr, player, enemy):
-    # 경험치 획득
-    for mymon in player.csMons: 
-        if mymon.participated and mymon.is_alive(battleturn):
-            mymon.exp += enemy.drop_exp
+    """경험치 획득"""
+    # 현재 전산몬(nowCSmon)에 대한 처리 먼저 수행
+    mymon = player.nowCSmon
+    if mymon.level == mymon.get_monster_max_level(battleturn):
+        display_status(stdscr, player, enemy)
+        addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}은/는 이미 레벨 제한에 도달했다.")
+        stdscr.refresh()
+        stdscr.getch()
+    else:
+        if mymon.participated == False:  # 전투에 참여하지 않은 경우
+            exp = int(enemy.drop_exp * player.concentration * player.knowhow / 10000)
+        else:
+            exp = int(enemy.drop_exp * player.knowhow / 100)
+        display_status(stdscr, player, enemy)
+        addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}이/가 {exp}의 경험치를 얻었다!")
+        mymon.exp += exp
+        stdscr.refresh()
+        stdscr.getch()
+        if mymon.exp >= mymon.max_exp:
+            if mymon.level < mymon.get_monster_max_level(battleturn):
+                mymon.level_up(battleturn)
+                display_status(stdscr, player, enemy)
+                addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}이/가 {mymon.level}레벨로 올랐다!")
+                stdscr.refresh()
+                stdscr.getch()
+            else:
+                mymon.exp = 0
+
+    # 나머지 전산몬에 대한 처리
+    for mymon in player.csMons:
+        if mymon == player.nowCSmon:  # 이미 처리한 nowCSmon은 건너뜀
+            continue
+        if mymon.level == mymon.get_monster_max_level(battleturn):
+            display_status(stdscr, player, enemy)
+            addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}은/는 이미 레벨 제한에 도달했다.")
+            stdscr.refresh()
+            stdscr.getch()
+            continue
+        if mymon.is_alive():
+            if mymon.participated == False:  # 전투에 참여하지 않은 경우
+                mymon.exp += int(enemy.drop_exp * player.concentration * player.knowhow / 10000)
+            else:
+                mymon.exp += int(enemy.drop_exp * player.knowhow / 100)
             if mymon.exp >= mymon.max_exp:
                 if mymon.level < mymon.get_monster_max_level(battleturn):
-                    mymon.level_up()
+                    mymon.level_up(battleturn)
                     display_status(stdscr, player, enemy)
                     addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}이/가 {mymon.level}레벨로 올랐다!")
                     stdscr.refresh()
                     stdscr.getch()
-                else: 
+                else:
                     mymon.exp = 0
-
+                    
 def battle(player, enemy, turn, endturn):
     global battleturn
     battleturn = turn 
@@ -1016,6 +1057,17 @@ def battle(player, enemy, turn, endturn):
             if turn % 5 == 0:
                 display_status(stdscr, player, enemy)
                 addstr_with_korean_support(stdscr, 17, 2, f"포켓몬들이 모두 회복했다!")
+                stdscr.refresh()
+                stdscr.getch()
+                display_status(stdscr, player, enemy)
+                addstr_with_korean_support(stdscr, 17, 0, f"  공부에 노하우가 생겼다! 경험치 획득량이 60% 증가했다.")
+                player.knowhow += 60
+                stdscr.refresh()
+                stdscr.getch()
+            if turn % 10 == 0:
+                display_status(stdscr, player, enemy)
+                addstr_with_korean_support(stdscr, 17, 0, f"  영어 강의에 익숙해졌다! 전투에 참여하지 않은 전산몬도 경험치를 20% 추가 획득한다.")
+                player.concentration += 20
                 stdscr.refresh()
                 stdscr.getch()
         else:
