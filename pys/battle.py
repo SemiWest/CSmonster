@@ -604,7 +604,7 @@ def item_phase(stdscr, player, enemy):
     skill_message(stdscr, enemy, player.nowCSmon, enemy_skill)
     stdscr.refresh()
     stdscr.getch()
-
+ 
 ''' 포획 '''
 def catch_monster(stdscr, player, enemy):
     """포획 시도"""
@@ -625,21 +625,21 @@ def catch_monster(stdscr, player, enemy):
             for j in range(blink_times):  # 몬스터볼이 반짝이는 효과
                 enemy.name = "noneoutput"  # 반짝이는 상태
                 display_status(stdscr, player, enemy)
-                addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을/를 포획 시도 중{"."*(i//2+1)}")
+                addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을/를 포획 시도 중{'.'*(i//2+1)}")
                 stdscr.refresh()
                 time.sleep(0.3/blink_times)  # 몬스터볼이 반짝이는 효과
                 enemy.name = "monsterball"  # 반짝이는 상태
                 display_status(stdscr, player, enemy)
-                addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을/를 포획 시도 중{"."*(i//2+1)}")
+                addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을/를 포획 시도 중{'.'*(i//2+1)}")
                 stdscr.refresh()
                 time.sleep(0.3/blink_times)  # 몬스터볼이 반짝이는 효과
         else:
             enemy.name = "monsterball"  # 반짝이는 상태
             display_status(stdscr, player, enemy)
-            addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을/를 포획 시도 중{"."*(i//2+1)}")
+            addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을/를 포획 시도 중{'.'*(i//2+1)}")
             stdscr.refresh()
         display_status(stdscr, player, enemy)
-        addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을/를 포획 시도 중{"."*(i//2+1)}")
+        addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을/를 포획 시도 중{'.'*(i//2+1)}")
         stdscr.refresh()
     time.sleep(0.5)  # 포획 시도 중 메시지 출력 후 대기
 
