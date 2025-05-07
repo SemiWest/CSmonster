@@ -69,27 +69,28 @@ def save_game_log_csv(filename, player, turn, totalhap):
         
         writer.writerow(row)
 
-def play_alternating_music(file1, file2):
-    """두 개의 배경음악을 끊김 없이 번갈아가며 재생"""
+def play_alternating_music(file_list):
+    """두 개 이상의 배경음악을 끊김 없이 번갈아가며 재생"""
     global music_thread_running
     music_thread_running = True
 
     def music_loop():
-        while music_thread_running:
-            # 첫 번째 음악 재생
-            pygame.mixer.music.load(file1)
+        nowfile = 0
+        try:
+            # 첫 번째 음악 로드 및 재생
+            pygame.mixer.music.load(file_list[nowfile])
             pygame.mixer.music.play()
-            while pygame.mixer.music.get_busy() and music_thread_running:
-                pygame.time.Clock().tick(10)  # 음악 상태를 주기적으로 확인
 
-            if not music_thread_running:
-                break
+            while music_thread_running:
+                # 현재 음악이 끝날 때까지 대기
+                while pygame.mixer.music.get_busy() and music_thread_running:
+                    pygame.time.Clock().tick(10)  # 10 FPS로 상태 확인
 
-            # 두 번째 음악 재생
-            pygame.mixer.music.load(file2)
-            pygame.mixer.music.play()
-            while pygame.mixer.music.get_busy() and music_thread_running:
-                pygame.time.Clock().tick(10)  # 음악 상태를 주기적으로 확인
+                # 다음 음악 파일을 대기열에 추가
+                nowfile = (nowfile + 1) % len(file_list)
+                pygame.mixer.music.queue(file_list[nowfile])
+        except Exception as e:
+            print(f"음악 재생 중 오류 발생: {e}")
 
     # 스레드로 실행
     music_thread = threading.Thread(target=music_loop, daemon=True)
@@ -101,7 +102,7 @@ def stop_music():
     music_thread_running = False
     pygame.mixer.music.stop()
 
-def thirty_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True):
+def limited_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True, endturn = 100):
     # 배경음악 재생 시작
     if music_on:
         # 배경음악 파일 경로
@@ -111,10 +112,10 @@ def thirty_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True):
         # pygame 초기화
         pygame.mixer.init()
         pygame.mixer.music.set_volume(music_volume/100)  # 볼륨 설정 (0.0 ~ 1.0)
-        play_alternating_music(music1, music2)
+        play_alternating_music((music1, music2))
 
-    while turn <=30:
-        if turn == 30:
+    while turn <= endturn:
+        if turn == endturn:
             # 졸업 연구   
             met_monster = copy.deepcopy(graudation)
         else:
@@ -127,14 +128,16 @@ def thirty_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True):
                 elif i%5 == 4: meetable_monsters.append(copy.deepcopy(monsters["프밍기"]))
                 
             met_monster = wild_monster(meetable_monsters)
-            met_monster.level = random.randint((turn-1)//5*5+1, (turn-1)//5*5+5)
+            met_monster.level = random.randint(met_monster.get_monster_max_level(turn)-8, 
+                                               (met_monster.get_monster_max_level(turn) + max(-8, (turn%10-11))))
             met_monster.stage = turn
             if turn % 10 == 0:
-                met_monster.level = turn+5
+                met_monster.level = met_monster.get_monster_max_level(turn)
                 met_monster.grade = "중간 보스"
-            met_monster.update()
+                met_monster.hpShield = True
+            met_monster.update_fullhp()
             
-        battlehap = battle(Me, met_monster, turn)
+        battlehap = battle(Me, met_monster, turn, endturn)
         if battlehap == 0:
             turn = 1
             totalhap = 0
@@ -142,21 +145,15 @@ def thirty_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True):
         totalhap += battlehap
         # 전투 종료 후 몬스터 상태 업데이트
         # 몬스터가 쓰러진 상태라면 게임오바
-        if Me.nowCSmon.nowhp == 0:
+        if Me.gameover():
             break
-
-        # 아니면 레벨업
-        for mymon in Me.csMons:
-            if mymon != monsters["빈 슬롯"]:
-                mymon.level += 1
-                if mymon.level > turn+5:
-                    mymon.level = turn+5
-                mymon.update()
         turn += 1
-
+    
+    if music_on:
+        stop_music()
     clear_screen()    
     print("결과\n")
-    if turn >30:
+    if turn >endturn:
         print("클리어")
         print("\n졸업 GPA: ", Me.gpa)
     else:
@@ -173,9 +170,6 @@ def thirty_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True):
     sys.stdin.flush()
     input("\n아무 키나 눌러 종료")
 
-    if music_on:
-        stop_music()
-
 os.system(f'mode con: cols={120} lines={30}')
 os.system(f"title 전산몬스터")
 
@@ -185,7 +179,7 @@ input("아무 키나 눌러 시작")
 while True:
     clear_screen()
     start = main_menu()
-    if start == "30턴 모드":
+    if start == "졸업 모드":
         turn = 0
         totalhap = 0
         Me.name = "Unknown"
@@ -217,7 +211,7 @@ while True:
         
         Me.nowCSmon = Me.csMons[0]
         clear_screen()
-        thirty_turn_mode(turn, totalhap, Me, music_volume, music_on)
+        limited_turn_mode(turn, totalhap, Me, music_volume, music_on, 30)
     elif start == "기록 보기":
         clear_screen()
         # 절대 경로 생성
