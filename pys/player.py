@@ -28,7 +28,9 @@ class player:
                 self.nowCSmon = csMons[0]
                 self.gpa = "0.0"
                 self.knowhow = 100
-                self.concentration = 0
+                self.concentration = 50
+                self.grade = "A+"
+
         def gameover(self):
                 # 게임 오버 조건: 
                 if any(csmon.is_alive() and csmon.name != "빈 슬롯" for csmon in self.csMons):

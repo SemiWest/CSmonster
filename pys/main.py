@@ -7,8 +7,9 @@ import csv
 Me = player()
 music_volume = 50
 music_on = True
-ESVolume = 50
+ESVolume = 90
 effectsound = True
+difficulty = 1
 
 def initialize_channels():
     """음악과 효과음을 위한 채널 초기화"""
@@ -67,27 +68,35 @@ def save_game_log_csv(filename, player, turn, totalhap):
 
 def limited_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True, endturn = 100):
     # 배경음악 재생 시작
-    if music_on:
-        # 배경음악 파일 경로
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        music1 = os.path.join(base_dir, "..\music\Im_a_kaist_nonmelody.wav")
-        music2 = os.path.join(base_dir, "..\music\Im_a_kaist_melody.wav")
-        # pygame 초기화
-        pygame.mixer.music.set_volume(music_volume/100)  # 볼륨 설정 (0.0 ~ 1.0)
-        play_alternating_music((music1, music2))
-
+    play_music(["../music/Im_a_kaist_nonmelody.wav", "../music/Im_a_kaist_melody.wav"])
     while turn <= endturn:
         if turn == endturn:
-            # 졸업 연구   
+            # 졸업 연구
             met_monster = copy.deepcopy(graudation)
+        elif turn <= 10:
+            # 1~10 스테이지
+            meetable_monsters = []
+            for i in range(100):
+                if i<40: meetable_monsters.append(monsters["프밍기"])
+                elif i<70: meetable_monsters.append(monsters["데이타구조"])
+                elif i<100: meetable_monsters.append(monsters["이산구조"])
+                
+            met_monster = wild_monster(meetable_monsters)
+            met_monster.level = random.randint(met_monster.get_monster_max_level(turn)-8, 
+                                               (met_monster.get_monster_max_level(turn) + max(-8, (turn%10-11))))
+            met_monster.stage = turn
+            if turn % 10 == 0:
+                met_monster.level = met_monster.get_monster_max_level(turn)
+                met_monster.grade = "중간 보스"
+                met_monster.hpShield = True
+            met_monster.update_fullhp()
         else:
             meetable_monsters = []
             for i in range(100):
-                if i%5 == 0: meetable_monsters.append(copy.deepcopy(monsters["데이타구조"]))
-                elif i%5 == 1: meetable_monsters.append(copy.deepcopy(monsters["프밍기"]))
-                elif i%5 == 2: meetable_monsters.append(copy.deepcopy(monsters["이산구조"]))
-                elif i%5 == 3: meetable_monsters.append(copy.deepcopy(monsters["시프"]))
-                elif i%5 == 4: meetable_monsters.append(copy.deepcopy(monsters["프밍기"]))
+                if i<40: meetable_monsters.append(monsters["프밍기"])
+                elif i<65: meetable_monsters.append(monsters["데이타구조"])
+                elif i<90: meetable_monsters.append(monsters["이산구조"])
+                elif i<100: meetable_monsters.append(monsters["시프"])
                 
             met_monster = wild_monster(meetable_monsters)
             met_monster.level = random.randint(met_monster.get_monster_max_level(turn)-8, 
@@ -110,15 +119,13 @@ def limited_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True, endtur
         if Me.gameover():
             break
         turn += 1
-    
-    if music_on and pygame.mixer.music.get_busy():
-        stop_music()
+    stop_music()
     clear_screen()
     sys.stdin.flush()    
-    print("결과\n")
-    if turn >endturn:
+    print("게임 결과\n")
+    if turn >= endturn:
         print("클리어")
-        print("\n졸업 GPA: ", Me.gpa)
+        print("\n졸업 GPA: ", Me.gpa, "졸업 성적: ", Me.grade)
     else:
         print("제적당하고 말았다...")           
         print("\n최종 스테이지:", turn)
@@ -136,17 +143,24 @@ def limited_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True, endtur
 os.system(f'mode con: cols={120} lines={30}')
 os.system(f"title 전산몬스터")
 
-print("F11키를 눌러 전체화면으로 전환해주세요.")
+print("\n\n\n\n\n\n\n\n\n\nF11키를 눌러 전체화면으로 전환해주세요.")
 print("폰트 설정: D2coding, 폰트 크기: 36")
-input("아무 키나 눌러 시작")
+print("조작키 정보: 방향키로 조작, enter키로 선택, esc키/q키/backspace키로 종료 및 취소")
+print("스크립트 넘기기: 아무 키나 누르기")
+input("\n\n아무 키나 눌러 시작")
 
 initialize_channels()
-change_options(effectsound, ESVolume, effect_channel, music_channel)
-while True:
+change_options(music_on, music_volume, effectsound, ESVolume, effect_channel, music_channel)
+set_difficulty(difficulty)
+pygame.mixer.music.set_volume(music_volume / 100)  # 음악 볼륨 설정
+pygame.mixer.Channel(1).set_volume(ESVolume / 100)  # 효과음 볼륨 설정
+
+while True:   
     clear_screen()
     sys.stdin.flush()
     start = main_menu()
-    if start == "졸업 모드":
+    if   start == "졸업 모드":
+        stop_music()
         turn = 0
         totalhap = 0
         Me.name = "Unknown"
@@ -178,7 +192,7 @@ while True:
         
         Me.nowCSmon = Me.csMons[0]
         clear_screen()
-        limited_turn_mode(turn, totalhap, Me, music_volume, music_on, 30)
+        limited_turn_mode(turn, totalhap, Me, music_volume, music_on, 2)
     elif start == "기록 보기":
         clear_screen()
         # 절대 경로 생성
@@ -211,10 +225,16 @@ while True:
         print("개발중입니당")
         input("아무 키나 눌러 종료")
         clear_screen()
+        stop_music()
     elif start == "환경 설정":
-        music_volume, music_on, effectsound, ESVolume = option.set(music_volume, music_on, effectsound, ESVolume)
-        change_options(effectsound, ESVolume, effect_channel, music_channel)
+        music_volume, music_on, effectsound, ESVolume, difficulty = option.set(music_volume, music_on, effectsound, ESVolume, difficulty)
+        change_options(music_on, music_volume, effectsound, ESVolume, effect_channel, music_channel)
+        set_difficulty(difficulty)
+        pygame.mixer.music.set_volume(music_volume / 100)
+        pygame.mixer.Channel(1).set_volume(ESVolume / 100)
         clear_screen()
+        if music_on == False and pygame.mixer.music.get_busy():
+            pygame.mixer.music.stop()            
     elif start == " 제작자  ":
         clear_screen()
         print("\n\n\n\n\n\n\n\n")

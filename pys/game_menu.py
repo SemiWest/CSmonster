@@ -20,6 +20,7 @@ def addstr_with_korean_support(stdscr, y, x, text, attr=0):
 
 def main_menu():
     def menu_logic(stdscr):
+        main_menu_reload = True
         # Initialize the curses screen
         stdscr = curses.initscr()
         curses.flushinp()  # Clear input buffer
@@ -34,38 +35,79 @@ def main_menu():
         curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
         curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
         curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)
-
+        curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_WHITE)
+        curses.init_pair(99, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        def main_menu_animation():
+            for i in range(169):
+                j = 13-int((168-i)**(1/2))
+                if j-3>=0:
+                    stdscr.addstr(j-3, 5, "⠉⠉⣿⡏⠉⠁⠀⢸⣿⠀⠀⠀⠀⣿⡇⠀⠀⠀⣿⡇⠀⠀⠀⣿⡏⠉⠉⠉⠉⠉⣿⡇⠀⠀⠀⠀⠀⢰⣶⠀⠀⠀⠀⠀⢰⣶⠒⠒⠒⠂⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢠⣴⠒⠒⣦⡄⣤⡖⠒⢲⣦ ⢰⣶⠒⡖⣶⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣶⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀")
+                    stdscr.addstr(j-3, 5, "⠉⠉⣿⡏⠉⠁⠀⢸⣿⠀⠀⠀⠀⣿⡇⠀⠀⠀⣿⡇⠀⠀⠀⣿⡏⠉⠉⠉⠉⠉⣿⡇⠀⠀⠀⠀⠀⢰⣶⠀⠀⠀⠀⠀⢰⣶⠒⠒⠒⠂⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢠⣴⠒⠒⣦⡄⣤⡖⠒⢲⣦ ", curses.color_pair(1))
+                    stdscr.addstr(j-3, 27, "⠀⣿⡏⠉⠉⠉⠉⠉⣿⡇⠀⠀⠀⠀⠀⢰⣶⠀⠀⠀⠀⠀⢰⣶⠒⠒⠒⠂⠀⠀⣿⡇⠀⠀⠀⠀  ")
+                    stdscr.addstr(j-3, 4, " ⠉⠉⣿⡏⠉⠁ ⢸⣿    ⣿⡇   ⣿⡇⠀⠀", curses.color_pair(1))
+                if j-2>=0:
+                    stdscr.addstr(j-2, 5, "⣠⡴⠛⠳⣤⡈⠉⢹⣿⠀⠀⣀⡴⠛⠳⢦⡀⠀⣿⡏⠉⠁⢀⣙⣓⣒⣲⣶⣒⣒⣋⣁⠀⠀⣀⣀⣤⠞⠛⢦⣄⣀⡀⠀⢸⣿⠤⠤⠤⠄⣀⣀⣿⡇⠀⠀⠀⠀⠀⠀⢸⣿⠀⠀⠀⠀⠛⠧⠤⢤⣄ ⢸⣿⠀⡇⣿⡇⢠⡖⠒⠒⣦⠀⣶⠤⠒⢲⡄⢠⣶⠒⠒⠦⠄⢺⣿⠒⠂⠀⢠⣴⣒⣒⣦⡄⣶⡦⠒⢲⣦")
+                    stdscr.addstr(j-2, 5, "⣠⡴⠛⠳⣤⡈⠉⢹⣿⠀⠀⣀⡴⠛⠳⢦⡀⠀⣿⡏⠉⠁⢀⣙⣓⣒⣲⣶⣒⣒⣋⣁⠀⠀⣀⣀⣤⠞⠛⢦⣄⣀⡀⠀⢸⣿⠤⠤⠤⠄⣀⣀⣿⡇⠀⠀⠀⠀⠀⠀⢸⣿⠀⠀⠀⠀⠛⠧⠤⢤⣄ ", curses.color_pair(1))
+                    stdscr.addstr(j-2, 27, "⢀⣙⣓⣒⣲⣶⣒⣒⣋⣁⠀⠀⣀⣀⣤⠞⠛⢦⣄⣀⡀⠀⢸⣿⠤⠤⠤⠄⣀⣀⣿⡇⠀     ")
+                    stdscr.addstr(j-2, 4, " ⣠⡴⠛⠳⣤⡈⠉⢹⣿  ⣀⡴⠛⠳⢦⡀ ⣿⡏⠉⠁", curses.color_pair(1))
+                if j-1>=0:
+                    stdscr.addstr(j-1, 5, "⢩⣥⠀⠀⠉⠁⠀⠈⠉⠀⠀⠉⣥⠀⠀⠈⠁⠀⠉⠁⠀⠀⠈⣭⡍⠉⠉⠉⠉⠉⠉⠉⠀⠀⠉⠉⠉⠀⠀⠈⠉⠉⠁⠀⢸⣿⠀⠀⠀⠀⠉⠉⣿⡇⠀⠀⠀⠀⠀⠀⢸⣿⠀⠀⣀⡀⣀⡀⠀⢸⣿ ⢸⣿⠀⡇⣿⡇⢸⡇⠀⠀⣿⠀⣿⠀⠀⢸⡇⢈⣛⠒⠒⣦⡄⢸⣿⠀⢀⣀⢸⣿⠉⠉⣉⡁⣿⡇⠀⠈⠉")
+                    stdscr.addstr(j-1, 5, "⢩⣥⠀⠀⠉⠁⠀⠈⠉⠀⠀⠉⣥⠀⠀⠈⠁⠀⠉⠁⠀⠀⠈⣭⡍⠉⠉⠉⠉⠉⠉⠉⠀⠀⠉⠉⠉⠀⠀⠈⠉⠉⠁⠀⢸⣿⠀⠀⠀⠀⠉⠉⣿⡇⠀⠀⠀⠀⠀⠀⢸⣿⠀⠀⣀⡀⣀⡀⠀⢸⣿ ", curses.color_pair(1))
+                    stdscr.addstr(j-1, 27, "⠈⣭⡍⠉⠉⠉⠉⠉⠉⠉⠀⠀⠉⠉⠉⠀⠀⠈⠉⠉⠁⠀⢸⣿⠀⠀⠀⠀⠉⠉⣿⡇⠀⠀    ")
+                    stdscr.addstr(j-1, 4, " ⢩⣥⠀⠀⠉⠁⠀⠈⠉⠀⠀⠉⣥⠀⠀⠈⠁⠀⠉⠁⠀⠀", curses.color_pair(1))
+                if j>=0:
+                    stdscr.addstr(j, 5, "⠘⠻⠤⠤⠤⠤⠤⠤⠤⠀⠀⠀⠻⠤⠤⠤⠤⠤⠤⠄⠀⠀⠀⠻⣇⠤⠤⠤⠤⠤⠤⡀⠀⠠⠤⠤⠤⠤⠤⠤⠤⠤⠤⠀⠘⠻⠤⠤⠟⠃⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠘⠛⠛⠃⠀⠀⠛⠛⠛⠃ ⠘⠛⠀⠃⠛⠃⠀⠛⠛⠛⠃⠀⠛⠀⠀⠘⠃⠀⠛⠛⠛⠃⠀⠀⠘⠛⠛⠀⠀⠘⠛⠛⠃⠀⠛⠃⠀⠀⠀")
+                    stdscr.addstr(j, 5, "⠸⠧⣀⣀⣀⣀⣀⣀⣀⠀⠀⠀⢿⣀⣀⣀⣀⣀⣀⡀⠀⠀⠀⢿⣇⣀⣀⣀⣀⣀⣀⡀⠀⠠⠤⠤⠤⠤⠤⠤⠤⠤⠤⠀⠘⠻⠤⠤⠟⠃⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠘⠛⠛⠃⠀⠀⠛⠛⠛⠃ ", curses.color_pair(1))
+                    stdscr.addstr(j, 27, "⠀⠻⠧⠤⠤⠤⠤⠤⠤⠄⠀⠠⠤⠤⠤⠤⠤⠤⠤⠤⠤⠀⠘⠻⠤⠤⠟⠃⠀⠀⠿⠇⠀     ")
+                    stdscr.addstr(j, 4, " ⠘⠻⠤⠤⠤⠤⠤⠤⠤⠀⠀⠀⠻⠤⠤⠤⠤⠤⠤⠄⠀", curses.color_pair(1))
+                stdscr.refresh()
+                time.sleep(0.001)
+                stdscr.clear()
+            #흰색 화면으로 0.1초간 반짝하는 효과
+            time.sleep(0.05)
+            game_started()
         # Main menu loop
         current_index = 0
         while True:
+            if main_menu_reload:
+                main_menu_animation()
+                main_menu_reload = False
+                time.sleep(1)
+            if musicOnOff:
+                if pygame.mixer.music.get_busy() == 0:
+                    play_music("../music/menu.wav")
+            else:
+                stop_music()
+                if pygame.mixer.music.get_busy() == 1:
+                    pygame.mixer.music.stop()
             stdscr.clear()
-            
-            stdscr.addstr(5, 5, "⠉⠉⣿⡏⠉⠁⠀⢸⣿⠀⠀⠀⠀⣿⡇⠀⠀⠀⣿⡇⠀⠀⠀⣿⡏⠉⠉⠉⠉⠉⣿⡇⠀⠀⠀⠀⠀⢰⣶⠀⠀⠀⠀⠀⢰⣶⠒⠒⠒⠂⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢠⣴⠒⠒⣦⡄⣤⡖⠒⢲⣦ ⢰⣶⠒⡖⣶⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣶⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀")
-            stdscr.addstr(6, 5, "⣠⡴⠛⠳⣤⡈⠉⢹⣿⠀⠀⣀⡴⠛⠳⢦⡀⠀⣿⡏⠉⠁⢀⣙⣓⣒⣲⣶⣒⣒⣋⣁⠀⠀⣀⣀⣤⠞⠛⢦⣄⣀⡀⠀⢸⣿⠤⠤⠤⠄⣀⣀⣿⡇⠀⠀⠀⠀⠀⠀⢸⣿⠀⠀⠀⠀⠛⠧⠤⢤⣄ ⢸⣿⠀⡇⣿⡇⢠⡖⠒⠒⣦⠀⣶⠤⠒⢲⡄⢠⣶⠒⠒⠦⠄⢺⣿⠒⠂⠀⢠⣴⣒⣒⣦⡄⣶⡦⠒⢲⣦")
-            stdscr.addstr(7, 5, "⢩⣥⠀⠀⠉⠁⠀⠈⠉⠀⠀⠉⣥⠀⠀⠈⠁⠀⠉⠁⠀⠀⠈⣭⡍⠉⠉⠉⠉⠉⠉⠉⠀⠀⠉⠉⠉⠀⠀⠈⠉⠉⠁⠀⢸⣿⠀⠀⠀⠀⠉⠉⣿⡇⠀⠀⠀⠀⠀⠀⢸⣿⠀⠀⣀⡀⣀⡀⠀⢸⣿ ⢸⣿⠀⡇⣿⡇⢸⡇⠀⠀⣿⠀⣿⠀⠀⢸⡇⢈⣛⠒⠒⣦⡄⢸⣿⠀⢀⣀⢸⣿⠉⠉⣉⡁⣿⡇⠀⠈⠉")
-            stdscr.addstr(8, 5, "⠘⠻⠤⠤⠤⠤⠤⠤⠤⠀⠀⠀⠻⠤⠤⠤⠤⠤⠤⠄⠀⠀⠀⠻⣇⠤⠤⠤⠤⠤⠤⡀⠀⠠⠤⠤⠤⠤⠤⠤⠤⠤⠤⠀⠘⠻⠤⠤⠟⠃⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠘⠛⠛⠃⠀⠀⠛⠛⠛⠃ ⠘⠛⠀⠃⠛⠃⠀⠛⠛⠛⠃⠀⠛⠀⠀⠘⠃⠀⠛⠛⠛⠃⠀⠀⠘⠛⠛⠀⠀⠘⠛⠛⠃⠀⠛⠃⠀⠀⠀")
-            stdscr.addstr(5, 5, "⠉⠉⣿⡏⠉⠁⠀⢸⣿⠀⠀⠀⠀⣿⡇⠀⠀⠀⣿⡇⠀⠀⠀⣿⡏⠉⠉⠉⠉⠉⣿⡇⠀⠀⠀⠀⠀⢰⣶⠀⠀⠀⠀⠀⢰⣶⠒⠒⠒⠂⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢠⣴⠒⠒⣦⡄⣤⡖⠒⢲⣦ ", curses.color_pair(1))
-            stdscr.addstr(6, 5, "⣠⡴⠛⠳⣤⡈⠉⢹⣿⠀⠀⣀⡴⠛⠳⢦⡀⠀⣿⡏⠉⠁⢀⣙⣓⣒⣲⣶⣒⣒⣋⣁⠀⠀⣀⣀⣤⠞⠛⢦⣄⣀⡀⠀⢸⣿⠤⠤⠤⠄⣀⣀⣿⡇⠀⠀⠀⠀⠀⠀⢸⣿⠀⠀⠀⠀⠛⠧⠤⢤⣄ ", curses.color_pair(1))
-            stdscr.addstr(7, 5, "⢩⣥⠀⠀⠉⠁⠀⠈⠉⠀⠀⠉⣥⠀⠀⠈⠁⠀⠉⠁⠀⠀⠈⣭⡍⠉⠉⠉⠉⠉⠉⠉⠀⠀⠉⠉⠉⠀⠀⠈⠉⠉⠁⠀⢸⣿⠀⠀⠀⠀⠉⠉⣿⡇⠀⠀⠀⠀⠀⠀⢸⣿⠀⠀⣀⡀⣀⡀⠀⢸⣿ ", curses.color_pair(1))
-            stdscr.addstr(8, 5, "⠸⠧⣀⣀⣀⣀⣀⣀⣀⠀⠀⠀⢿⣀⣀⣀⣀⣀⣀⡀⠀⠀⠀⢿⣇⣀⣀⣀⣀⣀⣀⡀⠀⠠⠤⠤⠤⠤⠤⠤⠤⠤⠤⠀⠘⠻⠤⠤⠟⠃⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠘⠛⠛⠃⠀⠀⠛⠛⠛⠃ ", curses.color_pair(1))
-            stdscr.addstr(5, 27, "⠀⣿⡏⠉⠉⠉⠉⠉⣿⡇⠀⠀⠀⠀⠀⢰⣶⠀⠀⠀⠀⠀⢰⣶⠒⠒⠒⠂⠀⠀⣿⡇⠀⠀⠀⠀  ")
-            stdscr.addstr(6, 27, "⢀⣙⣓⣒⣲⣶⣒⣒⣋⣁⠀⠀⣀⣀⣤⠞⠛⢦⣄⣀⡀⠀⢸⣿⠤⠤⠤⠄⣀⣀⣿⡇⠀     ")
-            stdscr.addstr(7, 27, "⠈⣭⡍⠉⠉⠉⠉⠉⠉⠉⠀⠀⠉⠉⠉⠀⠀⠈⠉⠉⠁⠀⢸⣿⠀⠀⠀⠀⠉⠉⣿⡇⠀⠀    ")
-            stdscr.addstr(8, 27, "⠀⠻⠧⠤⠤⠤⠤⠤⠤⠄⠀⠠⠤⠤⠤⠤⠤⠤⠤⠤⠤⠀⠘⠻⠤⠤⠟⠃⠀⠀⠿⠇⠀     ")
-            stdscr.addstr(5, 4, " ⠉⠉⣿⡏⠉⠁ ⢸⣿    ⣿⡇   ⣿⡇⠀⠀", curses.color_pair(1))
-            stdscr.addstr(6, 4, " ⣠⡴⠛⠳⣤⡈⠉⢹⣿  ⣀⡴⠛⠳⢦⡀ ⣿⡏⠉⠁", curses.color_pair(1))
-            stdscr.addstr(7, 4, " ⢩⣥⠀⠀⠉⠁⠀⠈⠉⠀⠀⠉⣥⠀⠀⠈⠁⠀⠉⠁⠀⠀", curses.color_pair(1))
-            stdscr.addstr(8, 4, " ⠘⠻⠤⠤⠤⠤⠤⠤⠤⠀⠀⠀⠻⠤⠤⠤⠤⠤⠤⠄⠀", curses.color_pair(1))
+            stdscr.addstr(10, 5, "⠉⠉⣿⡏⠉⠁⠀⢸⣿⠀⠀⠀⠀⣿⡇⠀⠀⠀⣿⡇⠀⠀⠀⣿⡏⠉⠉⠉⠉⠉⣿⡇⠀⠀⠀⠀⠀⢰⣶⠀⠀⠀⠀⠀⢰⣶⠒⠒⠒⠂⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢠⣴⠒⠒⣦⡄⣤⡖⠒⢲⣦ ⢰⣶⠒⡖⣶⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣶⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀")
+            stdscr.addstr(11, 5, "⣠⡴⠛⠳⣤⡈⠉⢹⣿⠀⠀⣀⡴⠛⠳⢦⡀⠀⣿⡏⠉⠁⢀⣙⣓⣒⣲⣶⣒⣒⣋⣁⠀⠀⣀⣀⣤⠞⠛⢦⣄⣀⡀⠀⢸⣿⠤⠤⠤⠄⣀⣀⣿⡇⠀⠀⠀⠀⠀⠀⢸⣿⠀⠀⠀⠀⠛⠧⠤⢤⣄ ⢸⣿⠀⡇⣿⡇⢠⡖⠒⠒⣦⠀⣶⠤⠒⢲⡄⢠⣶⠒⠒⠦⠄⢺⣿⠒⠂⠀⢠⣴⣒⣒⣦⡄⣶⡦⠒⢲⣦")
+            stdscr.addstr(12, 5, "⢩⣥⠀⠀⠉⠁⠀⠈⠉⠀⠀⠉⣥⠀⠀⠈⠁⠀⠉⠁⠀⠀⠈⣭⡍⠉⠉⠉⠉⠉⠉⠉⠀⠀⠉⠉⠉⠀⠀⠈⠉⠉⠁⠀⢸⣿⠀⠀⠀⠀⠉⠉⣿⡇⠀⠀⠀⠀⠀⠀⢸⣿⠀⠀⣀⡀⣀⡀⠀⢸⣿ ⢸⣿⠀⡇⣿⡇⢸⡇⠀⠀⣿⠀⣿⠀⠀⢸⡇⢈⣛⠒⠒⣦⡄⢸⣿⠀⢀⣀⢸⣿⠉⠉⣉⡁⣿⡇⠀⠈⠉")
+            stdscr.addstr(13, 5, "⠘⠻⠤⠤⠤⠤⠤⠤⠤⠀⠀⠀⠻⠤⠤⠤⠤⠤⠤⠄⠀⠀⠀⠻⣇⠤⠤⠤⠤⠤⠤⡀⠀⠠⠤⠤⠤⠤⠤⠤⠤⠤⠤⠀⠘⠻⠤⠤⠟⠃⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠘⠛⠛⠃⠀⠀⠛⠛⠛⠃ ⠘⠛⠀⠃⠛⠃⠀⠛⠛⠛⠃⠀⠛⠀⠀⠘⠃⠀⠛⠛⠛⠃⠀⠀⠘⠛⠛⠀⠀⠘⠛⠛⠃⠀⠛⠃⠀⠀⠀")
+            stdscr.addstr(10, 5, "⠉⠉⣿⡏⠉⠁⠀⢸⣿⠀⠀⠀⠀⣿⡇⠀⠀⠀⣿⡇⠀⠀⠀⣿⡏⠉⠉⠉⠉⠉⣿⡇⠀⠀⠀⠀⠀⢰⣶⠀⠀⠀⠀⠀⢰⣶⠒⠒⠒⠂⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢠⣴⠒⠒⣦⡄⣤⡖⠒⢲⣦ ", curses.color_pair(1))
+            stdscr.addstr(11, 5, "⣠⡴⠛⠳⣤⡈⠉⢹⣿⠀⠀⣀⡴⠛⠳⢦⡀⠀⣿⡏⠉⠁⢀⣙⣓⣒⣲⣶⣒⣒⣋⣁⠀⠀⣀⣀⣤⠞⠛⢦⣄⣀⡀⠀⢸⣿⠤⠤⠤⠄⣀⣀⣿⡇⠀⠀⠀⠀⠀⠀⢸⣿⠀⠀⠀⠀⠛⠧⠤⢤⣄ ", curses.color_pair(1))
+            stdscr.addstr(12, 5, "⢩⣥⠀⠀⠉⠁⠀⠈⠉⠀⠀⠉⣥⠀⠀⠈⠁⠀⠉⠁⠀⠀⠈⣭⡍⠉⠉⠉⠉⠉⠉⠉⠀⠀⠉⠉⠉⠀⠀⠈⠉⠉⠁⠀⢸⣿⠀⠀⠀⠀⠉⠉⣿⡇⠀⠀⠀⠀⠀⠀⢸⣿⠀⠀⣀⡀⣀⡀⠀⢸⣿ ", curses.color_pair(1))
+            stdscr.addstr(13, 5, "⠸⠧⣀⣀⣀⣀⣀⣀⣀⠀⠀⠀⢿⣀⣀⣀⣀⣀⣀⡀⠀⠀⠀⢿⣇⣀⣀⣀⣀⣀⣀⡀⠀⠠⠤⠤⠤⠤⠤⠤⠤⠤⠤⠀⠘⠻⠤⠤⠟⠃⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠘⠛⠛⠃⠀⠀⠛⠛⠛⠃ ", curses.color_pair(1))
+            stdscr.addstr(10, 27, "⠀⣿⡏⠉⠉⠉⠉⠉⣿⡇⠀⠀⠀⠀⠀⢰⣶⠀⠀⠀⠀⠀⢰⣶⠒⠒⠒⠂⠀⠀⣿⡇⠀⠀⠀⠀  ")
+            stdscr.addstr(11, 27, "⢀⣙⣓⣒⣲⣶⣒⣒⣋⣁⠀⠀⣀⣀⣤⠞⠛⢦⣄⣀⡀⠀⢸⣿⠤⠤⠤⠄⣀⣀⣿⡇⠀     ")
+            stdscr.addstr(12, 27, "⠈⣭⡍⠉⠉⠉⠉⠉⠉⠉⠀⠀⠉⠉⠉⠀⠀⠈⠉⠉⠁⠀⢸⣿⠀⠀⠀⠀⠉⠉⣿⡇⠀⠀    ")
+            stdscr.addstr(13, 27, "⠀⠻⠧⠤⠤⠤⠤⠤⠤⠄⠀⠠⠤⠤⠤⠤⠤⠤⠤⠤⠤⠀⠘⠻⠤⠤⠟⠃⠀⠀⠿⠇⠀     ")
+            stdscr.addstr(10, 4, " ⠉⠉⣿⡏⠉⠁ ⢸⣿    ⣿⡇   ⣿⡇⠀⠀", curses.color_pair(1))
+            stdscr.addstr(11, 4, " ⣠⡴⠛⠳⣤⡈⠉⢹⣿  ⣀⡴⠛⠳⢦⡀ ⣿⡏⠉⠁", curses.color_pair(1))
+            stdscr.addstr(12, 4, " ⢩⣥⠀⠀⠉⠁⠀⠈⠉⠀⠀⠉⣥⠀⠀⠈⠁⠀⠉⠁⠀⠀", curses.color_pair(1))
+            stdscr.addstr(13, 4, " ⠘⠻⠤⠤⠤⠤⠤⠤⠤⠀⠀⠀⠻⠤⠤⠤⠤⠤⠤⠄⠀", curses.color_pair(1))
             options = ["졸업 모드", "기록 보기", "무한 모드", " 제작자  ", "환경 설정"]
             for i, option in enumerate(options):
-                addstr_with_korean_support(stdscr, 16 + int(i // 2) * 2, 20 * (i % 2) + 44, f"  {option}")
+                addstr_with_korean_support(stdscr, 18 + int(i // 2) * 2, 20 * (i % 2) + 44, f"  {option}")
                 if i == current_index:
-                    addstr_with_korean_support(stdscr, 16 + int(i // 2) * 2, 20 * (i % 2) + 44, f"> {option}", curses.A_REVERSE)
+                    addstr_with_korean_support(stdscr, 18 + int(i // 2) * 2, 20 * (i % 2) + 44, f"> {option}", curses.A_REVERSE)
 
             stdscr.refresh()
             key = stdscr.getch()
             if key == ord('\n'):  # Enter 키를 누르면 선택 완료
                 option_select_sound()
+                main_menu_reload = True
                 return options[current_index]
             elif key == ord('\b') or key == 27 or key == ord("q"):  # 'q' 키를 누르면 종료
                 option_escape_sound()

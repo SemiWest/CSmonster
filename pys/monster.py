@@ -1,3 +1,8 @@
+difficulty = 1  # 난이도 조정 (0: 쉬움, 1: 보통, 2: 어려움)
+def set_difficulty(difficulty_level):
+    global difficulty
+    difficulty = difficulty_level
+
 class Monster:
     def __init__(self, name, level=5, hpD=0, hpW=1, adD=0, adW=1, spD=0, spW=1, grade = "일반", description="", stage="기억할 수 없는 곳"):
         self.name = name
@@ -23,9 +28,11 @@ class Monster:
         self.Maxhp = int(self.hpD + self.level * self.hpW)
         self.nowhp = self.Maxhp  if self.nowhp > self.Maxhp else int(self.nowhp)
         self.max_exp = int((self.level ** 3))  # 경험치 필요량
-        self.drop_exp = int(self.level * 10)  # 드랍 경험치
+        self.drop_exp = int(self.level * 30-10*difficulty)  # 드랍 경험치
         self.ad = int(self.adD + self.level * self.adW)
+        self.normad = self.ad
         self.sp = int(self.spD + self.level * self.spW)
+        self.normsp = self.sp
 
     def update_fullhp(self):
         self.update()

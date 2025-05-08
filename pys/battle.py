@@ -111,8 +111,8 @@ def display_details(stdscr, target, x, case="몬스터"):
             "",
             "체력",
             "",
-            (("공격력", 0, 99), (f"{target.ad}", 11, 4)),
-            (("스피드", 0, 99), (f"{target.sp}", 11, 4)),
+            (("공격력", 0, 99), (f"{target.ad}", 11, 4), ("" if target.ad == target.normad else f"×{target.ad//target.normad}", 12+len(f"{target.ad}"), 1 if target.ad//target.normad > 10 else 2 if target.ad//target.normad > 5 else 99)),
+            (("스피드", 0, 99), (f"{target.sp}", 11, 4), ("" if target.sp == target.normsp else f"×{target.sp//target.normsp}", 12+len(f"{target.sp}"), 1 if target.sp//target.normsp > 10 else 2 if target.sp//target.normsp > 5 else 99)),
             "",
             (("등급", 0, 99), (f"{target.grade}", 11, 99 if target.grade == "일반" else 2 if target.grade == "중간 보스" else 1)),
             (("만난 곳", 0, 99), (f"스테이지 {target.stage}", 11, 4) if isinstance(target.stage, int) else (f"{target.stage}", 11, 4)),
@@ -246,6 +246,8 @@ def option_choice(stdscr, option_case, player, enemy, description=None, coloring
             option_select_sound()
             return current_index
         if key == ord('\b') or key == 27 or key == ord("q"):  # BACKSPACE 키를 누르면 취소
+            if option_case == "배틀옵션":
+                continue
             option_escape_sound()
             return -1
         elif len(options) == 1:  # 옵션이 하나일 경우
@@ -383,7 +385,9 @@ def use_skill(user, target, skill, counter_skill=None):
         if counter_skill is not None:
             if counter_skill.effect_type == "damage":
                 damage = counter_skill.damage(user, target)*skill.skW
-                target.nowhp = max(0, target.nowhp - damage)
+                target.nowhp = max(0, target.nowhp - damage)            
+                if damage > 10: Damage_strong()
+                elif damage > 0: Damage_weak()
                 if target.hpShield:
                     target.nowhp = target.Maxhp//2
                     target.hpShield = False
@@ -395,6 +399,8 @@ def use_skill(user, target, skill, counter_skill=None):
     if skill.effect_type == "damage":
         damage = skill.damage(target, user)
         target.nowhp = max(0, target.nowhp - damage)
+        if damage > 10: Damage_strong()
+        elif damage > 0: Damage_weak()
         if target.hpShield:
             target.nowhp = target.Maxhp//2
             target.hpShield = False
@@ -403,6 +409,8 @@ def use_skill(user, target, skill, counter_skill=None):
     # halve_hp 스킬 처리
     if skill.effect_type == "halve_hp":
         target.nowhp = max(0, target.nowhp // 2)
+        if target.nowhp > 10: Damage_strong()
+        elif target.nowhp > 0: Damage_weak()
         if target.hpShield:
             target.nowhp = target.Maxhp//2
             target.hpShield = False
@@ -411,6 +419,7 @@ def use_skill(user, target, skill, counter_skill=None):
     # heal 스킬 처리
     if skill.effect_type == "heal":
         heal_amount = int(skill.skW * user.Maxhp)
+        Heal()
         user.nowhp = min(user.Maxhp, user.nowhp + heal_amount)
         return False
 
@@ -557,7 +566,7 @@ def use_item(item, target):
     if item.effect == "heal":
         heal_amount = max(item.fixed, int(target.Maxhp * item.varied))
         target.nowhp = min(target.Maxhp, target.nowhp + heal_amount)
-    
+        Heal()
     elif item.effect == "buff":
         if item.buffto == "ad":
             target.ad *= item.varied
@@ -638,10 +647,19 @@ def catch_monster(stdscr, player, enemy):
     enemy.name = "monsterball"  # 포획 중에는 몬스터볼로 표시
     display_status(stdscr, player, enemy)  # 상태 출력
     addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을/를 포획 시도 중")
+    # 포획 성공 확률 계산 (체력이 낮을수록 성공 확률 증가)
+    # 플레이어 레벨
+    max_level = max(player.csMons, key=lambda x: x.level).level
+    catch_rate = max(1, 100 + max_level - enemy.level - int((enemy.nowhp / enemy.Maxhp) * 75))  # 최소 25%, 최대 100%
+    successes = [random.randint(1, 100)**(1/3) <= catch_rate**(1/3), 
+                 random.randint(1, 100)**(1/3) <= catch_rate**(1/3),  
+                 random.randint(1, 100)**(1/3) <= catch_rate**(1/3)]
+    
     # 몬스터볼 반짝거리는 연출
     for i in range(6):  # 6번 반복 (반짝거림 효과)
         time.sleep(0.3)  # 0.3초 대기
         if i % 2 == 0:
+            catching()
             blink_times = int(2**((6-i)/2))
             for j in range(blink_times):  # 몬스터볼이 반짝이는 효과
                 enemy.name = "noneoutput"  # 반짝이는 상태
@@ -654,6 +672,8 @@ def catch_monster(stdscr, player, enemy):
                 addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}을/를 포획 시도 중{'.'*(i//2+1)}")
                 stdscr.refresh()
                 time.sleep(0.3/blink_times)  # 몬스터볼이 반짝이는 효과
+            if successes[i//2] == False:
+                break
         else:
             enemy.name = "monsterball"  # 반짝이는 상태
             display_status(stdscr, player, enemy)
@@ -664,11 +684,10 @@ def catch_monster(stdscr, player, enemy):
         stdscr.refresh()
     time.sleep(0.5)  # 포획 시도 중 메시지 출력 후 대기
 
-    # 포획 성공 확률 계산 (체력이 낮을수록 성공 확률 증가)
-    catch_rate = 100 - int((enemy.nowhp / enemy.Maxhp) * 75)  # 최소 25%, 최대 100%
-    success = random.randint(1, 100) <= catch_rate
-
+    success = successes[0] and successes[1] and successes[2]  # 포획 성공 여부
+    
     if success:
+        caught()
         display_status(stdscr, player, enemy)
         addstr_with_korean_support(stdscr, 17, 0, f"  {enemy_normname}이/가 잡혔다!")
         curses.flushinp()
@@ -794,6 +813,8 @@ def exp_gain(stdscr, player, enemy):
     """경험치 획득"""
     # 현재 전산몬(nowCSmon)에 대한 처리 먼저 수행
     mymon = player.nowCSmon
+    max_level = max(player.csMons, key=lambda x: x.level).level
+    enemy.drop_exp = int(enemy.drop_exp * max(1, enemy.level-max_level))  # 적 경험치 조정
     if mymon.level == mymon.get_monster_max_level(battleturn):
         display_status(stdscr, player, enemy)
         addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}은/는 이미 레벨 제한에 도달했다.")
@@ -809,6 +830,7 @@ def exp_gain(stdscr, player, enemy):
         get_ch_with_sound(stdscr)
         if mymon.exp >= mymon.max_exp:
             if mymon.level < mymon.get_monster_max_level(battleturn):
+                Level_up()
                 mymon.level_up(battleturn)
                 display_status(stdscr, player, enemy)
                 addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}이/가 {mymon.level}레벨로 올랐다!")
@@ -833,6 +855,7 @@ def exp_gain(stdscr, player, enemy):
             if mymon.exp >= mymon.max_exp:
                 if mymon.level < mymon.get_monster_max_level(battleturn):
                     mymon.level_up(battleturn)
+                    Level_up()
                     display_status(stdscr, player, enemy)
                     addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}이/가 {mymon.level}레벨로 올랐다!")
                     get_ch_with_sound(stdscr)
@@ -858,6 +881,7 @@ def battle(player, enemy, turn, endturn):
         if turn == endturn:
             stdscr.clear()
             # 테두리
+            stop_music()
             addstr_with_korean_support(stdscr, 0, 0, "┌──────────────────────────────────────────────────────────────┐")
             addstr_with_korean_support(stdscr, 15, 0, "└──────────────────────────────────────────────────────────────┘")
             for i in range(1, 15):
@@ -875,7 +899,9 @@ def battle(player, enemy, turn, endturn):
 
             addstr_with_korean_support(stdscr, 17, 2, f"졸업 연구를 통해 그동안의 성과를 증명하자!")
             get_ch_with_sound(stdscr)
-            
+            for mymon in player.csMons:
+                mymon.update_fullhp()
+            play_music("../music/bossbattle.wav")
             
         def battle_logic(stdscr):
             curses.start_color()
@@ -888,6 +914,8 @@ def battle(player, enemy, turn, endturn):
             curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)  # 빨간색
             curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)  # 노란색
             curses.init_pair(6, curses.COLOR_MAGENTA, curses.COLOR_BLACK)  # 보라색
+            curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_CYAN)  # 엔딩 화면
+            curses.init_pair(8, curses.COLOR_RED, curses.COLOR_CYAN)  # 엔딩 화면2
             curses.init_pair(99, curses.COLOR_WHITE, curses.COLOR_BLACK)  # 흰색
             curses.curs_set(0)  # 커서를 숨김
             global hap_num
@@ -902,6 +930,8 @@ def battle(player, enemy, turn, endturn):
             while True:
                 curses.flushinp()  # 입력 버퍼 비우기
                 player.nowCSmon.participated = True  # 현재 전산몬 참여 표시
+                if player.nowCSmon.nowhp < player.nowCSmon.Maxhp*0.35:
+                    HP_low()
                 """ 행동 선택"""
                 action = select_action(stdscr, player, enemy)
                 # 스킬
@@ -933,10 +963,9 @@ def battle(player, enemy, turn, endturn):
                         continue
                     if enemy.grade == "중간 보스" and enemy.nowhp>enemy.Maxhp*0.5:
                         display_status(stdscr, player, enemy, detail=True)
-                        addstr_with_korean_support(stdscr, 17, 0, f"  체력이 절반 이상 남은 중간 보스는 포획할 수 없다!")
+                        addstr_with_korean_support(stdscr, 17, 0, f"  체력 보호막이 남은 중간보스는 포획할 수 없다!")
                         get_ch_with_sound(stdscr)
                         continue
-
                     res = catch_phase(stdscr, player, enemy)
                     if res:
                         return True
@@ -946,8 +975,6 @@ def battle(player, enemy, turn, endturn):
                     addstr_with_korean_support(stdscr, 17, 0, f"  도망쳤다!")
                     get_ch_with_sound(stdscr)
                     return False
-                elif action == -1:
-                    continue
                 
                 """종료여부 확인"""
                 # 적 생존 여부 확인
@@ -978,18 +1005,83 @@ def battle(player, enemy, turn, endturn):
         battle_result = battle_logic(stdscr)
         
         if turn == endturn:
+            stop_music()
+            stdscr.clear()
+            stdscr.refresh()
+            time.sleep(2)
             if enemy.grade == "보스":
                 player.gpa = f"{(4.3*(enemy.Maxhp-enemy.nowhp)/9999):.2f}"
+            gpa = float(player.gpa)
+            player.grade = "A+" if gpa >= 4.3 else "A" if gpa >= 4.0 else "A-" if gpa >= 3.7 else "B+" if gpa >= 3.3 else "B" if gpa >= 3.0 else "B-" if gpa >= 2.7 else "C+" if gpa >= 2.3 else "C" if gpa >= 2.0 else "C-" if gpa >= 1.7 else "D+" if gpa >= 1.3 else "D" if gpa >= 1.0 else "D-" if gpa >= 0.7 else "F"
+            if player.grade == "A+" or player.grade == "A" or player.grade == "A-":
+                color = 1
+            elif player.grade == "B+" or player.grade == "B" or player.grade == "B-":
+                color = 2
+            elif player.grade == "C+" or player.grade == "C" or player.grade == "C-":
+                color = 3
+            elif player.grade == "D+" or player.grade == "D" or player.grade == "D-":
+                color = 4
+            else:
+                color = 5
+
+            def center_print(text):
+                toprint = text
+                lentoprint = 0
+                for i, char in enumerate(text):
+                    lentoprint += 1
+                    if unicodedata.east_asian_width(char) in ['F', 'W']:
+                        lentoprint += 1
+                addstr_with_korean_support(stdscr, 14, 60-lentoprint//2, toprint)
+                return lentoprint
+            
+            center_print(f"졸업 연구가 끝났다.")
+            get_ch_with_sound(stdscr)
+
+            play_music("../music/ending.wav")
+            stdscr.clear()
+            center_print(f"{player.name}은/는 최종 학점 {player.gpa}로 졸업했다.")
+            get_ch_with_sound(stdscr)
+
+            stdscr.clear()
+            xx = center_print(f"{player.name}의 최종 성적: {player.grade}")
+            addstr_with_korean_support(stdscr, 14, 61+xx//2-len(f"{player.grade}"), player.grade, curses.color_pair(color))
+            get_ch_with_sound(stdscr)
+
+            stdscr.clear()
+            picture = "⡨⠢⡑⢌⠆⡕⢌⠆⡕⢌⠢⡑⡐⢅⠢⠡⢂⢂⠢⢂⠅⡢⢂⢂⢂⠢⡂⢆⢂⢂⠄⢐⠠⠑⠄⠕⢌⠢⡑⢔⠡⠂⡂⠄⠠⠄⠄⠠⠠⠄⢂⠠⠄⡂⡐⢐⢐⢐⢅⠂⢆⢂⠪⢐⠐⢅⢂⠪⠐⢌⢂⠪⡐⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑\n⠜⢌⠌⡆⠕⡌⡢⢱⠨⠢⡑⢌⢂⠢⠡⢑⢐⠐⠅⡢⢑⠨⡂⡢⢡⢑⢌⠢⡑⡐⢅⠢⡂⢅⢅⠣⡡⡑⢌⢂⠂⢅⢀⠂⠠⠁⠌⠄⠅⠨⠄⠄⢂⠂⡂⣔⣦⡽⠖⠅⢅⠂⢅⠢⢑⢐⠐⠅⠅⢕⠠⡑⠄⢕⠨⡨⢂⠕⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑⢜⠨⡨⢌\n⢊⢪⢨⢘⢌⠢⡑⡑⡌⡪⢐⠅⡂⡊⢌⠐⠄⢅⢑⢐⠅⡪⡐⡌⢆⢕⠰⡡⠣⡑⢅⠕⡌⠆⡆⢕⠰⡨⢂⠢⡑⡐⠄⠅⠅⢅⠅⡅⠅⠅⠅⡊⡐⡨⢐⠜⢕⠨⢊⠌⡢⠡⡑⠨⡐⠄⢅⠅⠕⡐⡁⡂⡑⠄⢕⠨⡂⢅⠅⢕⠨⡂⠕⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢\n⡡⡱⡐⢕⢐⠅⢕⠡⡂⡪⢐⠅⡢⠨⢐⠨⡈⡢⢑⠔⡑⢔⢌⢌⠆⢆⠣⡊⡪⡘⢔⠱⡘⡌⡌⡢⡑⢌⠢⡑⢌⠢⡑⠅⢕⠡⠪⡐⢅⠣⡑⡐⢅⠌⣲⣅⠕⡨⠐⢌⢐⠡⢂⠅⡂⢅⢑⠨⠨⢐⢐⠐⠌⢌⠂⢅⠪⡐⠅⢕⠨⡂⢕⠡⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑⢌⠢⡑\n⢔⢑⢌⢢⠡⡑⢅⠕⡨⢂⢑⠌⡐⠡⢂⢂⢂⢊⠢⡑⢌⠆⢆⠕⢌⠢⡱⢨⠢⡑⡅⡣⡑⡌⡢⡑⢌⠆⡃⣊⠢⡑⢌⢊⢢⢑⠕⢌⢢⠱⡨⡨⢂⣿⣿⣿⢈⠢⠡⠡⡂⠌⡂⢌⢐⠐⠄⢅⢑⠐⠄⢅⢑⢐⢅⢑⠌⡢⠡⡑⡐⢌⢐⠌⡢⢑⢌⢐⠅⡪⢐⠅⠪⡐⢅⠪⠨⠢⡑⢌\n⢊⢆⠕⠔⡅⢕⢑⠌⡢⢑⠄⢕⠨⠨⢐⢐⠐⢅⠕⢌⠆⡣⡑⢌⠆⠕⢌⠢⡑⡑⢌⢢⠱⡨⠢⡑⢅⠥⡑⢔⢑⠌⢆⢕⢑⢌⢪⢘⢔⢑⠔⢬⣾⣿⣷⠟⠄⠅⢅⢑⠄⢅⢂⢂⠢⠡⡁⡂⠢⠡⡑⡰⢐⠅⡂⡢⢑⢈⢂⠢⠨⡐⡐⢌⠐⢅⢂⠢⢑⠨⡐⠌⡊⠔⡐⠅⢕⠑⢌⠢\n⡱⠰⡑⠕⡌⡢⠢⡑⠌⡂⢕⠐⢌⢐⠐⠄⠅⠕⢌⠢⡑⢔⠸⡐⢕⠩⡢⡑⠔⢌⠢⡡⢱⠨⢪⠨⡢⡑⢌⠆⡅⡣⡱⡐⢕⢌⢢⢑⠔⢅⢕⣿⡿⣯⣿⠨⡊⢌⠢⢂⠪⢐⢐⢐⠨⢐⠐⠌⢌⠪⡐⢌⣦⡵⣈⠢⡁⡂⡢⢑⢑⢐⠌⠄⢅⠑⠄⠅⠅⡊⠔⡡⠨⡂⠪⠨⡂⢅⠕⡨\n⠜⡌⡪⡘⡐⢌⠪⡐⢅⠪⠠⡑⡐⡐⠨⡈⡪⢘⠄⠕⢌⠢⡃⡪⡂⢇⠢⠪⡘⢔⢑⠌⢆⠣⡡⠱⡐⢜⢐⠕⢌⢆⠪⡨⠢⡊⡢⡡⡑⡑⣾⣿⢿⠟⢅⠕⡈⡂⠅⠅⡊⠔⡐⡐⠌⠄⠅⡑⡐⣅⣺⣿⣿⣷⡢⡁⡂⠢⠨⢐⠐⠅⠌⢌⢐⠨⠨⡈⠢⡈⡂⠪⡐⠌⢌⠪⡐⠅⡊⠔\n⢊⢆⢊⠢⡡⡑⠨⡐⡐⠡⡑⡐⡐⢄⢑⢐⠌⡢⢡⣷⣷⣳⣾⣶⣎⠢⠣⡑⢌⠢⡡⡑⢅⢕⢘⢌⢊⢢⢑⢅⠣⡂⡣⠪⠨⡂⡊⡢⡑⡑⢝⠕⣂⠣⡑⢌⠐⠌⠌⡂⠌⡂⢂⠂⠅⡊⡐⡐⣾⢿⣟⣿⣾⣿⣇⠂⠌⠌⡨⠠⠡⠡⢑⢐⢐⢈⠢⡈⡂⢆⢊⢌⣦⡕⢅⠊⢔⠡⢊⠌\n⡱⡐⢅⢕⠰⡈⡂⡢⢈⢂⢂⢂⢂⢂⠢⢑⠨⣶⣿⣿⣟⣿⣟⣿⣿⠨⡑⢌⠢⡑⢔⠅⡕⡰⢑⢌⢊⠆⡕⢔⢑⠌⡢⠑⢅⠢⢑⠰⡨⡊⡢⡑⢔⢑⢌⠐⠌⠌⡐⠄⠅⢂⢂⠡⢁⢂⢂⠢⣿⣿⣿⢿⣻⣾⣿⡌⠌⡐⠄⠅⡊⠌⡐⡐⡐⡐⢅⠢⢊⠔⠠⣽⡟⡳⡑⢌⢂⠪⡐⠅\n⠰⡨⡂⢆⠕⡐⢔⠨⢐⢐⢐⢐⠐⠄⡑⠄⣿⣟⣯⣷⣿⣿⣟⣿⣟⡇⡪⢐⢑⠌⢆⠕⢌⢌⠆⢕⢌⢊⢢⢑⠔⡑⠌⠌⡂⢌⠢⡑⠔⢌⠢⡊⡢⡑⢄⠅⠅⠅⡂⠅⡊⢐⠠⢊⠔⡐⠄⠅⣿⣿⣾⣿⣿⣿⣻⢁⠂⡂⠅⡂⢂⠅⡂⡢⢑⠌⡂⡑⠄⠅⢅⠭⢑⠌⢌⢂⠢⡑⡐⢅\n⠨⡂⠪⡐⡑⢌⢂⠪⢐⢐⣠⣦⣾⣶⣶⢁⣿⣿⡿⣿⣿⣽⣿⣟⡟⡐⠌⡢⠡⡑⡑⢌⢢⠡⡑⡑⠔⡅⢕⠔⢅⠊⠌⡂⡂⡂⡂⡪⠨⡂⠕⢌⠢⡊⡢⠡⠡⡁⡂⠅⡐⠄⡑⡐⢅⠢⠡⠡⡙⢿⣯⣿⣿⣾⣿⠔⠨⢐⠐⢄⢑⠌⢔⢨⣦⣬⣴⣬⣬⣈⠢⡊⠔⡨⢂⠪⡐⢌⠢⠡\n⢈⢂⠑⠌⢌⠢⡑⠌⣂⣶⣟⣿⣯⣿⣿⠠⢸⣿⡿⣿⣯⣿⣾⠏⡲⣿⣇⢊⠌⠢⠡⡑⢔⠡⡡⡑⢕⢘⢔⢑⠅⢕⣡⣦⣦⡂⠪⡐⠅⢌⠌⡂⡑⡐⢌⠪⡈⡂⡂⠅⡂⠅⠢⡈⡂⠅⢅⢑⢐⢐⠨⠩⡘⠫⡐⠌⡪⠐⢅⢑⠄⠕⠄⠕⢿⣿⢿⣿⢿⣿⣷⣔⠡⠨⡂⢅⠢⡑⠌⢌\n⢐⠠⠡⠑⢄⢑⢐⢥⣿⣷⣿⣿⣻⣽⡿⡈⡢⡑⢍⠪⠨⡉⡢⢁⠂⠇⡂⠂⠅⠅⠕⡈⡢⢑⠌⢜⢐⢑⢐⠅⣅⣽⣿⣟⣿⡿⠨⢐⠡⢑⠨⡐⠌⠌⡂⠕⡐⠌⠢⡑⠨⡈⡂⢂⠂⡑⡐⡐⡐⠄⠡⠡⢈⠂⡂⠅⠂⠅⡂⠂⠌⡐⠡⢁⢿⣿⡿⣿⡿⣿⣾⣿⣷⡑⠄⢕⠐⠌⠌⡂\n⠐⠄⠅⠌⠔⡐⡡⣿⣿⣽⣾⣿⢿⠫⠨⡂⡢⢊⠔⡡⢑⠌⡐⠄⠅⠡⠄⠅⡁⠅⠅⡂⡊⡢⡑⢅⠪⢐⠡⢪⣾⣿⣯⣿⣿⡇⠌⡂⠌⡐⡐⠠⢁⢂⠢⢑⠨⡈⡂⠌⡐⠄⢂⠂⢂⠂⡂⡢⢂⠅⠅⠌⠄⢂⠐⡈⠄⠡⡠⢡⠁⠄⡑⢐⠠⢛⢿⣿⡿⣿⣯⣷⣿⣿⠌⡂⠅⠅⠕⠨\n⠨⢊⠌⠌⢌⢐⢘⠟⢏⢛⢙⠍⣆⢅⢃⠆⡪⢐⠡⢊⠔⠡⡂⠅⠌⠠⠁⡂⢐⠨⠐⢌⠢⡂⠪⢐⠨⠠⡑⣽⣿⣿⣽⣿⣾⠇⠅⡂⠅⡂⡐⠡⡂⠢⡑⠄⢅⠂⡂⠡⠐⡈⠄⠨⠄⢌⠐⠌⢔⠨⠂⠅⢌⢐⠨⠐⡈⠢⣱⢱⠈⡐⡀⡂⠌⡐⡐⡉⠫⢛⠡⢑⠡⢁⢂⢂⠅⠅⠅⠅\n⠨⠐⡈⠌⠄⢂⠢⡈⡂⡢⢂⢊⠝⡳⠞⢌⠢⡁⡪⢐⠨⢐⠠⠑⡈⠄⠡⠐⡐⡈⠌⡐⠌⠌⢌⢐⠨⠐⣐⣿⣿⣾⣿⣯⠟⡈⡂⡂⢅⠢⠨⠨⡂⠕⡐⡑⠄⠅⢂⠁⣑⢆⠨⡀⠅⠂⠌⠌⡐⡨⠨⠨⡐⠐⡈⢐⠠⠡⢱⡳⡐⡐⠠⠂⠅⡂⠢⠨⢈⢐⠈⠄⠨⢐⠠⡑⠨⠨⠨⠨\n⠄⠅⢐⠠⡁⡂⡂⡂⡪⢐⠡⡂⢕⠨⡨⠢⡱⡐⢌⠔⡨⢐⠠⢁⠂⠌⢌⢐⢐⠠⠂⡂⠡⢁⢂⠂⢌⠐⠌⡋⠷⠟⡁⡂⠔⡐⡐⠌⡐⠨⠨⡈⡂⠅⡂⠂⠌⡐⠠⢂⢸⡪⡐⡐⢈⠌⠌⡂⠢⠨⡈⡂⡂⠡⠐⡀⠂⠌⡐⡵⡱⡨⡌⠨⠐⡀⠅⠨⢀⠂⢌⠨⢈⢒⢜⠄⠅⡊⠌⠌\n⠄⠅⡀⢂⡇⡢⢂⠢⠨⡂⢅⠪⠠⡑⢌⢸⢜⢞⠰⡡⢂⠢⠨⢐⠨⡈⡂⢂⠐⡀⠡⠐⠈⠄⡂⠌⡂⢅⢑⠨⠨⠸⡀⡂⠅⡂⢂⠅⠌⢌⠌⢔⢆⠡⡐⠡⢁⠂⠅⠢⢸⡪⡐⢐⠐⠨⢐⠨⡈⡂⡂⡐⠄⠅⡂⠄⠅⢥⣶⣗⢮⠪⢂⢁⢂⠐⡈⠌⡐⢈⠄⠂⡂⢌⣾⡮⢐⠠⠡⠡\n⠠⢁⢐⡲⣕⠆⡑⠌⡂⡪⠐⠌⢌⢂⢂⢪⡳⡍⠍⡂⠅⠌⢌⠐⢌⢐⠐⡀⠂⡀⢂⠈⠌⡐⠐⡅⡂⡂⡂⠅⠅⣅⢂⠄⠅⢂⠂⠌⠌⡂⠌⣸⢐⢘⠠⢁⠂⠌⡈⠌⢸⣮⣐⠠⠈⠌⡐⢐⠐⡐⠠⠂⠅⡡⠠⠡⢈⣾⣿⣮⣗⠅⠂⡀⢂⠐⡐⢐⠄⡂⠨⠐⣼⣯⣿⣻⡔⠠⠡⢈\n⠈⢄⢂⠏⡂⠌⡐⠡⢂⠊⠌⠌⡂⢂⠂⣮⡮⣦⣅⢂⠡⠨⠠⢑⢐⠐⠐⡀⠡⠄⡂⠌⡐⠄⠅⡯⡂⢔⠠⢁⢪⢿⡔⠈⠌⡐⠨⡈⡂⡂⡥⣼⣢⠔⢁⢐⠠⠁⡐⠈⣸⣿⡾⣕⣌⡐⡐⢐⠐⡈⠨⢈⠐⡀⠂⣦⣿⣿⣾⣻⣿⣄⠂⢂⠐⡀⢂⠂⠌⠂⣵⡽⣮⢷⣻⣽⣽⠠⡁⠢\n⢐⡐⡜⠄⢂⠡⠈⠌⠄⠅⡡⠁⠔⡀⢪⣿⣿⣿⣿⣆⠄⠡⢈⢤⠰⣈⠠⠐⢀⠡⠐⡀⠂⠌⠠⣹⡪⠂⠌⡀⡾⣽⣿⢌⠐⠨⢐⠐⠔⣨⣻⣳⡗⠨⠠⠐⠄⢂⠄⡂⢸⣿⣟⣷⣻⣿⢾⡄⢂⠐⣈⠠⠐⠄⡁⣿⣿⣷⣿⣿⣽⣿⣎⢄⠢⠬⢦⡂⠅⡡⣿⢯⣿⣟⣯⣿⣽⡐⠨⡈\n⣿⣿⢿⣔⡀⢂⠁⠅⠨⠐⡀⠅⠂⠄⣽⣿⣿⣿⣿⣿⡀⠌⡌⢤⣇⠠⢣⡂⠄⠂⠐⡀⠡⢈⠐⣷⢕⡁⢂⠠⠈⠛⠩⠁⠌⠨⠄⠌⢄⣗⣗⣿⣿⣐⠐⡈⢀⠂⠠⠐⠈⢿⣿⣽⡽⣟⣿⣟⠊⢄⣄⠝⢆⠁⠄⣿⣿⣾⣿⣿⣯⣿⣿⢧⠡⡭⡆⠪⣷⡐⢻⣿⢷⣿⣟⣯⣿⡎⡐⢐\n⣿⣽⡿⡟⢒⠠⠈⠠⠁⢂⠄⢂⠁⢄⣿⣽⣾⣿⣿⣿⡃⣼⡦⡖⡔⣬⡺⠣⠐⠈⠠⠐⠄⢂⣞⡯⣗⣧⢥⠚⡑⢈⠄⡁⠄⢩⠂⣅⢾⣺⣾⣻⣿⣿⣷⠄⡖⡔⠄⠂⠁⢿⣿⢿⣟⣿⣿⡳⢅⢪⢨⢀⢊⠂⡂⣿⣾⣿⣿⣾⣿⣿⣿⣿⣵⢲⢒⠡⠑⠄⠩⣿⣟⣯⣿⣿⢿⡧⠐⠠\n⣿⣯⣿⠠⠲⣑⠈⠠⠈⡀⠐⢀⠐⢿⢿⣿⣿⣿⣿⣿⠈⠉⠉⠉⠈⠘⠙⠉⠂⢁⠐⢈⣖⣷⢵⣟⡽⣪⢿⣻⣶⣶⠛⠚⢍⢎⣪⣾⣿⣿⣾⣯⣿⣿⣿⢉⡢⡸⣞⢴⡱⡪⡿⣿⣿⢿⡝⠈⡀⠈⢀⠁⠁⠁⣖⣿⣿⣿⣿⣿⣽⣿⣷⠁⡉⠁⢀⢐⠠⣑⣵⣿⣿⣟⣿⣟⢋⠡⢈⠐\n⣿⣟⠷⠙⠹⣼⠔⠄⠂⢀⠈⢀⠄⡈⢿⣯⣷⣿⣿⣮⣐⠄⡂⠡⠂⠄⢦⣷⣧⣀⠂⣺⣽⣿⣗⣗⣯⣞⣵⣽⣾⠿⢀⠠⠄⣅⠑⣿⣷⣿⣿⡷⣿⣿⡟⠈⠺⠽⠸⡱⡓⢳⢯⢿⣿⣿⡳⢅⠢⡑⡔⠆⡐⡨⠩⡻⣿⣯⣷⣿⣿⡿⣿⣔⢔⢅⢂⢢⢱⣻⣿⣿⣿⣟⣿⠃⡀⡂⢂⠈\n"
+            x, y = 10, 1
+            for i, str in enumerate(picture):
+                if str == "\n":
+                    y += 1
+                    x = 10
+                    continue
+                stdscr.addstr(y, x, str, curses.color_pair(7))
+                x += 1
+                
+            picture2 = "         ⣀⣀⣰⣆⣀⣀    ⣤⣤⣤⣤⣤⣤⡄ ⣠⣤⣤⣄ ⢠⡄   ⣀⣀⣀⣦⣀⣀⡀         \n         ⣠⠟⠁ ⠹⢆    ⠰⠏ ⡄⠈⠷  ⣯  ⣹⠒⢺⡇   ⢠⡞⠁ ⠙⢦⡀         \n        ⠐⠒⠒⢲⡖⠒⠒⠒  ⠘⣛⣛⣛⣛⣛⣛⡛ ⣉⠛⠛⠉ ⢘⡃  ⠐⠒⠒⠒⡶⠒⠒⠒         \n         ⠛⠛⠛⠛⠛⢻    ⣶⠶⠶⠶⠶⠾⠇ ⣺⠒⠒⠒⠒⢺⡇   ⠛⠛⠛⠛⠛⢻⡇         \n              ⠈    ⠉⠉⠉⠉⠉⠉⠁ ⠈⠉⠉⠉⠉⠉         ⠈⠁         "
+            x=34
+            y=1
+            for i, str in enumerate(picture2):
+                if str == "\n":
+                    y += 1
+                    x = 34
+                    continue
+                stdscr.addstr(y, x, str, curses.color_pair(8))
+                x += 1
+            get_ch_with_sound(stdscr)
+
             return hap_num
         # 전투 결과에 따라 승리 또는 패배 처리
         elif battle_result:
             # 전투에서 승리한 경우
             display_status(stdscr, player, enemy)
+            Battle_win()
             addstr_with_korean_support(stdscr, 17, 0, f"  승리했다!")
             get_ch_with_sound(stdscr)
 
             # 아이템 드랍
             drop_item(stdscr, player, enemy)
+
             # 경험치 획득
             exp_gain(stdscr, player, enemy)
             for mymon in player.csMons:    
@@ -1002,16 +1094,17 @@ def battle(player, enemy, turn, endturn):
                 get_ch_with_sound(stdscr)
                 display_status(stdscr, player, enemy)
                 addstr_with_korean_support(stdscr, 17, 0, f"  공부에 노하우가 생겼다! 경험치 획득량이 60% 증가했다.")
-                player.knowhow += 60
+                player.knowhow *= 1.60
                 get_ch_with_sound(stdscr)
             if turn % 10 == 0:
                 display_status(stdscr, player, enemy)
                 addstr_with_korean_support(stdscr, 17, 0, f"  영어 강의에 익숙해졌다! 전투에 참여하지 않은 전산몬도 경험치를 20% 추가 획득한다.")
-                player.concentration += 20
+                player.concentration *= 1.20
                 get_ch_with_sound(stdscr)
         else:
             # 전투에서 패배한 경우
             if player.gameover():
+                stop_music()
                 display_status(stdscr, player, enemy)
                 addstr_with_korean_support(stdscr, 17, 0, f"  눈 앞이 깜깜해졌다...")
                 get_ch_with_sound(stdscr)
