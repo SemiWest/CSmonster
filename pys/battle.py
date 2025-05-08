@@ -388,7 +388,7 @@ def use_skill(user, target, skill, counter_skill=None):
                 target.nowhp = max(0, target.nowhp - damage)            
                 if damage > 10: Damage_strong()
                 elif damage > 0: Damage_weak()
-                if target.hpShield:
+                if target.hpShield and target.nowhp<=target.Maxhp//2:
                     target.nowhp = target.Maxhp//2
                     target.hpShield = False
                 return True
@@ -401,7 +401,7 @@ def use_skill(user, target, skill, counter_skill=None):
         target.nowhp = max(0, target.nowhp - damage)
         if damage > 10: Damage_strong()
         elif damage > 0: Damage_weak()
-        if target.hpShield:
+        if target.hpShield and target.nowhp<=target.Maxhp//2:
             target.nowhp = target.Maxhp//2
             target.hpShield = False
         return False
@@ -411,7 +411,7 @@ def use_skill(user, target, skill, counter_skill=None):
         target.nowhp = max(0, target.nowhp // 2)
         if target.nowhp > 10: Damage_strong()
         elif target.nowhp > 0: Damage_weak()
-        if target.hpShield:
+        if target.hpShield and target.nowhp<=target.Maxhp//2:
             target.nowhp = target.Maxhp//2
             target.hpShield = False
         return False
@@ -813,6 +813,8 @@ def exp_gain(stdscr, player, enemy):
     """경험치 획득"""
     # 현재 전산몬(nowCSmon)에 대한 처리 먼저 수행
     mymon = player.nowCSmon
+    if mymon.name == "빈 슬롯":
+        return
     max_level = max(player.csMons, key=lambda x: x.level).level
     enemy.drop_exp = int(enemy.drop_exp * max(1, enemy.level-max_level))  # 적 경험치 조정
     if mymon.level == mymon.get_monster_max_level(battleturn):
@@ -843,9 +845,6 @@ def exp_gain(stdscr, player, enemy):
         if mymon == player.nowCSmon:  # 이미 처리한 nowCSmon은 건너뜀
             continue
         if mymon.level == mymon.get_monster_max_level(battleturn):
-            display_status(stdscr, player, enemy)
-            addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}은/는 이미 레벨 제한에 도달했다.")
-            get_ch_with_sound(stdscr)
             continue
         if mymon.is_alive():
             if mymon.participated == False:  # 전투에 참여하지 않은 경우
@@ -1044,7 +1043,7 @@ def battle(player, enemy, turn, endturn):
 
             stdscr.clear()
             xx = center_print(f"{player.name}의 최종 성적: {player.grade}")
-            addstr_with_korean_support(stdscr, 14, 61+xx//2-len(f"{player.grade}"), player.grade, curses.color_pair(color))
+            addstr_with_korean_support(stdscr, 14, 60-xx//2+xx-len(f"{player.grade}"), f"{ player.grade}", curses.color_pair(color))
             get_ch_with_sound(stdscr)
 
             stdscr.clear()

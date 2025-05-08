@@ -66,7 +66,7 @@ def save_game_log_csv(filename, player, turn, totalhap):
         
         writer.writerow(row)
 
-def limited_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True, endturn = 100):
+def limited_turn_mode(turn, totalhap, Me, endturn = 100):
     # 배경음악 재생 시작
     play_music(["../music/Im_a_kaist_nonmelody.wav", "../music/Im_a_kaist_melody.wav"])
     while turn <= endturn:
@@ -127,6 +127,7 @@ def limited_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True, endtur
         print("클리어")
         print("\n졸업 GPA: ", Me.gpa, "졸업 성적: ", Me.grade)
     else:
+        Lose()
         print("제적당하고 말았다...")           
         print("\n최종 스테이지:", turn)
     print("총 전투 횟수:", totalhap)
@@ -192,7 +193,7 @@ while True:
         
         Me.nowCSmon = Me.csMons[0]
         clear_screen()
-        limited_turn_mode(turn, totalhap, Me, music_volume, music_on, 2)
+        limited_turn_mode(turn, totalhap, Me, 30)
     elif start == "기록 보기":
         clear_screen()
         # 절대 경로 생성

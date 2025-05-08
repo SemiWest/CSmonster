@@ -151,3 +151,6 @@ def Battle_win():
 
 def game_started():
     play_effect("../sound/Game_start.mp3")
+
+def Lose():
+    play_effect("../sound/Lose.mp3")

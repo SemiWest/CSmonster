@@ -72,7 +72,7 @@ def main_menu():
             if main_menu_reload:
                 main_menu_animation()
                 main_menu_reload = False
-                time.sleep(1)
+                time.sleep(2.5)
             if musicOnOff:
                 if pygame.mixer.music.get_busy() == 0:
                     play_music("../music/menu.wav")
