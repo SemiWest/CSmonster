@@ -1,11 +1,4 @@
-import subprocess
-import sys
-try:
-    import curses
-except ImportError:    
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "windows-curses"])
-    import curses
-import unicodedata
+from playsound import *
 from player import *
 
 def addstr_with_korean_support(stdscr, y, x, text, attr=0):
@@ -72,16 +65,22 @@ def main_menu():
             stdscr.refresh()
             key = stdscr.getch()
             if key == ord('\n'):  # Enter 키를 누르면 선택 완료
+                option_select_sound()
                 return options[current_index]
-            elif key == ord('\b'):  # 'q' 키를 누르면 종료
+            elif key == ord('\b') or key == 27 or key == ord("q"):  # 'q' 키를 누르면 종료
+                option_escape_sound()
                 return False
             elif key == curses.KEY_UP and (current_index > 1 and current_index < len(options)):
+                option_change_sound()
                 current_index -= 2
             elif key == curses.KEY_DOWN and (current_index >= 0 and current_index < len(options) - 2):
+                option_change_sound()
                 current_index += 2
             elif key == curses.KEY_LEFT and (current_index % 2 == 1 and current_index < len(options) and current_index >= 0):
+                option_change_sound()
                 current_index -= 1
             elif key == curses.KEY_RIGHT and (current_index % 2 == 0 and current_index < len(options) and current_index >= 0 and current_index != len(options) - 1):
+                option_change_sound()
                 current_index += 1
 
     return curses.wrapper(menu_logic)

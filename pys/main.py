@@ -1,26 +1,22 @@
 from battle import *
 from player import *
-from monster import *
-from items import *
 from game_menu import *
 import option
-import random
-import copy
-import os
 import csv
-import sys
-import threading
-try:
-    import pygame
-except ImportError:
-    os.system(f"{sys.executable} -m pip install pygame")
-    import pygame
 
 Me = player()
 music_volume = 50
 music_on = True
-# 전역 변수로 종료 플래그 선언
-music_thread_running = False
+ESVolume = 50
+effectsound = True
+
+def initialize_channels():
+    """음악과 효과음을 위한 채널 초기화"""
+    global music_channel, effect_channel
+    pygame.mixer.init()
+    music_channel = pygame.mixer.Channel(0)  # 채널 0: 음악
+    effect_channel = pygame.mixer.Channel(1)  # 채널 1: 효과음
+
 # 현재 작업 디렉터리를 Python 파일이 위치한 디렉터리로 설정
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
  
@@ -69,39 +65,6 @@ def save_game_log_csv(filename, player, turn, totalhap):
         
         writer.writerow(row)
 
-def play_alternating_music(file_list):
-    """두 개 이상의 배경음악을 끊김 없이 번갈아가며 재생"""
-    global music_thread_running
-    music_thread_running = True
-
-    def music_loop():
-        nowfile = 0
-        try:
-            # 첫 번째 음악 로드 및 재생
-            pygame.mixer.music.load(file_list[nowfile])
-            pygame.mixer.music.play()
-
-            while music_thread_running:
-                # 현재 음악이 끝날 때까지 대기
-                while pygame.mixer.music.get_busy() and music_thread_running:
-                    pygame.time.Clock().tick(10)  # 10 FPS로 상태 확인
-
-                # 다음 음악 파일을 대기열에 추가
-                nowfile = (nowfile + 1) % len(file_list)
-                pygame.mixer.music.queue(file_list[nowfile])
-        except Exception as e:
-            print(f"음악 재생 중 오류 발생: {e}")
-
-    # 스레드로 실행
-    music_thread = threading.Thread(target=music_loop, daemon=True)
-    music_thread.start()
-
-def stop_music():
-    """배경음악 정지"""
-    global music_thread_running
-    music_thread_running = False
-    pygame.mixer.music.stop()
-
 def limited_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True, endturn = 100):
     # 배경음악 재생 시작
     if music_on:
@@ -110,7 +73,6 @@ def limited_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True, endtur
         music1 = os.path.join(base_dir, "..\music\Im_a_kaist_nonmelody.wav")
         music2 = os.path.join(base_dir, "..\music\Im_a_kaist_melody.wav")
         # pygame 초기화
-        pygame.mixer.init()
         pygame.mixer.music.set_volume(music_volume/100)  # 볼륨 설정 (0.0 ~ 1.0)
         play_alternating_music((music1, music2))
 
@@ -149,9 +111,10 @@ def limited_turn_mode(turn, totalhap, Me, music_volume=50, music_on=True, endtur
             break
         turn += 1
     
-    if music_on:
+    if music_on and pygame.mixer.music.get_busy():
         stop_music()
-    clear_screen()    
+    clear_screen()
+    sys.stdin.flush()    
     print("결과\n")
     if turn >endturn:
         print("클리어")
@@ -176,8 +139,12 @@ os.system(f"title 전산몬스터")
 print("F11키를 눌러 전체화면으로 전환해주세요.")
 print("폰트 설정: D2coding, 폰트 크기: 36")
 input("아무 키나 눌러 시작")
+
+initialize_channels()
+change_options(effectsound, ESVolume, effect_channel, music_channel)
 while True:
     clear_screen()
+    sys.stdin.flush()
     start = main_menu()
     if start == "졸업 모드":
         turn = 0
@@ -245,7 +212,8 @@ while True:
         input("아무 키나 눌러 종료")
         clear_screen()
     elif start == "환경 설정":
-        music_volume, music_on = option.set(music_volume, music_on)
+        music_volume, music_on, effectsound, ESVolume = option.set(music_volume, music_on, effectsound, ESVolume)
+        change_options(effectsound, ESVolume, effect_channel, music_channel)
         clear_screen()
     elif start == " 제작자  ":
         clear_screen()
