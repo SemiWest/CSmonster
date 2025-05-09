@@ -28,7 +28,7 @@ class Monster:
         self.Maxhp = int(self.hpD + self.level * self.hpW)
         self.nowhp = self.Maxhp  if self.nowhp > self.Maxhp else int(self.nowhp)
         self.max_exp = int((self.level ** 3))  # 경험치 필요량
-        self.drop_exp = int(self.level * 30-10*difficulty)  # 드랍 경험치
+        self.drop_exp = int(self.level * (30-10*difficulty))  # 드랍 경험치
         self.ad = int(self.adD + self.level * self.adW)
         self.normad = self.ad
         self.sp = int(self.spD + self.level * self.spW)

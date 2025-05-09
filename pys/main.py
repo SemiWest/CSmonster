@@ -42,7 +42,7 @@ def save_game_log_csv(filename, player, turn, totalhap):
         
         # 파일이 없을 경우 헤더 작성
         if not file_exists:
-            header = ["플레이어 이름", "클리어 여부", "졸업 GPA/최종 스테이지", "총 전투 횟수"]
+            header = ["플레이어 이름", "플레이 난이도", "클리어 여부", "졸업 GPA/최종 스테이지", "총 전투 횟수"]
             for i in range(len(player.csMons)):
                 header.append(f"전산몬{i+1}")
                 header.append(f"전산몬{i+1} 레벨")
@@ -50,9 +50,10 @@ def save_game_log_csv(filename, player, turn, totalhap):
             writer.writerow(header)
         
         # 플레이어 데이터 작성
+        diff = "이지" if difficulty == 0 else "노말" if difficulty == 1 else "하드"
         clear_status = "클리어" if turn > 30 else "제적"
         gpa_or_stage = player.gpa if turn > 30 else turn
-        row = [player.name, clear_status, gpa_or_stage, totalhap]
+        row = [player.name, diff, clear_status, gpa_or_stage, totalhap]
         
         for mymon in player.csMons:
             if mymon.name != "빈 슬롯":
@@ -211,10 +212,10 @@ while True:
             reader = csv.reader(file)
             clear_count = 1
             for row in reader:
-                if row[1] == "클리어":
-                    print(f"{clear_count}. {row[0]}\n    졸업 GPA {row[2]}")
+                if row[2] == "클리어":
+                    print(f"{clear_count}. {row[0]}\n    플레이 난이도 {row[1]}|졸업 GPA {row[3]}|총 전투 횟수 {row[4]}")
                     print("    잡은 전산몬스터")
-                    for i in range(4, len(row), 3):
+                    for i in range(5, len(row), 3):
                         if row[i] != "빈 슬롯":
                             print(f"       {row[i].ljust(13-len(row[i]))}lv {row[i+1].ljust(3)}  잡은 스테이지: {row[i+2]}")
                     print()
