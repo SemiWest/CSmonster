@@ -813,8 +813,6 @@ def exp_gain(stdscr, player, enemy):
     """경험치 획득"""
     # 현재 전산몬(nowCSmon)에 대한 처리 먼저 수행
     mymon = player.nowCSmon
-    if mymon.name == "빈 슬롯":
-        return
     max_level = max(player.csMons, key=lambda x: x.level).level
     enemy.drop_exp = int(enemy.drop_exp * max(1, enemy.level-max_level))  # 적 경험치 조정
     if mymon.level == mymon.get_monster_max_level(battleturn):
@@ -839,12 +837,13 @@ def exp_gain(stdscr, player, enemy):
                 get_ch_with_sound(stdscr)
             else:
                 mymon.exp = 0
-
     # 나머지 전산몬에 대한 처리
     for mymon in player.csMons:
         if mymon == player.nowCSmon:  # 이미 처리한 nowCSmon은 건너뜀
             continue
         if mymon.level == mymon.get_monster_max_level(battleturn):
+            continue
+        if mymon.name == "빈 슬롯":
             continue
         if mymon.is_alive():
             if mymon.participated == False:  # 전투에 참여하지 않은 경우
