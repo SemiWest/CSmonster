@@ -131,6 +131,9 @@ def catching():
 def caught():
     play_effect("../sound/Catched.mp3")
 
+def Critical():
+    play_effect("../sound/Critical.mp3")
+
 def Damage_strong():
     play_effect("../sound/Damage_strong.mp3")
 
