@@ -195,7 +195,7 @@ while True:
         
         Me.nowCSmon = Me.csMons[0]
         clear_screen()
-        limited_turn_mode(turn, totalhap, Me, 5)
+        limited_turn_mode(turn, totalhap, Me, 50)
     elif start == "기록 보기":
         clear_screen()
         # 절대 경로 생성
