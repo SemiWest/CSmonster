@@ -19,43 +19,48 @@ Noneitem = Items(
 
 americano = Items(
     name="아이스아메리카노", 
-    description="카페인의 힘으로 체력을 회복한다. 5 또는 최대 체력의 10% 중 큰 값을 회복한다.", 
+    description="카페인의 힘으로 체력을 회복한다. 10 또는 최대 체력의 10% 중 큰 값을 회복한다.", 
     effect="heal",
-    fixed=5,
+    fixed=10,
     varied=0.1,
     )
 
 AirPods = Items(
     name="에어팟",
-    description="에어팟을 주고 노동요를 틀어준다. 흥이 올라 속도가 2배로 상승한다.", 
+    description="에어팟을 주고 노동요를 틀어준다. 흥이 올라 속도가 오른다.", 
     effect="buff",
-    varied=2,
-    buffto="sp",
+    varied=5,
     )
 
 clever_soup = Items(
     name="총명탕",
-    description="총명탕을 먹인다. 두뇌 능력이 상승해 공격력이 1.5배로 증가한다.", 
+    description="총명탕을 먹인다. 두뇌 능력이 상승해 특수공격이 오른다.", 
     effect="buff",
-    varied=1.5,
-    buffto="ad",
+    varied=2,
+    )
+
+protein = Items(
+    name="프로틴",
+    description="프로틴을 먹인다. 근육량이 증가해 공격과 방어가 모두 오른다.", 
+    effect="buff",
+    grade="레어",
+    varied=(1,2),
     )
 
 zokbo = Items(
     name="족보",
-    description="족보를 보고 상대의 취약점을 파악한다. 공격력이 2배로 증가한다.", 
+    description="족보를 보고 상대의 취약점을 파악한다. 공격과 특수공격이 모두 오른다.", 
     effect="buff",
     grade="레어",
-    varied=2,
-    buffto="ad",
+    varied=(1,3),
     )
 
 MonsterZero = Items(
     name="몬스터 제로",
-    description="농축된 카페인의 힘으로 체력을 회복한다. 10 또는 최대 체력의 25% 중 큰 값을 회복한다.", 
+    description="농축된 카페인의 힘으로 체력을 회복한다. 20 또는 최대 체력의 25% 중 큰 값을 회복한다.", 
     effect="heal",
     grade="레어",
-    fixed=10,
+    fixed=20,
     varied=0.25,
     )
 
@@ -90,6 +95,7 @@ items = {
     "몬스터 제로": MonsterZero,
     "에어팟": AirPods,
     "총명탕": clever_soup,
+    "프로틴": protein,
     "족보": zokbo,
     "링거": Linger,
     "치킨": Chicken,

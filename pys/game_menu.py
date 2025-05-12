@@ -68,11 +68,13 @@ def main_menu():
             game_started()
         # Main menu loop
         current_index = 0
+        curses.flushinp()  # Clear input buffer
         while True:
             if main_menu_reload:
                 main_menu_animation()
                 main_menu_reload = False
                 time.sleep(2.5)
+                curses.flushinp()  # Clear input buffer
             if musicOnOff:
                 if pygame.mixer.music.get_busy() == 0:
                     play_music("../music/menu.wav")
@@ -97,7 +99,7 @@ def main_menu():
             stdscr.addstr(11, 4, " ⣠⡴⠛⠳⣤⡈⠉⢹⣿  ⣀⡴⠛⠳⢦⡀ ⣿⡏⠉⠁", curses.color_pair(1))
             stdscr.addstr(12, 4, " ⢩⣥⠀⠀⠉⠁⠀⠈⠉⠀⠀⠉⣥⠀⠀⠈⠁⠀⠉⠁⠀⠀", curses.color_pair(1))
             stdscr.addstr(13, 4, " ⠘⠻⠤⠤⠤⠤⠤⠤⠤⠀⠀⠀⠻⠤⠤⠤⠤⠤⠤⠄⠀", curses.color_pair(1))
-            options = ["졸업 모드", "기록 보기", "무한 모드", " 제작자  ", "환경 설정"]
+            options = ["졸업 모드", "기록 보기", "모험 모드", " 제작자  ", "환경 설정", " 도움말  "]
             for i, option in enumerate(options):
                 addstr_with_korean_support(stdscr, 18 + int(i // 2) * 2, 20 * (i % 2) + 44, f"  {option}")
                 if i == current_index:

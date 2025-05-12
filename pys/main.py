@@ -73,7 +73,8 @@ def limited_turn_mode(turn, totalhap, Me, endturn = 100):
     while turn <= endturn:
         if turn == endturn:
             # 졸업 연구
-            met_monster = copy.deepcopy(graudation)
+            met_monster = copy.deepcopy(graduation)
+            met_monster.update_fullreset()
         elif turn <= 10:
             # 1~10 스테이지
             meetable_monsters = []
@@ -90,7 +91,7 @@ def limited_turn_mode(turn, totalhap, Me, endturn = 100):
                 met_monster.level = met_monster.get_monster_max_level(turn)
                 met_monster.grade = "중간 보스"
                 met_monster.hpShield = True
-            met_monster.update_fullhp()
+            met_monster.update_fullreset()
         else:
             meetable_monsters = []
             for i in range(100):
@@ -107,7 +108,7 @@ def limited_turn_mode(turn, totalhap, Me, endturn = 100):
                 met_monster.level = met_monster.get_monster_max_level(turn)
                 met_monster.grade = "중간 보스"
                 met_monster.hpShield = True
-            met_monster.update_fullhp()
+            met_monster.update_fullreset()
             
         battlehap = battle(Me, met_monster, turn, endturn)
         if battlehap == 0:
@@ -167,7 +168,7 @@ while True:
         totalhap = 0
         Me.name = "Unknown"
         Me.csMons = [
-            copy.deepcopy(monsters["프밍기"]), 
+            copy.deepcopy(monsters["시프"]), 
             copy.deepcopy(monsters["빈 슬롯"]), 
             copy.deepcopy(monsters["빈 슬롯"]), 
             copy.deepcopy(monsters["빈 슬롯"]), 
@@ -194,7 +195,7 @@ while True:
         
         Me.nowCSmon = Me.csMons[0]
         clear_screen()
-        limited_turn_mode(turn, totalhap, Me, 30)
+        limited_turn_mode(turn, totalhap, Me, 5)
     elif start == "기록 보기":
         clear_screen()
         # 절대 경로 생성
@@ -207,23 +208,32 @@ while True:
             clear_screen()
             continue
 
-        print("클리어 기록")
         with open(filepath, 'r', encoding='utf-8') as file:
+            stop = False
             reader = csv.reader(file)
-            clear_count = 1
-            for row in reader:
-                if row[2] == "클리어":
-                    print(f"{clear_count}. {row[0]}\n    플레이 난이도 {row[1]}|졸업 GPA {row[3]}|총 전투 횟수 {row[4]}")
-                    print("    잡은 전산몬스터")
-                    for i in range(5, len(row), 3):
-                        if row[i] != "빈 슬롯":
-                            print(f"       {row[i].ljust(13-len(row[i]))}lv {row[i+1].ljust(3)}  잡은 스테이지: {row[i+2]}")
-                    print()
-                    clear_count += 1
-        
-        input("\n아무 키나 눌러 종료")
-        clear_screen()    
-    elif start == "무한 모드":
+            while not stop:
+                clear_count = 1 
+                for row in reader:
+                    if row[2] == "클리어":
+                        clear_screen()
+                        print("클리어 기록\n\n")
+                        print(f"{clear_count}. {row[0]}\n    플레이 난이도 {row[1]}|졸업 GPA {row[3]}|총 전투 횟수 {row[4]}")
+                        print("    잡은 전산몬스터")
+                        for i in range(5, len(row), 3):
+                            if row[i] != "빈 슬롯":
+                                print(f"       {row[i].ljust(13-len(row[i]))}lv {row[i+1].ljust(3)}  잡은 스테이지: {row[i+2]}")
+                        print()
+                        clear_count += 1
+                        sys.stdin.flush()
+                        print("아무 키나 눌러 다음 페이지로 넘기십시오.(q키를 누르면 종료)")
+                        exit = input()
+                        if exit.lower() == "q":
+                            stop = True
+                            break
+                file.seek(0)  # 파일 포인터를 처음으로 되돌림
+        clear_screen()
+    elif start == "모험 모드":
+        play_music(["../music/Im_a_kaist_nonmelody.wav", "../music/Im_a_kaist_melody.wav"])
         print("개발중입니당")
         input("아무 키나 눌러 종료")
         clear_screen()
@@ -246,6 +256,57 @@ while True:
         print("\t\t\t\t\t               eweRim             \n")
         print("\t\t\t\t\t               감사링             ")
         getch = input("아무 키나 눌러 종료")
+        clear_screen()
+    elif start == " 도움말  ":
+        clear_screen()
+        print("\n\n도움말             ")
+        print("전산몬스터는 포켓몬스터의 패러디 게임입니다.         ")
+        print("졸업 모드는 30턴의 전투를 거쳐 좋은 성적으로 졸업하는 것이 목표입니다.         ")
+        print("무한 모드는 무한으로 전투를 진행하는 모드입니다.         ")
+        print("기록 보기에서는 졸업 모드에서 클리어한 기록을 보여줍니다.         ")
+        print("\n\n폰트 설정: D2coding, 폰트 크기: 36")
+        print("조작키 정보: 방향키로 조작, enter키로 선택, esc키/q키/backspace키로 종료 및 취소")
+        print("스크립트 넘기기: 아무 키나 누르기")
+        sys.stdin.flush()
+        input("\n\n아무 키나 눌러 다음 페이지로")
+        clear_screen()
+        print("\t\t\t상성표\n\n\t     DTS SYS CST SWD SEC VSC AIS SOC INT")
+        print("\t    ┌───┬───┬───┬───┬───┬───┬───┬───┬───┐")
+        for types in type_chart:
+            print(f"\t{type_dict[types]} │", end = "")
+            for comps in type_chart[types]:
+                comp = type_chart[types][comps]
+                if comp==4:
+                    print(" ◎ │", end = "")
+                elif comp==1:
+                    print(" △ │", end = "")
+                elif comp==0:
+                    print(" × │", end = "")
+                else:
+                    print("   │", end = "")
+            print()
+            if types=="인터랙티브컴퓨팅":
+                print("\t    └───┴───┴───┴───┴───┴───┴───┴───┴───┘")
+                break
+            print("\t    ├───┼───┼───┼───┼───┼───┼───┼───┼───┤")
+        print("가로: 공격 받는 전산몬 타입 | 세로: 스킬 타입")
+        print("◎: 효과가 굉장함 | △: 효과가 별로임 | ×: 효과가 없음")
+        # 타입 코드
+        # type_dict = {
+        #     "데이터 과학": "DTS",
+        #     "시스템-네트워크": "SYS",
+        #     "전산이론": "CST",
+        #     "소프트웨어디자인": "SWD",
+        #     "시큐어컴퓨팅": "SEC",
+        #     "비주얼컴퓨팅": "VSC",
+        #     "인공지능-정보서비스": "AIS",
+        #     "소셜컴퓨팅": "SOC",
+        #     "인터랙티브컴퓨팅": "INT"
+        #     }
+        print("DTS: 데이터 과학         | SYS: 시스템-네트워크  | CST: 전산이론 ")
+        print("SWD: 소프트웨어디자인    | SEC: 시큐어컴퓨팅     | VSC: 비주얼컴퓨팅")
+        print("AIS: 인공지능-정보서비스 | SOC: 소셜컴퓨팅       | INT: 인터랙티브컴퓨팅")
+        getch = input("\n아무 키나 눌러 종료")
         clear_screen()
     else:
         clear_screen()
