@@ -1,14 +1,5 @@
-try:
-    import pygame
-except ImportError:
-    os.system(f"{sys.executable} -m pip install pygame")
-    import pygame
-try:
-    import curses
-except ImportError:    
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "windows-curses"])
-    import curses
-import subprocess
+import pygame
+import curses
 import sys
 import os
 import time
