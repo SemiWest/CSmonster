@@ -46,6 +46,7 @@ if %errorlevel% neq 0 (
 
 :: 게임 실행
 echo 게임을 실행합니다...
+cd pys
 python main.py
 
 :: 종료 대기

@@ -1,3 +1,2 @@
 pygame
-csv
 windows-curses
