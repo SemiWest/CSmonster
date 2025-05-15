@@ -4,7 +4,7 @@ from game_menu import *
 import option
 import csv
 
-Me = player()
+Me = Player()
 music_volume = 50
 music_on = True
 ESVolume = 90
@@ -56,7 +56,7 @@ def save_game_log_csv(filename, player, turn, totalhap):
         row = [player.name, diff, clear_status, gpa_or_stage, totalhap]
         
         for mymon in player.csMons:
-            if mymon.name != "빈 슬롯":
+            if mymon.dictNo != -1:
                 row.append(mymon.name)
                 row.append(mymon.level)
                 row.append(mymon.stage)
@@ -75,6 +75,8 @@ def limited_turn_mode(turn, totalhap, Me, endturn = 100):
             # 졸업 연구
             met_monster = copy.deepcopy(graduation)
             met_monster.update_fullreset()
+        elif turn == 3:
+            met_monster = copy.deepcopy(Hanjin)
         elif turn <= 10:
             # 1~10 스테이지
             meetable_monsters = []
@@ -136,7 +138,7 @@ def limited_turn_mode(turn, totalhap, Me, endturn = 100):
 
     print("\n나의 전산몬스터: ")
     for mymon in Me.csMons:
-        if mymon.name != "빈 슬롯":
+        if mymon.dictNo != -1:
             print(f"{mymon.name} lv{mymon.level} 잡은 스테이지: {mymon.stage}")
 
     save_game_log_csv("game_log.csv", Me, turn, totalhap)

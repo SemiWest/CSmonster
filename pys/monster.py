@@ -43,7 +43,8 @@ def comp(atskilltype, tgtype):
     return type_chart[atskilltype][tgtype]/2
 
 class Monster:
-    def __init__(self, name, HP, ATK, DEF, SP_ATK, SP_DEF, SPD, type=["전산이론"], evlev=1, evbefore=None, description=""):
+    def __init__(self, dictNo, name, HP, ATK, DEF, SP_ATK, SP_DEF, SPD, type=["전산이론"], evlev=1, evbefore=None, description=""):
+        self.dictNo = dictNo  # 몬스터 번호
         self.name = name
         self.level = 5
         self.exp = 0
@@ -220,9 +221,9 @@ class Monster:
             return multiplier
 
 # 플레이어와 적 전산몬스터 생성
-Nonemonster = Monster(name="빈 슬롯", HP = 0, ATK = 0, DEF = 0, SP_ATK = 0, SP_DEF = 0, SPD = 0, type=None, evlev=1, evbefore=None,)
+Nonemonster = Monster(dictNo = -1, name="빈 슬롯", HP = 0, ATK = 0, DEF = 0, SP_ATK = 0, SP_DEF = 0, SPD = 0, type=None, evlev=1, evbefore=None,)
 
-cs101 = Monster(name="프밍기", HP = 30, ATK = 56, DEF = 35, SP_ATK = 25, SP_DEF = 35, SPD = 72, type=["전산이론"], evlev=1, evbefore=None,
+cs101 = Monster(dictNo = 101, name="프밍기", HP = 30, ATK = 56, DEF = 35, SP_ATK = 25, SP_DEF = 35, SPD = 72, type=["전산이론"], evlev=1, evbefore=None,
                 description="카이스트 입학 후 가장 먼저 듣게 되는 전산과 기필 과목이다. 시간표 브레이커로 유명하다.")
 cs101.giving_EV = [1]
 cs101.skills = {
@@ -251,7 +252,7 @@ cs101.skills = {
     
 }
 
-cs206 = Monster(name="데이타구조", HP = 39, ATK = 52, DEF = 43, SP_ATK = 60, SP_DEF = 50, SPD = 65, type=["데이터 과학", "전산이론"], evlev=1, evbefore=None,)
+cs206 = Monster(dictNo = 206, name="데이타구조", HP = 39, ATK = 52, DEF = 43, SP_ATK = 60, SP_DEF = 50, SPD = 65, type=["데이터 과학", "전산이론"], evlev=1, evbefore=None,)
 cs206.giving_EV = [3]
 cs206.skills = {
     'StackOverflow': Monster.Skill(
@@ -287,7 +288,7 @@ cs206.skills = {
         description="해시맵을 사용하여 최적의 공격 방법을 찾는다. 공격력을 올린다."),
 }
 
-cs204 = Monster(name="이산구조", HP = 57, ATK = 40, DEF = 55, SP_ATK = 40, SP_DEF = 50, SPD = 60, type=["전산이론", "시큐어컴퓨팅"], evlev=1, evbefore=None,)
+cs204 = Monster(dictNo = 204, name="이산구조", HP = 57, ATK = 40, DEF = 55, SP_ATK = 40, SP_DEF = 50, SPD = 60, type=["전산이론", "시큐어컴퓨팅"], evlev=1, evbefore=None,)
 cs204.giving_EV = [0]
 cs204.skills = {
     'Modus Pones': Monster.Skill(
@@ -324,7 +325,7 @@ cs204.skills = {
         description="무한 루프 그래프를 만들어 상대의 공격을 흘려보낸다."),
 }
 
-cs230 = Monster(name="시프", HP = 65, ATK = 60, DEF = 50, SP_ATK = 70, SP_DEF = 50, SPD = 85, type=["시스템-네트워크", "시큐어컴퓨팅"], evlev=2, evbefore=None,)
+cs230 = Monster(dictNo = 230, name="시프", HP = 65, ATK = 60, DEF = 50, SP_ATK = 70, SP_DEF = 50, SPD = 85, type=["시스템-네트워크", "시큐어컴퓨팅"], evlev=2, evbefore=None,)
 cs230.giving_EV = [3,5]
 cs230.skills = {
     'BufferOverflow': Monster.Skill(
@@ -333,7 +334,7 @@ cs230.skills = {
         type="시스템-네트워크",
         pp=10,
         skW=100,
-        acc = 90,
+        acc = 85,
         description="버퍼 오버플로우를 일으켜 공격한다."),
     '페이지 폴트': Monster.Skill(
         name='페이지 폴트', 
@@ -362,7 +363,7 @@ cs230.skills = {
 
 # 졸업 연구
 # 졸업 연구는 특별한 몬스터로, 레벨과 스킬이 다름
-graduation = Monster(name="졸업 연구", HP = 200, ATK = 100, DEF = 100, SP_ATK = 100, SP_DEF = 100, SPD = 100, type=[
+graduation = Monster(dictNo = 999, name="졸업 연구", HP = 200, ATK = 100, DEF = 100, SP_ATK = 100, SP_DEF = 100, SPD = 100, type=[
     random.choice(["데이터 과학", "시스템-네트워크", "전산이론", "소프트웨어디자인", "시큐어컴퓨팅", "비주얼컴퓨팅", "인공지능-정보서비스", "소셜컴퓨팅", "인터랙티브컴퓨팅"]),
     random.choice(["데이터 과학", "시스템-네트워크", "전산이론", "소프트웨어디자인", "시큐어컴퓨팅", "비주얼컴퓨팅", "인공지능-정보서비스", "소셜컴퓨팅", "인터랙티브컴퓨팅"]),
 ], evlev=1, evbefore=None , description="졸업이 눈 앞이다. 그동안의 성과를 보이자.")
