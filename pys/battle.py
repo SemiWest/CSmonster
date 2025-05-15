@@ -495,6 +495,12 @@ def skill_message(stdscr, user, target, skill, counter_skill=None, damage = None
 def use_skill(user, target, skill, counter_skill):
     """스킬 효과를 처리 (체력 계산만 수행)"""
     skill.nowpp -= 1
+    if skill.consecutive_uses != 0:
+        if user.usedskill.name == skill.name:
+            skill.consecutive_uses += 1
+        else:
+            skill.consecutive_uses = 1
+    user.usedskill = skill
     # reflect 스킬 처리
     if skill.effect_type == "reflect":
         if counter_skill is not None:

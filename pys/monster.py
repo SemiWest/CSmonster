@@ -74,6 +74,7 @@ class Monster:
         self.skills = {}  # 스킬 저장
         self.participated = False  # 전투에 참여했는지 여부
         self.hpShield = False
+        self.usedskill = None
         self.update_fullreset()
 
     def update_battle(self):        
@@ -180,6 +181,8 @@ class Monster:
             self.skW = skW # 위력
             self.acc = acc  # 명중률
             self.priority = priority # 우선도
+            self.consecutive_uses = 0  # 연속 사용 횟수 (리플렉트 계열 스킬에 사용)
+
 
         def damage(self, target, attacker):
             # 데미지 계산
@@ -210,7 +213,13 @@ class Monster:
             if self.acc == -1:  # 명중률이 -1이면 무조건 명중
                 return True
             else:
-                hitChance = self.acc*(3+max(0,min(6,max(-6,attacker.accuracy-target.evasion))))/(3-min(0,min(6,max(-6,attacker.accuracy-target.evasion))))/100  # 명중 확률
+                effective_acc = self.acc
+                if self.effect_type == "reflect":
+                    effective_acc *= 0.5 ** (self.consecutive_uses-1)
+
+                hitChance = effective_acc*(3+max(0,min(6,max(-6,attacker.accuracy-target.evasion))))/(
+                    3-min(0,min(6,max(-6,attacker.accuracy-target.evasion)))
+                    )/100  # 명중 확률
                 hit = random.random() < hitChance
             return hit
 
@@ -268,9 +277,10 @@ cs206.skills = {
         effect_type="reflect", 
         type="데이터 과학",
         pp=5,
-        skW=1, 
+        skW=0.5, 
+        acc=100,
         priority=4, 
-        description="큐를 U자로 만들어 상대를 향하게 한다. 상대의 공격이 입력되면 그 공격을 다시 상대에게 출력한다."),
+        description="큐를 U자로 만들어 상대를 향하게 한다. 상대의 공격을 절반의 피해로 상대에게 출력한다."),
     '트리 구축': Monster.Skill(
         name='트리 구축', 
         effect_type="Sdamage",
@@ -321,6 +331,7 @@ cs204.skills = {
         type = "전산이론",
         pp=10,
         skW=0,
+        acc=100,
         priority=4, 
         description="무한 루프 그래프를 만들어 상대의 공격을 흘려보낸다."),
 }

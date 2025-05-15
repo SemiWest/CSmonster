@@ -170,7 +170,7 @@ while True:
         totalhap = 0
         Me.name = "Unknown"
         Me.csMons = [
-            copy.deepcopy(monsters["시프"]), 
+            copy.deepcopy(monsters["데이타구조"]), 
             copy.deepcopy(monsters["빈 슬롯"]), 
             copy.deepcopy(monsters["빈 슬롯"]), 
             copy.deepcopy(monsters["빈 슬롯"]), 
