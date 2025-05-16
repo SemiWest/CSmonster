@@ -413,7 +413,9 @@ def skill_message(stdscr, user, target, skill, counter_skill=None, damage = None
     # 스킬 메시지 출력
     display_status(stdscr, True)  # 상태 출력
     if skill.effect_type == "reflect":
-        if counter_skill is not None:
+        if damage == -121:
+            addstr_with_korean_support(stdscr, 17, 0, f"  하지만 실패했다!")
+        elif counter_skill is not None:
             if counter_skill.effect_type == "Pdamage" or counter_skill.effect_type == "Sdamage":
                 if skill.skW == 0:
                     addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}이/가 {target.name}의 {counter_skill.name}을/를 방어했다.")
@@ -495,14 +497,19 @@ def skill_message(stdscr, user, target, skill, counter_skill=None, damage = None
 def use_skill(user, target, skill, counter_skill):
     """스킬 효과를 처리 (체력 계산만 수행)"""
     skill.nowpp -= 1
-    if skill.consecutive_uses != 0:
+    if user.usedskill is not None:
         if user.usedskill.name == skill.name:
             skill.consecutive_uses += 1
         else:
             skill.consecutive_uses = 1
+    else: 
+        skill.consecutive_uses = 1
     user.usedskill = skill
     # reflect 스킬 처리
     if skill.effect_type == "reflect":
+        if random.random() > skill.acc*(0.5**(skill.consecutive_uses-1))/100:
+            return False, -121, False
+
         if counter_skill is not None:
             if counter_skill.effect_type == "Pdamage" or counter_skill.effect_type == "Sdamage":
                 damage, crit= counter_skill.damage(user, target)
