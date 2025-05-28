@@ -8,6 +8,8 @@ hap_num = 0
 player = None
 enemy = None
 enemyCSmon = None
+sX, sY = 1, 0
+bsX, bsY = 64, 18 #16:9 사이즈
 
 ''' 디스플레이 '''
 def addstr_with_korean_support(stdscr, y, x, text, attr=0):
@@ -81,62 +83,66 @@ def animate_health_bar(stdscr, y, x, current_hp, target_hp, max_hp):
         stdscr.addstr(y+1, x, f"({int(temp_hp)}/{max_hp})")
         stdscr.refresh()
         time.sleep(0.05)  # 애니메이션 속도 
-    
 
 def display_status(stdscr, detail=False):
     stdscr.clear()
     curses.flushinp()
     
+    esX, esY = sX+bsX+2-25, sY+2
+    psX, psY = sX+3, sY+bsY-4
     # 테두리
-    addstr_with_korean_support(stdscr, 0, 0, "┌──────────────────────────────────────────────────────────────┐")
-    addstr_with_korean_support(stdscr, 15, 0, "└──────────────────────────────────────────────────────────────┘")
-    for i in range(1, 15):
-        addstr_with_korean_support(stdscr, i, 0, "│")
-        addstr_with_korean_support(stdscr, i, 63, "│")
+    addstr_with_korean_support(stdscr,  sY, sX, "┌"+"─"*bsX+"┐")
+    for i in range(sY+1, sY+bsY+7):
+        addstr_with_korean_support(stdscr, i,       sX, "│")
+        addstr_with_korean_support(stdscr, i, sX+bsX+1, "│")
+    addstr_with_korean_support(stdscr, sY+bsY+1, sX, "├"+"─"*bsX+"┤")
+    addstr_with_korean_support(stdscr, sY+bsY+7, sX, "└"+"─"*bsX+"┘")
     
     # 배틀 정보 출력
-    addstr_with_korean_support(stdscr, 1, 2, f"플레이어: {player.name}", curses.color_pair(5))
-    addstr_with_korean_support(stdscr, 2, 2, f"스테이지 {battleturn}", curses.color_pair(4))
-    addstr_with_korean_support(stdscr, 3, 2, f"턴 {hap_num}", curses.color_pair(3))
+    addstr_with_korean_support(stdscr, sY+1, sX+2, f"플레이어: {player.name}", curses.color_pair(5))
+    addstr_with_korean_support(stdscr, sY+2, sX+2, f"스테이지 {battleturn}", curses.color_pair(4))
+    addstr_with_korean_support(stdscr, sY+3, sX+2, f"턴 {hap_num}", curses.color_pair(3))
+    
+    # 적 상태 출력
     if isinstance(enemy, Player):
         for i, mymon in enumerate(enemy.csMons):
-            addstr_with_korean_support(stdscr, 1, 39+i*2, "◒", curses.color_pair(1 if not mymon.is_alive() else 5 if mymon.dictNo == -1 else 99))
-    # 적 상태 출력
+            addstr_with_korean_support(stdscr, sY+1, esX+1+i*2, "◒", curses.color_pair(1 if not mymon.is_alive() else 5 if mymon.dictNo == -1 else 99))
     if enemyCSmon.dictNo == -2:
-        addstr_with_korean_support(stdscr, 2, 46, "▗███████▖", curses.color_pair(1))
-        addstr_with_korean_support(stdscr, 3, 46, "███▛ ▜███", curses.color_pair(1))
-        addstr_with_korean_support(stdscr, 4, 46, "███▙▀▟███")
-        addstr_with_korean_support(stdscr, 5, 46, "▝███████▘")
-        addstr_with_korean_support(stdscr, 3, 50, "▃")
+        addstr_with_korean_support(stdscr, esY  , esX+7, "▗███████▖", curses.color_pair(1))
+        addstr_with_korean_support(stdscr, esY+1, esX+7, "███▛ ▜███", curses.color_pair(1))
+        addstr_with_korean_support(stdscr, esY+2, esX+7, "███▙▀▟███")
+        addstr_with_korean_support(stdscr, esY+3, esX+7, "▝███████▘")
+        addstr_with_korean_support(stdscr, esY+1, esX+11,    "▃")
     elif enemyCSmon.dictNo == -3:
-        addstr_with_korean_support(stdscr, 2, 45, "▗███████▖", curses.color_pair(1))
-        addstr_with_korean_support(stdscr, 3, 45, "███▛ ▜███", curses.color_pair(1))
-        addstr_with_korean_support(stdscr, 4, 45, "███▙▀▟███")
-        addstr_with_korean_support(stdscr, 5, 45, "▝███████▘")
-        addstr_with_korean_support(stdscr, 3, 49, "▃")
+        addstr_with_korean_support(stdscr, esY  , esX+8, "▗███████▖", curses.color_pair(1))
+        addstr_with_korean_support(stdscr, esY+1, esX+8, "███▛ ▜███", curses.color_pair(1))
+        addstr_with_korean_support(stdscr, esY+2, esX+8, "███▙▀▟███")
+        addstr_with_korean_support(stdscr, esY+3, esX+8, "▝███████▘")
+        addstr_with_korean_support(stdscr, esY+1, esX+12, "▃")
     elif enemyCSmon.grade == "보스":
+        addstr_with_korean_support(stdscr, esY, esX, f"{enemyCSmon.name}(lv {enemyCSmon.level})", curses.color_pair(1))
+        animate_health_bar(stdscr, esY+1, esX, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
         for i, j in enumerate(enemyCSmon.type):
-            display_type(stdscr, 4, 55-i*6, j)
-        addstr_with_korean_support(stdscr, 2, 38, f"{enemyCSmon.name}(lv {enemyCSmon.level})", curses.color_pair(1))
-        animate_health_bar(stdscr, 3, 38, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
+            display_type(stdscr, esY+2, esX+17-i*6, j)
     elif enemyCSmon.grade == "중간 보스":
+        addstr_with_korean_support(stdscr, esY, esX, f"{enemyCSmon.name}(lv {enemyCSmon.level})", curses.color_pair(2))
+        animate_health_bar(stdscr, esY+1, esX, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
         for i, j in enumerate(enemyCSmon.type):
-            display_type(stdscr, 4, 55-i*6, j)
-        addstr_with_korean_support(stdscr, 2, 38, f"{enemyCSmon.name}(lv {enemyCSmon.level})", curses.color_pair(2))
-        animate_health_bar(stdscr, 3, 38, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
+            display_type(stdscr, esY+2, esX+17-i*6, j)
     else:
+        addstr_with_korean_support(stdscr, esY, esX, f"{enemyCSmon.name}(lv {enemyCSmon.level})")
+        animate_health_bar(stdscr, esY+1, esX, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
         for i, j in enumerate(enemyCSmon.type):
-            display_type(stdscr, 4, 55-i*6, j)
-        addstr_with_korean_support(stdscr, 2, 38, f"{enemyCSmon.name}(lv {enemyCSmon.level})")
-        animate_health_bar(stdscr, 3, 38, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
+            display_type(stdscr, esY+2, esX+17-i*6, j)
+        
 
     # 플레이어 상태 출력
-    addstr_with_korean_support(stdscr, 11, 4, f"{player.nowCSmon.name}(lv {player.nowCSmon.level})")
-    animate_health_bar(stdscr, 12, 4, player.nowCSmon.nowhp, player.nowCSmon.nowhp, player.nowCSmon.HP)
-    for i, j in enumerate(player.nowCSmon.type):
-        display_type(stdscr, 13, 21-i*6, j)
     for i, mymon in enumerate(player.csMons):
-            addstr_with_korean_support(stdscr, 10, 5+i*2, "◒", curses.color_pair(1 if not mymon.is_alive() else 5 if mymon.dictNo == -1 else 99))
+            addstr_with_korean_support(stdscr, psY, psX+1+i*2, "◒", curses.color_pair(1 if not mymon.is_alive() else 5 if mymon.dictNo == -1 else 99))
+    addstr_with_korean_support(stdscr, psY+1, psX, f"{player.nowCSmon.name}(lv {player.nowCSmon.level})")
+    animate_health_bar(stdscr, psY+2, psX, player.nowCSmon.nowhp, player.nowCSmon.nowhp, player.nowCSmon.HP)
+    for i, j in enumerate(player.nowCSmon.type):
+        display_type(stdscr, psY+3, psX+17-i*6, j)
     if detail:
         display_details(stdscr, player.nowCSmon, 68, "몬스터")
 
@@ -152,7 +158,7 @@ def display_details(stdscr, target, x, case="몬스터"):
             "체력",
             "",
             (("공격", 0, 99), (f"{target.ATK}", 11, 4), None if target.Rank[1]==0 else ((("+" if target.Rank[1]>0 else "-") + f"{abs(target.Rank[1])}"), 12 + len(f"{target.ATK}"), min(7-target.Rank[1], 7+target.Rank[1]))),
-            (("방어", 0, 99), (f"{target.DEF}", 11, 4), None if target.Rank[2]==0 else ((("+" if target.Rank[2]>0 else "-") + f"{abs(target.Rank[2])}"), 12 + len(f"{target.DEF}"), min(7-target.Rank[3], 7+target.Rank[2]))),
+            (("방어", 0, 99), (f"{target.DEF}", 11, 4), None if target.Rank[2]==0 else ((("+" if target.Rank[2]>0 else "-") + f"{abs(target.Rank[2])}"), 12 + len(f"{target.DEF}"), min(7-target.Rank[2], 7+target.Rank[2]))),
             (("특공", 0, 99), (f"{target.SP_ATK}", 11, 4), None if target.Rank[3]==0 else ((("+" if target.Rank[3]>0 else "-") + f"{abs(target.Rank[3])}"), 12 + len(f"{target.SP_ATK}"), min(7-target.Rank[3], 7+target.Rank[3]))),
             (("특방", 0, 99), (f"{target.SP_DEF}", 11, 4), None if target.Rank[4]==0 else ((("+" if target.Rank[4]>0 else "-") + f"{abs(target.Rank[4])}"), 12 + len(f"{target.SP_DEF}"), min(7-target.Rank[4], 7+target.Rank[4]))),
             (("속도", 0, 99), (f"{target.SPD}", 11, 4), None if target.Rank[5]==0 else ((("+" if target.Rank[5]>0 else "-") + f"{abs(target.Rank[5])}"), 12 + len(f"{target.SPD}"), min(7-target.Rank[5], 7+target.Rank[5]))),
@@ -175,7 +181,7 @@ def display_details(stdscr, target, x, case="몬스터"):
                         char_width = 2 if unicodedata.east_asian_width(char) in ['F', 'W'] else 1
                         if current_width + char_width > max_width - start_x:
                             # 현재 줄 출력
-                            addstr_with_korean_support(stdscr, 3 + i + line_offset, start_x, current_line, curses.color_pair(detail[2]))
+                            addstr_with_korean_support(stdscr, sY+2 + i + line_offset, start_x, current_line, curses.color_pair(detail[2]))
                             current_line = char  # 새로운 줄 시작
                             current_width = char_width
                             line_offset += 1
@@ -184,18 +190,18 @@ def display_details(stdscr, target, x, case="몬스터"):
                             current_width += char_width
                     if current_line:
                         # 마지막 줄 출력
-                        addstr_with_korean_support(stdscr, 3 + i + line_offset, start_x, current_line, curses.color_pair(detail[2]))
+                        addstr_with_korean_support(stdscr, sY+2 + i + line_offset, start_x, current_line, curses.color_pair(detail[2]))
 
             elif isinstance(detailes, str):  # detail이 문자열인 경우
                 if detailes == "체력":
                     current_ratio = int(target.nowhp * 20 / target.HP)
-                    addstr_with_korean_support(stdscr, 3 + i, 68, "체력")
-                    addstr_with_korean_support(stdscr, 3 + i, 79, f" {'█' * current_ratio}{' ' * (20 - current_ratio)} ", curses.color_pair(hpcolor(current_ratio)))
-                    addstr_with_korean_support(stdscr, 3 + i + 1, 79, f"({int(target.nowhp)}/{target.HP})")
+                    addstr_with_korean_support(stdscr, sY+2 + i, 68, "체력")
+                    addstr_with_korean_support(stdscr, sY+2 + i, 79, f" {'█' * current_ratio}{' ' * (20 - current_ratio)} ", curses.color_pair(hpcolor(current_ratio)))
+                    addstr_with_korean_support(stdscr, sY+2 + i + 1, 79, f"({int(target.nowhp)}/{target.HP})")
                 elif detailes == "타입":
-                    addstr_with_korean_support(stdscr, 3 + i, 68, "타입")
+                    addstr_with_korean_support(stdscr, sY+2 + i, 68, "타입")
                     for j, type in enumerate(target.type):
-                        display_type(stdscr, 3 + i, 79+j*6, type)
+                        display_type(stdscr, sY+2 + i, 79+j*6, type)
                 else:
                     # 120칸 제한을 넘으면 줄바꿈 처리
                     start_x = 68
@@ -223,47 +229,47 @@ def display_details(stdscr, target, x, case="몬스터"):
 def option_choice(stdscr, option_case, description=None, coloring=None, temp=None):
     """옵션 선택 메뉴"""
     current_index = 0
+    stY = sY+bsY+3
     while True:
         display_status(stdscr)  # 상태 출력
         if option_case == "스킬":
             display_status(stdscr, True)  # 상태 출력
-
             options = player.nowCSmon.skills.values()
             for i, option in enumerate(options):
                 if coloring != None:
                     if coloring[i] != False:
-                        addstr_with_korean_support(stdscr, 17 + int(i / 2)*2, 22 * (i % 2), f"  {option.name}", curses.color_pair(coloring[i]))
-                    else: addstr_with_korean_support(stdscr, 17 + int(i / 2)*2, 22 * (i % 2), f"  {option.name}")
-                else: addstr_with_korean_support(stdscr, 17 + int(i / 2)*2, 22 * (i % 2), f"  {option.name}")
+                        addstr_with_korean_support(     stdscr, stY + int(i / 2)*2, sX + 2 + ((bsX-10)//2) * (i % 2), f"  {option.name}", curses.color_pair(coloring[i]))
+                    else: addstr_with_korean_support(   stdscr, stY + int(i / 2)*2, sX + 2 + ((bsX-10)//2) * (i % 2), f"  {option.name}")
+                else: addstr_with_korean_support(       stdscr, stY + int(i / 2)*2, sX + 2 + ((bsX-10)//2) * (i % 2), f"  {option.name}")
+                
                 if i == current_index:
-                    addstr_with_korean_support(stdscr, 17 + int(i / 2)*2, 22 * (i % 2), f"> {option.name}", curses.A_REVERSE)
+                    addstr_with_korean_support(         stdscr, stY + int(i / 2)*2, sX + 2 + ((bsX-10)//2) * (i % 2), f"> {option.name}", curses.A_REVERSE)
                     
-                    display_type(stdscr, 17, 44, option.skill_type)
-                    addstr_with_korean_support(stdscr, max(22, 17+int(len(options)/2)+2), 2, f"{description[i][0]}")
-                    if description[i][1] != None: 
-                        addstr_with_korean_support(stdscr, 19, 44,  f"위력   "+f"{description[i][1]}".rjust(6))
-                    else: 
-                        addstr_with_korean_support(stdscr, 19, 44,  f"위력   "+"----".rjust(6))
-                    addstr_with_korean_support(stdscr, 17, 53,      f"물리   " if option.effect_type == "Pdamage" else "특수" if option.effect_type == "Sdamage" else "----")    
-                    addstr_with_korean_support(stdscr, 18, 44,      f"pp     "+f"{option.nowpp}/{option.pp}".rjust(6))
-                    addstr_with_korean_support(stdscr, 20, 44,      f"명중률 "+f"{option.acc}".rjust(6) if option.acc != -1 else "----")
+                    # 설명 및 상세정보
+                    addstr_with_korean_support(stdscr,                               stY+6,      sX+3, f"{description[i][0]}")
+                    display_type(              stdscr,                                 stY, sX+bsX-13, option.skill_type)
+                    addstr_with_korean_support(stdscr,                                 stY,  sX+bsX-4, f"물리   " if option.effect_type == "Pdamage" else "특수" if option.effect_type == "Sdamage" else "----")    
+                    addstr_with_korean_support(stdscr,                               stY+1, sX+bsX-13, f"pp     "+f"{option.nowpp}/{option.pp}".rjust(6))
+                    if description[i][1] != None: addstr_with_korean_support(stdscr, stY+2, sX+bsX-13, f"위력   "+f"{description[i][1]}".rjust(6))
+                    else:                         addstr_with_korean_support(stdscr, stY+2, sX+bsX-13, f"위력   "+"----".rjust(6))
+                    addstr_with_korean_support(stdscr,                               stY+3, sX+bsX-13, f"명중률 "+(f"{option.acc}".rjust(6) if option.acc != -1 else f"----".rjust(6)))
         
         elif option_case == "몬스터":
             options = player.csMons
             for i, option in enumerate(options):
                 if coloring != None:
                     if coloring[i] != False:
-                        addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option.name}", curses.color_pair(coloring[i]))
-                    else: addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option.name}")
+                        addstr_with_korean_support(     stdscr, stY + int(i / 2), sX + 2 + (bsX//2) * (i % 2), f"  {option.name}", curses.color_pair(coloring[i]))
+                    else: addstr_with_korean_support(   stdscr, stY + int(i / 2), sX + 2 + (bsX//2) * (i % 2), f"  {option.name}")
                 elif option.dictNo == -1:
-                    addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option.name}", curses.color_pair(4))
-                else: addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option.name}")
+                    addstr_with_korean_support(         stdscr, stY + int(i / 2), sX + 2 + (bsX//2) * (i % 2), f"  {option.name}", curses.color_pair(4))
+                else: addstr_with_korean_support(       stdscr, stY + int(i / 2), sX + 2 + (bsX//2) * (i % 2), f"  {option.name}")
                 if i == current_index:
-                    addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"> {option.name}", curses.A_REVERSE)  # 선택된 옵션 강조
+                    addstr_with_korean_support(         stdscr, stY + int(i / 2), sX + 2 + (bsX//2) * (i % 2), f"> {option.name}", curses.A_REVERSE)  # 선택된 옵션 강조
                     if option.dictNo != -1:
-                        display_details(stdscr, option, 68, "몬스터")  # 상세 정보 출력
+                        display_details(stdscr, option, sX+bsX+4, "몬스터")  # 상세 정보 출력
             if temp != None:
-                addstr_with_korean_support(stdscr, max(21, 17+int(len(options)/2)+2), 2, f"잡은 전산몬: {temp.name}(lv {temp.level})")
+                addstr_with_korean_support(stdscr, stY+3, sX+bsX-len(f"잡은 전산몬: {temp.name}(lv {temp.level})"), f"잡은 전산몬: {temp.name}(lv {temp.level})")
               
                 
         elif option_case == "아이템":
@@ -271,29 +277,27 @@ def option_choice(stdscr, option_case, description=None, coloring=None, temp=Non
             for i, option in enumerate(options):
                 if coloring != None:
                     if coloring[i] != False:
-                        addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option.name}", curses.color_pair(coloring[i]))
-                    else: addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option.name}")
+                        addstr_with_korean_support(     stdscr, stY + int(i / 2), (bsX//2) * (i % 2), f"  {option.name}", curses.color_pair(coloring[i]))
+                    else: addstr_with_korean_support(   stdscr, stY + int(i / 2), (bsX//2) * (i % 2), f"  {option.name}")
                 elif option.dictNo == -1:
-                    addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option.name}", curses.color_pair(4))
-                else: addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option.name}")
+                    addstr_with_korean_support(         stdscr, stY + int(i / 2), (bsX//2) * (i % 2), f"  {option.name}", curses.color_pair(4))
+                else: addstr_with_korean_support(       stdscr, stY + int(i / 2), (bsX//2) * (i % 2), f"  {option.name}")
                 if i == current_index:
-                    addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"> {option.name}", curses.A_REVERSE)
-                    y = max(21, 17+int(len(options)/2)+2)
+                    addstr_with_korean_support(         stdscr, stY + int(i / 2), (bsX//2) * (i % 2), f"> {option.name}", curses.A_REVERSE)
                     if temp != None:
-                        addstr_with_korean_support(stdscr, y, 2, f"얻은 아이템: {temp.name}", curses.color_pair(
+                        addstr_with_korean_support(stdscr, stY+3, sX+bsX-len(f"얻은 아이템: {temp.name}"), f"얻은 아이템: {temp.name}", curses.color_pair(
                             2 if temp.grade == "레전더리" else 6 if temp.grade == "에픽" else 3 if temp.grade == "레어" else 0
                             ))
-                        y += 1
-                    addstr_with_korean_support(stdscr, y, 2, f"{description[i]}")
+                    addstr_with_korean_support(stdscr, stY+6, sX+3, f"{description[i]}")
             
              
         elif option_case == "배틀옵션":
             display_status(stdscr, True)  # 상태 출력
             options = ["스킬 사용", "전산몬 교체", "아이템 사용", "전산몬 포획","도망가기"]
             for i, option in enumerate(options):
-                addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"  {option}")
+                addstr_with_korean_support(stdscr, stY + int(i / 2)*2, (bsX//2) * (i % 2)+2, f"  {option}")
                 if i == current_index:
-                    addstr_with_korean_support(stdscr, 17 + int(i / 2), 32 * (i % 2), f"> {option}", curses.A_REVERSE)
+                    addstr_with_korean_support(stdscr, stY + int(i / 2)*2, (bsX//2) * (i % 2)+2, f"> {option}", curses.A_REVERSE)
 
 
         stdscr.refresh()
@@ -332,11 +336,11 @@ def select_skill(stdscr):
         Cskill = player.nowCSmon.skills[skill]
         if Cskill.effect_type == "Pdamage" or Cskill.effect_type == "Sdamage":
             if Cskill.Comp(enemyCSmon) >= 2:
-                coloring[i] = 2  # 적에게 효과가 있는 스킬 표시
+                coloring[i] = 2  # 적에게 효과가 굉장한 스킬 표시
             elif Cskill.Comp(enemyCSmon) == 0:
                 coloring[i] = 6  # 적에게 효과가 없는 스킬 표시
-            elif Cskill.Comp(enemyCSmon) < 1:
-                coloring[i] = 5  # 적에게 효과가 없는 스킬 표시
+            elif Cskill.Comp(enemyCSmon) <= 0.5:
+                coloring[i] = 5  # 적에게 효과가 별로인 스킬 표시
     descriptions = [[
         player.nowCSmon.skills[skill].description,
         player.nowCSmon.skills[skill].skW if player.nowCSmon.skills[skill].effect_type == "Pdamage" or player.nowCSmon.skills[skill].effect_type == "Sdamage" else None
@@ -452,7 +456,7 @@ def skill_message(stdscr, user, target, skill, counter_skill=None, damage = None
         else:
             if skill.Comp(target) >= 2:
                 addstr_with_korean_support(stdscr, 17, 0, f"  효과가 굉장했다!")
-            elif skill.Comp(target) < 1:
+            elif skill.Comp(target) <= 0.5:
                 addstr_with_korean_support(stdscr, 17, 0, f"  효과가 별로인 듯 하다...")
             get_ch_with_sound(stdscr)
             display_status(stdscr, True)  # 상태 출력
@@ -472,22 +476,44 @@ def skill_message(stdscr, user, target, skill, counter_skill=None, damage = None
         addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 체력이 {heal_amount} 회복되었다!")
 
     elif skill.effect_type == "buff":
-        if skill.skW % 8 == 0:
-            addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 급소율이 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
-        elif skill.skW % 8 == 1:
-            addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 공격이 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
-        elif skill.skW % 8 == 2:
-            addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 방어가 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
-        elif skill.skW % 8 == 3:
-            addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 특수공격이 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
-        elif skill.skW % 8 == 4:
-            addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 특수방어가 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
-        elif skill.skW % 8 == 5:
-            addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 스피드가 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
-        elif skill.skW % 8 == 6:
-            addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 회피율이 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
-        elif skill.skW % 8 == 7:
-            addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 명중률이 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
+        if isinstance(skill.skW, tuple):
+            for B in skill.skW:
+                if B % 8 == 0:
+                    addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 급소율이 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"))
+                elif B % 8 == 1:
+                    addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 공격이 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"))
+                elif B % 8 == 2:
+                    addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 방어가 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"))
+                elif B % 8 == 3:
+                    addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 특수공격이 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"))
+                elif B % 8 == 4:
+                    addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 특수방어가 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"))
+                elif B % 8 == 5:
+                    addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 스피드가 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"))
+                elif B % 8 == 6:
+                    addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 회피율이 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"))
+                elif B % 8 == 7:
+                    addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 명중률이 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"))
+                if B != skill.skW[-1]:
+                    get_ch_with_sound(stdscr)
+                    display_status(stdscr, True)  # 상태 출력
+        else:
+            if skill.skW % 8 == 0:
+                addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 급소율이 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
+            elif skill.skW % 8 == 1:
+                addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 공격이 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
+            elif skill.skW % 8 == 2:
+                addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 방어가 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
+            elif skill.skW % 8 == 3:
+                addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 특수공격이 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
+            elif skill.skW % 8 == 4:
+                addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 특수방어가 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
+            elif skill.skW % 8 == 5:
+                addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 스피드가 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
+            elif skill.skW % 8 == 6:
+                addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 회피율이 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
+            elif skill.skW % 8 == 7:
+                addstr_with_korean_support(stdscr, 17, 0, f"  {user.name}의 명중률이 " + (f"{skill.skW//8 + 1}랭크 증가했다!" if skill.skW//8 >= 0 else f"{-(skill.skW//8 + 1)}랭크 감소했다!"))
     get_ch_with_sound(stdscr)  # 메시지를 잠시 보여줌
     if crit:
         display_status(stdscr, True)  # 상태 출력
@@ -505,6 +531,7 @@ def use_skill(user, target, skill, counter_skill):
     else: 
         skill.consecutive_uses = 1
     user.usedskill = skill
+
     # reflect 스킬 처리
     if skill.effect_type == "reflect":
         if random.random() > skill.acc*(0.5**(skill.consecutive_uses-1))/100:
@@ -561,9 +588,15 @@ def use_skill(user, target, skill, counter_skill):
 
     # buff 스킬 처리
     if skill.effect_type == "buff":
-        user.Rank[skill.skW % 8] = max(-6,min(6, user.Rank[skill.skW % 8] + skill.skW//8 + 1))
-        if skill.skW % 8 == 0:
-            user.Rank[0] = max(0,min(3, user.Rank[0]))
+        if isinstance(skill.skW, tuple):
+            for B in skill.skW:
+                user.Rank[B % 8] = max(-6,min(6, user.Rank[B % 8] + B//8 + 1))
+                if B % 8 == 0:
+                    user.Rank[0] = max(0,min(3, user.Rank[0]))
+        else:
+            user.Rank[skill.skW % 8] = max(-6,min(6, user.Rank[skill.skW % 8] + skill.skW//8 + 1))
+            if skill.skW % 8 == 0:
+                user.Rank[0] = max(0,min(3, user.Rank[0]))
         return False, 0, False
 
     return False, 0, False
@@ -625,19 +658,35 @@ def skill_phase(stdscr):
         get_ch_with_sound(stdscr)
         return skill_phase(stdscr)
     if nowCSmon_skill.effect_type == "buff":
-        if player.nowCSmon.Rank[nowCSmon_skill.skW % 8] == 6 and nowCSmon_skill.skW//8 >= 0 or player.nowCSmon.Rank[nowCSmon_skill.skW % 8] == -6 and nowCSmon_skill.skW//8 <= -2:
-            display_status(stdscr)
-            addstr_with_korean_support(stdscr, 17, 0, f"  {player.nowCSmon.name}의 "
-                                       +("공격은"       if nowCSmon_skill.skW % 8 == 1 else
-                                        "방어는"        if nowCSmon_skill.skW % 8 == 2 else
-                                        "특수공격은"    if nowCSmon_skill.skW % 8 == 3 else
-                                        "특수방어는"    if nowCSmon_skill.skW % 8 == 4 else
-                                        "스피드는"      if nowCSmon_skill.skW % 8 == 5 else
-                                        "회피율은"      if nowCSmon_skill.skW % 8 == 6 else
-                                        "명중률은"      if nowCSmon_skill.skW % 8 == 7 else
-                                        "급소율은") + " 이미 최대치야!")
-            get_ch_with_sound(stdscr)
-            return skill_phase(stdscr)
+        if isinstance(nowCSmon_skill.skW, tuple):
+            for B in nowCSmon_skill.skW:
+                if player.nowCSmon.Rank[B % 8] == 6 and B//8 >= 0 or player.nowCSmon.Rank[B % 8] == -6 and B//8 <= -2:
+                    display_status(stdscr)
+                    addstr_with_korean_support(stdscr, 17, 0, f"  {player.nowCSmon.name}의 "
+                                        +("공격은"       if B % 8 == 1 else
+                                            "방어는"        if B % 8 == 2 else
+                                            "특수공격은"    if B % 8 == 3 else
+                                            "특수방어는"    if B % 8 == 4 else
+                                            "스피드는"      if B % 8 == 5 else
+                                            "회피율은"      if B % 8 == 6 else
+                                            "명중률은"      if B % 8 == 7 else
+                                            "급소율은") + " 이미 최대치야!")
+                    get_ch_with_sound(stdscr)
+                    return skill_phase(stdscr)
+        else:
+            if player.nowCSmon.Rank[nowCSmon_skill.skW % 8] == 6 and nowCSmon_skill.skW//8 >= 0 or player.nowCSmon.Rank[nowCSmon_skill.skW % 8] == -6 and nowCSmon_skill.skW//8 <= -2:
+                display_status(stdscr)
+                addstr_with_korean_support(stdscr, 17, 0, f"  {player.nowCSmon.name}의 "
+                                        +("공격은"       if nowCSmon_skill.skW % 8 == 1 else
+                                            "방어는"        if nowCSmon_skill.skW % 8 == 2 else
+                                            "특수공격은"    if nowCSmon_skill.skW % 8 == 3 else
+                                            "특수방어는"    if nowCSmon_skill.skW % 8 == 4 else
+                                            "스피드는"      if nowCSmon_skill.skW % 8 == 5 else
+                                            "회피율은"      if nowCSmon_skill.skW % 8 == 6 else
+                                            "명중률은"      if nowCSmon_skill.skW % 8 == 7 else
+                                            "급소율은") + " 이미 최대치야!")
+                get_ch_with_sound(stdscr)
+                return skill_phase(stdscr)
     enemyCSmon_skill = enemyskill()
     # 우선순위 비교
     if nowCSmon_skill.priority > enemyCSmon_skill.priority or (nowCSmon_skill.priority == enemyCSmon_skill.priority and player.nowCSmon.CSPD >= enemyCSmon.CSPD):
@@ -820,7 +869,7 @@ def catch_monster(stdscr):
     successes = [random.randint(1, 100)**(1/3) <= catch_rate**(1/3), 
                  random.randint(1, 100)**(1/3) <= catch_rate**(1/3),  
                  random.randint(1, 100)**(1/3) <= catch_rate**(1/3)]
-    
+
     # 몬스터볼 반짝거리는 연출
     for i in range(6):  # 6번 반복 (반짝거림 효과)
         time.sleep(0.3)  # 0.3초 대기
@@ -968,9 +1017,10 @@ def exp_gain(stdscr):
     """경험치 획득"""
     # 현재 전산몬(nowCSmon)에 대한 처리 먼저 수행
     mymon = player.nowCSmon
+    monnum = player.csMons.index(mymon)
     max_level = max(player.csMons, key=lambda x: x.level).level
     enemyCSmon.drop_exp = int(enemyCSmon.drop_exp * max(1, enemyCSmon.level-max_level))  # 적 경험치 조정
-    if mymon.level == mymon.get_monster_max_level(battleturn):
+    if mymon.level >= mymon.get_monster_max_level(battleturn):
         display_status(stdscr)
         addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}은/는 이미 레벨 제한에 도달했다.")
         get_ch_with_sound(stdscr)
@@ -981,6 +1031,7 @@ def exp_gain(stdscr):
             exp = int(enemyCSmon.drop_exp * player.knowhow / 100)
             for ev in enemyCSmon.giving_EV:
                 mymon.EV[ev] =+ 1
+
         display_status(stdscr)
         addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}이/가 {exp}의 경험치를 얻었다!")
         mymon.exp += exp
@@ -988,17 +1039,20 @@ def exp_gain(stdscr):
         if mymon.exp >= mymon.max_exp:
             if mymon.level < mymon.get_monster_max_level(battleturn):
                 Level_up()
-                mymon.level_up(battleturn)
+                evocheck = mymon.level_up(battleturn)
+                if evocheck == True:
+                    evolution(stdscr, mymon, monnum, True)
                 display_status(stdscr)
                 addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}이/가 {mymon.level}레벨로 올랐다!")
                 get_ch_with_sound(stdscr)
             else:
                 mymon.exp = 0
+
     # 나머지 전산몬에 대한 처리
-    for mymon in player.csMons:
-        if mymon == player.nowCSmon:  # 이미 처리한 nowCSmon은 건너뜀
+    for monnum, mymon in enumerate(player.csMons):
+        if monnum == player.csMons.index(player.nowCSmon):  # 이미 처리한 nowCSmon은 건너뜀
             continue
-        if mymon.level == mymon.get_monster_max_level(battleturn):
+        if mymon.level >= mymon.get_monster_max_level(battleturn):
             continue
         if mymon.dictNo == -1:
             continue
@@ -1014,14 +1068,39 @@ def exp_gain(stdscr):
                         mymon.EV[ev] =+ 1
             if mymon.exp >= mymon.max_exp:
                 if mymon.level < mymon.get_monster_max_level(battleturn):
-                    mymon.level_up(battleturn)
                     Level_up()
+                    evocheck = mymon.level_up(battleturn)
+                    if evocheck == True:
+                        evolution(stdscr, mymon, monnum, False)
                     display_status(stdscr)
                     addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}이/가 {mymon.level}레벨로 올랐다!")
                     get_ch_with_sound(stdscr)
                 else:
                     mymon.exp = 0
-                    
+
+def evolution(stdscr, mymon, monnum, isnowCSmon):
+    """진화"""
+    display_status(stdscr)
+    addstr_with_korean_support(stdscr, 17, 0, f"  {mymon.name}이/가 진화하려고 한다!")
+    get_ch_with_sound(stdscr)
+    tempmon = mymon
+    evmon = copy.deepcopy(mymon.evomon)
+    evmon.evomon = None
+    evmon.IV = tempmon.IV
+    evmon.EV = tempmon.EV
+    evmon.grade = tempmon.grade
+    evmon.level = tempmon.level
+    evmon.exp = tempmon.exp
+    evmon.stage = tempmon.stage
+    mymon = evmon
+    player.csMons[monnum] = evmon
+    if isnowCSmon:
+        player.nowCSmon = evmon
+    mymon.update_fullreset()
+    display_status(stdscr)
+    addstr_with_korean_support(stdscr, 17, 0, f"  {tempmon.name}이/가 {mymon.name}으로 진화했다!")
+    get_ch_with_sound(stdscr)
+
 def battle(getplayer, getenemy, turn, endturn):
     global battleturn, player, enemy, enemyCSmon
     battleturn = turn

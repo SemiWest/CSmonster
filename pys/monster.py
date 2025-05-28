@@ -100,9 +100,18 @@ class Monster:
         
         self.max_exp = int((self.level ** 3))  # 경험치 필요량
         self.drop_exp = int(self.level * (30-10*difficulty))  # 드랍 경험치
-        
-        self.update_battle()
 
+        self.update_battle()
+        
+    def evolution_Check(self):
+        if self.dictNo == 204 and self.level >= 10:
+            self.evomon = cs300
+            return True 
+        elif self.dictNo == 230 and self.level >= 13:
+            self.evomon = cs330
+            return True
+        else: return False
+        
     def update_fullreset(self):
         self.update()
         self.nowhp = self.HP  # 현재 체력 회복
@@ -121,6 +130,7 @@ class Monster:
             if self.level >= self.get_monster_max_level(turn):
                 self.exp = 0
                 break
+        return self.evolution_Check()
 
     def is_alive(self):
         return self.nowhp > 0
@@ -183,13 +193,14 @@ class Monster:
             self.priority = priority # 우선도
             self.consecutive_uses = 0  # 연속 사용 횟수 (리플렉트 계열 스킬에 사용)
 
-
         def damage(self, target, attacker):
             # 데미지 계산
             # 크리티컬
             crit = random.random() < attacker.critChance
             if self.effect_type == "Pdamage": 
                 basedmg = ((2*attacker.level + 10)/250)*attacker.CATK/(target.DEF if crit else target.CDEF)
+                if self.name == "빅O":
+                    basedmg *= ((target.CDEF+target.CSP_DEF)**0.5)/(2*(attacker.CATK)**0.5)
             else: 
                 basedmg = ((2*attacker.level + 10)/250)*attacker.CSP_ATK/(target.SP_DEF if crit else target.CSP_DEF) 
             
@@ -225,13 +236,14 @@ class Monster:
 
         def Comp(self, target):
             multiplier = 1
-            for type in target.type:
-                multiplier *= comp(self.skill_type, type)
+            for typ in target.type:
+                multiplier *= comp(self.skill_type, typ)
             return multiplier
 
 # 플레이어와 적 전산몬스터 생성
 Nonemonster = Monster(dictNo = -1, name="빈 슬롯", HP = 0, ATK = 0, DEF = 0, SP_ATK = 0, SP_DEF = 0, SPD = 0, type=None, evlev=1, evbefore=None,)
 
+# 꼬렛
 cs101 = Monster(dictNo = 101, name="프밍기", HP = 30, ATK = 56, DEF = 35, SP_ATK = 25, SP_DEF = 35, SPD = 72, type=["전산이론"], evlev=1, evbefore=None,
                 description="카이스트 입학 후 가장 먼저 듣게 되는 전산과 기필 과목이다. 시간표 브레이커로 유명하다.")
 cs101.giving_EV = [1]
@@ -261,6 +273,7 @@ cs101.skills = {
     
 }
 
+# 파이리
 cs206 = Monster(dictNo = 206, name="데이타구조", HP = 39, ATK = 52, DEF = 43, SP_ATK = 60, SP_DEF = 50, SPD = 65, type=["데이터 과학", "전산이론"], evlev=1, evbefore=None,)
 cs206.giving_EV = [3]
 cs206.skills = {
@@ -294,11 +307,12 @@ cs206.skills = {
         effect_type="buff",
         type="데이터 과학",
         pp = 20,
-        skW=1,
-        description="해시맵을 사용하여 최적의 공격 방법을 찾는다. 공격력을 올린다."),
+        skW=3,
+        description="해시맵을 사용하여 최적의 공격 방법을 찾는다. 특수공격을 올린다."),
 }
 
-cs204 = Monster(dictNo = 204, name="이산구조", HP = 57, ATK = 40, DEF = 55, SP_ATK = 40, SP_DEF = 50, SPD = 60, type=["전산이론", "시큐어컴퓨팅"], evlev=1, evbefore=None,)
+# 동미러
+cs204 = Monster(dictNo = 204, name="이산구조", HP = 57, ATK = 24, DEF = 86, SP_ATK = 24, SP_DEF = 86, SPD = 23, type=["전산이론", "비주얼컴퓨팅"], evlev=1, evbefore=None,)
 cs204.giving_EV = [0]
 cs204.skills = {
     'Modus Pones': Monster.Skill(
@@ -336,6 +350,7 @@ cs204.skills = {
         description="무한 루프 그래프를 만들어 상대의 공격을 흘려보낸다."),
 }
 
+# 이브이
 cs230 = Monster(dictNo = 230, name="시프", HP = 65, ATK = 60, DEF = 50, SP_ATK = 70, SP_DEF = 50, SPD = 85, type=["시스템-네트워크", "시큐어컴퓨팅"], evlev=2, evbefore=None,)
 cs230.giving_EV = [3,5]
 cs230.skills = {
@@ -360,7 +375,7 @@ cs230.skills = {
         effect_type="Sdamage", 
         type="시큐어컴퓨팅",
         pp=35,
-        skW=60,
+        skW=50,
         priority=1,
         description="어떻게 해서 공격한다. 선제공격한다."),
     '셀프 디버그': Monster.Skill(
@@ -371,6 +386,83 @@ cs230.skills = {
         skW=0.5,
         description="자기 자신을 디버깅해 에러를 고친다. 체력을 최대 체력의 절반만큼 회복한다."),
 }
+
+# 쥬피썬더
+cs330 = Monster(dictNo = 330, name="OS", HP =65, ATK = 65, DEF = 60, SP_ATK = 110, SP_DEF = 95, SPD = 130, type = ["시스템-네트워크", "시큐어컴퓨팅"], evlev=3, evbefore="시프", description="전산과 과목 중 가장 악명이 높다. 자전거를 손을 놓고 타게 만드는 과목이다.")
+cs330.giving_EV = [5, 5, 3]
+cs330.skills = {
+    '우주방사선': Monster.Skill(
+        name='우주방사선', 
+        effect_type="buff", 
+        type="시스템-네트워크",
+        pp=5,
+        skW=(random.randint(8, 15), random.randint(-16, -9)),
+        description="무작위로 능력치 하나를 크게 올리고 대신 능력치 하나를 낮춘다."),
+    'System32 삭제': Monster.Skill(
+        name='System32 삭제', 
+        effect_type="Sdamage", 
+        type="시큐어컴퓨팅",
+        pp=5,
+        skW=130,
+        acc=40,
+        description="상대의 운영체제 폴더를 삭제한다. 명중률이 낮다."),
+    '페이지 폴트': Monster.Skill(
+        name='페이지 폴트', 
+        effect_type="Sdamage", 
+        type="시큐어컴퓨팅",
+        pp=20,
+        skW=70,
+        acc=95,
+        description="상대가 사용중인 페이지를 페이징 파일로 옮겨버린다."),
+    '셀프 디버그': Monster.Skill(
+        name='셀프 디버그', 
+        effect_type="heal", 
+        type="시스템-네트워크",
+        pp=5,
+        skW=0.5,
+        description="자기 자신을 디버깅해 에러를 고친다. 체력을 최대 체력의 절반만큼 회복한다."),
+}
+
+# 동탁군
+cs300 = Monster(dictNo = 300, name = "알고개", HP = 67, ATK = 89, DEF = 116, SP_ATK = 79, SP_DEF = 116, SPD = 33, type = ["전산이론"], evlev = 2, evbefore = "이산구조")
+cs300.giving_EV = [2, 4]
+cs300.skills = {
+    '퀵소트': Monster.Skill(
+        name='퀵소트', 
+        effect_type="buff",
+        type="전산이론",
+        pp=15,
+        skW=(10,12),
+        acc = -1,
+        priority=1, 
+        description="빠르게 정렬해 방어와 특수 방어를 모두 크게 올린다."),
+    '빅O': Monster.Skill(
+        name='빅O', 
+        effect_type="Pdamage",
+        type="전산이론",
+        pp=10,
+        skW=60, 
+        description="총 방어 수치가 높은 만큼 더 강하게 공격한다."),
+    '이산화2': Monster.Skill(
+        name='이산화2', 
+        effect_type="halve_hp",
+        type="시큐어컴퓨팅",
+        pp=15,
+        skW=0,
+        acc=80,
+        description="상대를 이산화시켜 HP를 반으로 줄인다."),
+    '무한루프그래프': Monster.Skill(
+        name='무한루프그래프', 
+        effect_type="reflect", 
+        type = "전산이론",
+        pp=15,
+        skW=0,
+        acc=100,
+        priority=4, 
+        description="무한 루프 그래프를 만들어 상대의 공격을 흘려보낸다."),
+}
+
+
 
 # 졸업 연구
 # 졸업 연구는 특별한 몬스터로, 레벨과 스킬이 다름
@@ -399,4 +491,6 @@ monsters = {
     "이산구조": cs204,
     "데이타구조": cs206,
     "시프": cs230,
+    "OS": cs330,
+    "알고개": cs300,
 }

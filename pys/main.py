@@ -77,30 +77,31 @@ def limited_turn_mode(turn, totalhap, Me, endturn = 100):
             met_monster.update_fullreset()
         elif turn == 3:
             met_monster = copy.deepcopy(Hanjin)
-        elif turn <= 10:
-            # 1~10 스테이지
-            meetable_monsters = []
-            for i in range(100):
-                if i<40: meetable_monsters.append(monsters["프밍기"])
-                elif i<70: meetable_monsters.append(monsters["데이타구조"])
-                elif i<100: meetable_monsters.append(monsters["이산구조"])
-                
-            met_monster = wild_monster(meetable_monsters)
-            met_monster.level = random.randint(met_monster.get_monster_max_level(turn)-8, 
-                                               (met_monster.get_monster_max_level(turn) + max(-8, (turn%10-11))))
-            met_monster.stage = turn
-            if turn % 10 == 0:
-                met_monster.level = met_monster.get_monster_max_level(turn)
-                met_monster.grade = "중간 보스"
-                met_monster.hpShield = True
-            met_monster.update_fullreset()
         else:
-            meetable_monsters = []
-            for i in range(100):
-                if i<40: meetable_monsters.append(monsters["프밍기"])
-                elif i<65: meetable_monsters.append(monsters["데이타구조"])
-                elif i<90: meetable_monsters.append(monsters["이산구조"])
-                elif i<100: meetable_monsters.append(monsters["시프"])
+            if turn <= 10:
+                # 1~10 스테이지
+                meetable_monsters = []
+                for i in range(100):
+                    if i<40: meetable_monsters.append(monsters["프밍기"])
+                    elif i<70: meetable_monsters.append(monsters["데이타구조"])
+                    elif i<100: meetable_monsters.append(monsters["이산구조"])
+            elif turn <= 20:
+                meetable_monsters = []
+                for i in range(100):
+                    if i<20: meetable_monsters.append(monsters["프밍기"])
+                    elif i<50: meetable_monsters.append(monsters["데이타구조"])
+                    elif i<80: meetable_monsters.append(monsters["이산구조"])
+                    elif i<100: meetable_monsters.append(monsters["시프"])
+            elif turn <= 30:
+                meetable_monsters = []
+                for i in range(100):
+                    if i<10: meetable_monsters.append(monsters["프밍기"])
+                    elif i<40: meetable_monsters.append(monsters["데이타구조"])
+                    elif i<70: meetable_monsters.append(monsters["이산구조"])
+                    elif i<90: meetable_monsters.append(monsters["시프"])
+                    elif i<95: meetable_monsters.append(monsters["OS"])
+                    elif i<100: meetable_monsters.append(monsters["알고개"])
+
                 
             met_monster = wild_monster(meetable_monsters)
             met_monster.level = random.randint(met_monster.get_monster_max_level(turn)-8, 
@@ -194,8 +195,8 @@ while True:
             else:
                 Me.name = newname
                 break
-        
         Me.nowCSmon = Me.csMons[0]
+        Me.nowCSmon.update_fullreset()
         clear_screen()
         limited_turn_mode(turn, totalhap, Me, 50)
     elif start == "기록 보기":
