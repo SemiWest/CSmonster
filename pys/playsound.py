@@ -1,11 +1,9 @@
 import pygame
-import curses
 import sys
 import os
 import time
 import threading
 import unicodedata
-
 import pygame
 
 # 전역 변수
@@ -100,11 +98,11 @@ def play_effect(file_path, esp_volume = 100):
         sound.set_volume(ESVolume / esp_volume)  # 볼륨 설정
         effect_channel.play(sound)  # 효과음 재생
 
-def get_ch_with_sound(stdscr):
-    stdscr.refresh()
-    curses.flushinp()
-    stdscr.getch()
-    play_effect("../sound/Conv_end.mp3")
+# def get_ch_with_sound(stdscr):
+#     stdscr.refresh()
+#     curses.flushinp()
+#     stdscr.getch()
+#     play_effect("../sound/Conv_end.mp3")
 
 def option_select_sound():
     play_effect("../sound/Option_select.mp3")

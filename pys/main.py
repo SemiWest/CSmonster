@@ -1,6 +1,5 @@
 from battle import *
-from player import *
-from game_menu import *
+import graduationmode
 import option
 import csv
 
@@ -67,7 +66,7 @@ def save_game_log_csv(filename, player, turn, totalhap):
         
         writer.writerow(row)
 
-def limited_turn_mode(turn, totalhap, Me, endturn = 100):
+def Adventure_mode(turn, totalhap, Me, endturn = 100):
     # 배경음악 재생 시작
     play_music(["../music/Im_a_kaist_nonmelody.wav", "../music/Im_a_kaist_melody.wav"])
     while turn <= endturn:
@@ -113,7 +112,9 @@ def limited_turn_mode(turn, totalhap, Me, endturn = 100):
                 met_monster.hpShield = True
             met_monster.update_fullreset()
             
-        battlehap = battle(Me, met_monster, turn, endturn)
+        # pygame 화면을 battle 함수에 전달하기 위해 game_menu에서 가져오기
+        from game_menu import screen
+        battlehap = battle(Me, met_monster, turn, endturn, screen)
         if battlehap == 0:
             turn = 1
             totalhap = 0
@@ -146,15 +147,9 @@ def limited_turn_mode(turn, totalhap, Me, endturn = 100):
     sys.stdin.flush()
     input("\n아무 키나 눌러 종료")
 
-os.system(f'mode con: cols={120} lines={30}')
-os.system(f"title 전산몬스터")
-
-print("\n\n\n\n\n\n\n\n\n\nF11키를 눌러 전체화면으로 전환해주세요.")
-print("폰트 설정: D2coding, 폰트 크기: 36")
-print("조작키 정보: 방향키로 조작, enter키로 선택, esc키/q키/backspace키로 종료 및 취소")
-print("스크립트 넘기기: 아무 키나 누르기")
-input("\n\n아무 키나 눌러 시작")
-
+def graduation_mode(totalhap, Me):
+    graduationmode.game_start(totalhap, Me)
+    
 initialize_channels()
 change_options(music_on, music_volume, effectsound, ESVolume, effect_channel, music_channel)
 set_difficulty(difficulty)
@@ -167,7 +162,6 @@ while True:
     start = main_menu()
     if   start == "졸업 모드":
         stop_music()
-        turn = 0
         totalhap = 0
         Me.name = "Unknown"
         Me.csMons = [
@@ -186,19 +180,9 @@ while True:
             copy.deepcopy(items["빈 슬롯"]),
             copy.deepcopy(items["빈 슬롯"])
             ]
-        while True:
-            newname = input("이름을 입력하세요: ")
-            if len(newname) > 10:
-                print("이름은 10자 이내로 입력해주세요.")
-            elif len(newname) < 1:
-                print("이름을 입력해주세요.")
-            else:
-                Me.name = newname
-                break
-        Me.nowCSmon = Me.csMons[0]
-        Me.nowCSmon.update_fullreset()
-        clear_screen()
-        limited_turn_mode(turn, totalhap, Me, 50)
+        
+        graduation_mode(totalhap, Me)
+
     elif start == "기록 보기":
         clear_screen()
         # 절대 경로 생성
@@ -236,11 +220,39 @@ while True:
                 file.seek(0)  # 파일 포인터를 처음으로 되돌림
         clear_screen()
     elif start == "모험 모드":
-        play_music(["../music/Im_a_kaist_nonmelody.wav", "../music/Im_a_kaist_melody.wav"])
-        print("개발중입니당")
-        input("아무 키나 눌러 종료")
-        clear_screen()
         stop_music()
+        turn = 0
+        totalhap = 0
+        Me.name = "Unknown"
+        Me.csMons = [
+            copy.deepcopy(monsters["데이타구조"]), 
+            copy.deepcopy(monsters["빈 슬롯"]), 
+            copy.deepcopy(monsters["빈 슬롯"]), 
+            copy.deepcopy(monsters["빈 슬롯"]), 
+            copy.deepcopy(monsters["빈 슬롯"]), 
+            copy.deepcopy(monsters["빈 슬롯"])
+            ]
+        Me.items = [
+            copy.deepcopy(items["빈 슬롯"]),
+            copy.deepcopy(items["빈 슬롯"]),
+            copy.deepcopy(items["빈 슬롯"]),
+            copy.deepcopy(items["빈 슬롯"]),
+            copy.deepcopy(items["빈 슬롯"]),
+            copy.deepcopy(items["빈 슬롯"])
+            ]
+        while True:
+            newname = input("이름을 입력하세요: ")
+            if len(newname) > 10:
+                print("이름은 10자 이내로 입력해주세요.")
+            elif len(newname) < 1:
+                print("이름을 입력해주세요.")
+            else:
+                Me.name = newname
+                break
+        Me.nowCSmon = Me.csMons[0]
+        Me.nowCSmon.update_fullreset()
+        clear_screen()
+        Adventure_mode(turn, totalhap, Me, 50)
     elif start == "환경 설정":
         music_volume, music_on, effectsound, ESVolume, difficulty = option.set(music_volume, music_on, effectsound, ESVolume, difficulty)
         change_options(music_on, music_volume, effectsound, ESVolume, effect_channel, music_channel)
@@ -312,9 +324,6 @@ while True:
         getch = input("\n아무 키나 눌러 종료")
         clear_screen()
     else:
-        clear_screen()
-        input("플레이 해주셔서 감삼당\n\n아무 키나 눌러 종료")
-        clear_screen()
         break
 
 

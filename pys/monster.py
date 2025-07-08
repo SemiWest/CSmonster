@@ -1,4 +1,5 @@
 import random
+
 difficulty = 1  # 난이도 조정 (0: 쉬움, 1: 보통, 2: 어려움)
 def set_difficulty(difficulty_level):
     global difficulty
@@ -43,13 +44,13 @@ def comp(atskilltype, tgtype):
     return type_chart[atskilltype][tgtype]/2
 
 class Monster:
-    def __init__(self, dictNo, name, HP, ATK, DEF, SP_ATK, SP_DEF, SPD, type=["전산이론"], evlev=1, evbefore=None, description=""):
+    def __init__(self, dictNo, name, HP, ATK, DEF, SP_ATK, SP_DEF, SPD, type=["전산이론"], evlev=1, evbefore=None, description="", image="../img/monsters/데이타구조.png"):
         self.dictNo = dictNo  # 몬스터 번호
         self.name = name
         self.level = 5
         self.exp = 0
         self.type = type  # 타입 (데이터 과학, 시스템-네트워크, 전산이론, 소프트웨어디자인, 시큐어컴퓨팅, 비주얼컴퓨팅, 인공지능-정보서비스, 소셜컴퓨팅, 인터랙티브컴퓨팅)
-
+        self.image = image
         self.IV = []
         for i in range(6):
             self.IV.append(random.randint(0, 31))  # IV는 0~31 사이의 랜덤 값

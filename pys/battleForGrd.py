@@ -96,50 +96,15 @@ def display_status(screen, detail=False):
     draw_text(screen, f"스테이지 {battleturn}", sX, sY+960, BLUE)
     draw_text(screen, f"턴 {hap_num}", sX, sY+1000, CYAN)
     
-    # 적 상태 출력
-    if isinstance(enemy, Player):
-        for i, mymon in enumerate(enemy.csMons):
-            color = 1 if not mymon.is_alive() else 5 if mymon.dictNo == -1 else 99
-            draw_text(screen, "◒", esX+i*32, sY+40, color)
-    
-    if enemyCSmon.dictNo == -2:
-        # 보스 몬스터 아스키 아트
-        draw_text(screen, "▗███████▖", esX+50, esY, RED)
-        draw_text(screen, "███▛ ▜███", esX+50, esY+36, RED)
-        draw_text(screen, "███▙▀▟███", esX+50, esY+72, )
-        draw_text(screen, "▝███████▘", esX+50, esY+108)
-        draw_text(screen, "▃", esX+90, esY+36)
-    elif enemyCSmon.dictNo == -3:
-        # 보스 몬스터 아스키 아트
-        draw_text(screen, "▗███████▖", esX+60, esY, 1)
-        draw_text(screen, "███▛ ▜███", esX+60, esY+20, 1)
-        draw_text(screen, "███▙▀▟███", esX+60, esY+40)
-        draw_text(screen, "▝███████▘", esX+60, esY+60)
-        draw_text(screen, "▃", esX+100, esY+20)
-    elif enemyCSmon.grade == "보스":
-        screen.blit(STAT, (esX, esY))
-        draw_text(screen, f"{enemyCSmon.name}", esX+64, esY+52, RED)
-        draw_text(screen, f"lv.{enemyCSmon.level}", esX+384, esY+52, WHITE)
-        animate_health_bar(screen, esY+104, esX+135, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
-        for i, j in enumerate(enemyCSmon.type):
-            display_type(screen, esY, esX+470+i*124, j)
-    elif enemyCSmon.grade == "중간 보스":
-        screen.blit(STAT, (esX, esY))
-        draw_text(screen, f"{enemyCSmon.name}", esX+64, esY+52, YELLOW)
-        draw_text(screen, f"lv.{enemyCSmon.level}", esX+384, esY+52, WHITE)
-        animate_health_bar(screen, esY+104, esX+135, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
-        for i, j in enumerate(enemyCSmon.type):
-            display_type(screen, esY, esX+470+i*124, j)
-    else:
-        screen.blit(STAT, (esX, esY))
-        image = pygame.image.load(enemyCSmon.image)  # 몬스터 이미지 로드
-        image = pygame.transform.scale_by(image, 8)  # 이미지 크기 조정
-        screen.blit(image, (esX+860-image.get_width()//2, esY+310-image.get_height()))
-        draw_text(screen, f"{enemyCSmon.name}", esX+64, esY+52, WHITE)
-        draw_text(screen, f"lv.{enemyCSmon.level}", esX+384, esY+52, WHITE)
-        animate_health_bar(screen, esY+104, esX+135, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
-        for i, j in enumerate(enemyCSmon.type):
-            display_type(screen, esY, esX+470+i*124, j)
+    screen.blit(STAT, (esX, esY))
+    image = pygame.image.load(enemyCSmon.image)  # 몬스터 이미지 로드
+    image = pygame.transform.scale_by(image, 8)  # 이미지 크기 조정
+    screen.blit(image, (esX+860-image.get_width()//2, esY+310-image.get_height()))
+    draw_text(screen, f"{enemyCSmon.name}", esX+64, esY+52, WHITE)
+    draw_text(screen, f"lv.{enemyCSmon.level}", esX+384, esY+52, WHITE)
+    animate_health_bar(screen, esY+104, esX+135, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
+    for i, j in enumerate(enemyCSmon.type):
+        display_type(screen, esY, esX+470+i*124, j)
             
         
     # 플레이어 상태 출력
@@ -252,8 +217,8 @@ def option_choice(screen, option_case, description=None, coloring=None, temp=Non
         elif option_case == "몬스터":
             options = player.csMons
             for i, option in enumerate(options):
-                x_pos = sX + 20 + (300 * (i % 2))
-                y_pos = stY + int(i / 2) * 25
+                x_pos = stX + (300 * (i % 2))
+                y_pos = stY + int(i / 2) * 56
                 
                 color = 0
                 if coloring != None and coloring[i] != False:
@@ -274,13 +239,13 @@ def option_choice(screen, option_case, description=None, coloring=None, temp=Non
         elif option_case == "아이템":
             options = player.items
             for i, option in enumerate(options):
-                x_pos = sX + 20 + (300 * (i % 2))
-                y_pos = stY + int(i / 2) * 25
+                x_pos = stX + (300 * (i % 2))
+                y_pos = stY + int(i / 2) * 56
                 
                 color = 0
                 if coloring != None and coloring[i] != False:
                     color = coloring[i]
-                elif option.dictNo == -1:
+                elif option.grade == "아이템아님":  # 빈 슬롯인 경우
                     color = 4
                 
                 prefix = "> " if i == current_index else "  "
@@ -295,10 +260,10 @@ def option_choice(screen, option_case, description=None, coloring=None, temp=Non
              
         elif option_case == "배틀옵션":
             display_status(screen, True)  # 상태 출력
-            options = ["스킬 사용", "전산몬 교체", "아이템 사용", "전산몬 포획","도망가기"]
+            options = ["스킬 사용", "전산몬 교체", "아이템 사용", "전산몬 포획"]
             for i, option in enumerate(options):
-                x_pos = sX + 20 + (300 * (i % 2))
-                y_pos = stY + int(i / 2) * 40
+                x_pos = stX + (300 * (i % 2))
+                y_pos = stY + int(i / 2) * 56
                 
                 prefix = "> " if i == current_index else "  "
                 draw_text(screen, f"{prefix}{option}", x_pos, y_pos, WHITE)
