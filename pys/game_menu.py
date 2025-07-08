@@ -14,6 +14,7 @@ LIGHTGRAY = (178, 178, 178)
 ORANGE = (255, 165, 0)
 LIGHTBLUE = (173, 216, 230)
 VIOLET = (238, 130, 238)
+PURPLE = (128, 0, 128)
 
 # 전역 변수로 screen을 선언하되 초기화는 하지 않음
 screen = None
@@ -45,8 +46,9 @@ def load_title_image():
     return image
 
 def create_flash_effect(surface, intensity):
+    """화면 플래시 효과를 만드는 함수"""
     flash_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-    flash_surface.fill(BLACK)
+    flash_surface.fill(WHITE)  # 흰색 플래시
     flash_surface.set_alpha(intensity)
     surface.blit(flash_surface, (0, 0))
 
@@ -80,13 +82,24 @@ def main_menu():
             start_y = -image_rect.height  # 화면 위쪽에서 시작
             end_y = center_y - image_rect.height * 0.7 # 화면 중앙보다 조금 위
             
-            # 총 애니메이션 프레임 수 (일정한 속도로 떨어짐)
-            total_frames = 61
+            # 총 애니메이션 프레임 수 (중력 가속도로 떨어짐)
+            total_frames = 60
+            gravity = 0.8  # 중력 가속도
+            velocity = 0   # 초기 속도
+            current_y = start_y
+            
             for frame in range(total_frames):
                 # 화면 지우기 (흰색 배경)
                 screen.fill(WHITE)
-                # 일정한 속도로 떨어지는 애니메이션
-                current_y = start_y + frame**2 * (end_y - start_y)/3600
+                
+                # 물리 기반 애니메이션 (중력 가속도)
+                velocity += gravity
+                current_y += velocity
+                
+                # 목표 지점에 도달하면 정지
+                if current_y >= end_y:
+                    current_y = end_y
+                    break
                 image_x = center_x - image_rect.width // 2
                 # 이미지 그리기
                 screen.blit(title_image, (image_x, current_y))
@@ -100,11 +113,32 @@ def main_menu():
                         return False
             
             # 중앙 도달 시 플래시 효과와 게임 시작 사운드
-            create_flash_effect(screen, 255)  # 플래시 효과
+            # 최종 이미지를 그리고 게임 시작 사운드 재생
+            image_x = center_x - image_rect.width // 2
+            screen.fill(WHITE)
+            screen.blit(title_image, (image_x, current_y))
+            pygame.display.flip()
+            
             game_started()  # 게임 시작 사운드 재생
             
+            # 플래시 효과 (여러 프레임에 걸쳐)
+            for flash_frame in range(8):
+                screen.fill(WHITE)
+                screen.blit(title_image, (image_x, current_y))
+                
+                # 플래시 강도 (점점 약해짐)
+                flash_intensity = 255 - (flash_frame * 32)
+                if flash_intensity > 0:
+                    create_flash_effect(screen, flash_intensity)
+                    
+                pygame.display.flip()
+                pygame.time.wait(150)  # 0.15초 대기
+            
             # 2초 정적 (이미지만 표시)
-            pygame.time.wait(3000)
+            screen.fill(WHITE)
+            screen.blit(title_image, (image_x, current_y))
+            pygame.display.flip()
+            pygame.time.wait(2000)
                     
         # Main menu loop
         current_index = 0
@@ -179,3 +213,208 @@ def main_menu():
             clock.tick(60)  # 60 FPS
     
     return menu_logic()
+
+def wait_for_key():
+    """키 입력을 기다리는 함수"""
+    pygame.event.clear()  # 이벤트 큐 정리
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                return
+
+def show_records():
+    """기록 보기 화면을 pygame으로 표시"""
+    init_pygame_screen()
+    
+    # CSV 파일 경로 확인
+    import os
+    import csv
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    filepath = os.path.join(base_dir, "game_log.csv")
+    
+    if not os.path.isfile(filepath):
+        # 기록이 없는 경우
+        screen.fill(WHITE)
+        draw_text(screen, "기록이 없습니다.", 50, 200, BLACK)
+        draw_text(screen, "아무 키나 눌러 메뉴로 돌아가기", 50, 240, GRAY)
+        pygame.display.flip()
+        wait_for_key()
+        return
+    
+    # 클리어 기록 읽기
+    clear_records = []
+    with open(filepath, 'r', encoding='utf-8') as file:
+        reader = csv.reader(file)
+        header = next(reader)  # 헤더 스킵
+        for row in reader:
+            if len(row) > 2 and row[2] == "클리어":
+                clear_records.append(row)
+    
+    if not clear_records:
+        screen.fill(WHITE)
+        draw_text(screen, "클리어 기록이 없습니다.", 50, 200, BLACK)
+        draw_text(screen, "아무 키나 눌러 메뉴로 돌아가기", 50, 240, GRAY)
+        pygame.display.flip()
+        wait_for_key()
+        return
+    
+    # 기록 표시 (페이지별로)
+    current_page = 0
+    while current_page < len(clear_records):
+        screen.fill(WHITE)
+        
+        y_pos = 50
+        draw_text(screen, "클리어 기록", 50, y_pos, BLACK)
+        y_pos += 80  # 줄간격 40 * 2
+        
+        record = clear_records[current_page]
+        draw_text(screen, f"{current_page + 1}. {record[0]}", 50, y_pos, BLACK)
+        y_pos += 40
+        draw_text(screen, f"    플레이 난이도 {record[1]} | 졸업 GPA {record[3]} | 총 전투 횟수 {record[4]}", 50, y_pos, BLACK)
+        y_pos += 40
+        draw_text(screen, "    잡은 전산몬스터", 50, y_pos, BLACK)
+        y_pos += 40
+        
+        # 잡은 몬스터 표시
+        for i in range(5, len(record), 3):
+            if i+2 < len(record) and record[i] != "빈 슬롯":
+                monster_text = f"       {record[i]} lv {record[i+1]}  잡은 스테이지: {record[i+2]}"
+                draw_text(screen, monster_text, 50, y_pos, BLACK)
+                y_pos += 40
+        
+        y_pos += 40
+        if current_page < len(clear_records) - 1:
+            draw_text(screen, "아무 키나 눌러 다음 페이지로 (q키: 종료)", 50, y_pos, GRAY)
+        else:
+            draw_text(screen, "아무 키나 눌러 메뉴로 돌아가기", 50, y_pos, GRAY)
+        
+        pygame.display.flip()
+        
+        # 키 입력 대기
+        waiting = True
+        while waiting:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        return
+                    waiting = False
+                    current_page += 1
+                    break
+
+def show_credits():
+    """제작자 정보를 pygame으로 표시"""
+    init_pygame_screen()
+    
+    screen.fill(WHITE)
+    
+    y_center = SCREEN_HEIGHT // 2 - 160  # 8줄 * 40 / 2 = 160
+    
+    draw_text(screen, "제작자", SCREEN_WIDTH // 2 - 96, y_center, BLACK)  # "제작자" 3글자 * 32 = 96
+    y_center += 80
+    
+    draw_text(screen, "SemiWest", SCREEN_WIDTH // 2 - 128, y_center, BLACK)  # "SemiWest" 8글자 * 16 = 128 (영문은 절반)
+    y_center += 80
+    
+    draw_text(screen, "special thank to", SCREEN_WIDTH // 2 - 256, y_center, BLACK)  # 16글자 * 16 = 256
+    y_center += 80
+    
+    draw_text(screen, "eweRim", SCREEN_WIDTH // 2 - 96, y_center, BLACK)  # "eweRim" 6글자 * 16 = 96
+    y_center += 80
+    
+    draw_text(screen, "감사링", SCREEN_WIDTH // 2 - 96, y_center, BLACK)  # "감사링" 3글자 * 32 = 96
+    y_center += 80
+    
+    draw_text(screen, "아무 키나 눌러 메뉴로 돌아가기", 50, SCREEN_HEIGHT - 100, GRAY)
+    
+    pygame.display.flip()
+    wait_for_key()
+
+def show_help():
+    """도움말을 pygame으로 표시"""
+    init_pygame_screen()
+    
+    # 첫 번째 페이지
+    screen.fill(WHITE)
+    
+    y_pos = 50
+    draw_text(screen, "도움말", 50, y_pos, BLACK)
+    y_pos += 80
+    
+    help_texts = [
+        "전산몬스터는 포켓몬스터의 패러디 게임입니다.",
+        "졸업 모드는 30턴의 전투를 거쳐 좋은 성적으로 졸업하는 것이 목표입니다.",
+        "무한 모드는 무한으로 전투를 진행하는 모드입니다.",
+        "기록 보기에서는 졸업 모드에서 클리어한 기록을 보여줍니다.",
+        "",
+        "폰트 설정: D2coding, 폰트 크기: 32",
+        "조작키 정보: 방향키로 조작, enter키로 선택, esc키/q키/backspace키로 종료 및 취소",
+        "스크립트 넘기기: 아무 키나 누르기"
+    ]
+    
+    for text in help_texts:
+        if text:  # 빈 줄이 아닌 경우
+            draw_text(screen, text, 50, y_pos, BLACK)
+        y_pos += 40
+    
+    draw_text(screen, "아무 키나 눌러 다음 페이지로", 50, y_pos + 40, GRAY)
+    
+    pygame.display.flip()
+    wait_for_key()
+    
+    # 두 번째 페이지 - 상성표
+    screen.fill(WHITE)
+    
+    y_pos = 50
+    draw_text(screen, "상성표", 200, y_pos, BLACK)
+    y_pos += 80
+    
+    # 상성표 헤더
+    from monster import type_chart, type_dict
+    header_text = "     DTS SYS CST SWD SEC VSC AIS SOC INT"
+    draw_text(screen, header_text, 50, y_pos, BLACK)
+    y_pos += 40
+    
+    # 상성표 내용
+    for types in type_chart:
+        line_text = f"{type_dict[types]} "
+        for comps in type_chart[types]:
+            comp = type_chart[types][comps]
+            if comp == 4:
+                line_text += " ◎ "
+            elif comp == 1:
+                line_text += " △ "
+            elif comp == 0:
+                line_text += " × "
+            else:
+                line_text += "   "
+        draw_text(screen, line_text, 50, y_pos, BLACK)
+        y_pos += 40
+        
+        if types == "인터랙티브컴퓨팅":
+            break
+    
+    y_pos += 40
+    draw_text(screen, "가로: 공격 받는 전산몬 타입 | 세로: 스킬 타입", 50, y_pos, BLACK)
+    y_pos += 40
+    draw_text(screen, "◎: 효과가 굉장함 | △: 효과가 별로임 | ×: 효과가 없음", 50, y_pos, BLACK)
+    y_pos += 80
+    
+    # 타입 약어 설명
+    draw_text(screen, "DTS: 데이터 과학         | SYS: 시스템-네트워크  | CST: 전산이론", 50, y_pos, BLACK)
+    y_pos += 40
+    draw_text(screen, "SWD: 소프트웨어디자인    | SEC: 시큐어컴퓨팅     | VSC: 비주얼컴퓨팅", 50, y_pos, BLACK)
+    y_pos += 40
+    draw_text(screen, "AIS: 인공지능-정보서비스 | SOC: 소셜컴퓨팅       | INT: 인터랙티브컴퓨팅", 50, y_pos, BLACK)
+    y_pos += 40
+    
+    draw_text(screen, "아무 키나 눌러 메뉴로 돌아가기", 50, y_pos, GRAY)
+    
+    pygame.display.flip()
+    wait_for_key()

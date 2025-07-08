@@ -172,7 +172,7 @@ def game_start(totalhap, Me):
     
     # 게임 초기값 설정
     turn = 1
-    endturn = 31  # 졸업 모드의 기본 스테이지 수
+    endturn = 3  # 졸업 모드의 기본 스테이지 수
     
     # 배경음악 재생 시작
     play_music(["../music/Im_a_kaist_nonmelody.wav", "../music/Im_a_kaist_melody.wav"])
@@ -182,8 +182,8 @@ def game_start(totalhap, Me):
             # 졸업 연구
             met_monster = copy.deepcopy(graduation)
             met_monster.update_fullreset()
-        elif turn == 3:
-            met_monster = copy.deepcopy(Hanjin)
+        # elif turn == 3:
+        #     met_monster = copy.deepcopy(Hanjin)
         else:
             if turn <= 10:
                 # 1~10 스테이지

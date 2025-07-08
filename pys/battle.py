@@ -1406,6 +1406,7 @@ def battle(getplayer, getenemy, turn, endturn, screen=None):
             # 전투에서 패배한 경우
             if player.gameover():
                 stop_music()
+                Lose()  # 사망 효과음 재생
                 display_status(screen)
                 draw_text(screen, f"  눈 앞이 깜깜해졌다...", stX, stY, WHITE)
                 pygame.display.flip()
