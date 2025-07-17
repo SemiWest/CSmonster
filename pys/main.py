@@ -1,5 +1,5 @@
 from battle import *
-import graduationmode
+import ForGrd.graduationmode as graduationmode
 import option
 import csv
 import sys

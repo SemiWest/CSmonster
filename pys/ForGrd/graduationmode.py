@@ -1,5 +1,5 @@
 from game_menu import *
-from battleForGrd import *
+from ForGrd.battleForGrd import *
 import csv
 
 # 전역 변수들
