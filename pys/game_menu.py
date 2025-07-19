@@ -1,5 +1,6 @@
 from playsound import *
 from player import *
+from ForGrd.playerForGrd import *
 
 # 색상 정의
 BLACK = (0, 0, 0)
@@ -15,6 +16,18 @@ ORANGE = (255, 165, 0)
 LIGHTBLUE = (173, 216, 230)
 VIOLET = (238, 130, 238)
 PURPLE = (128, 0, 128)
+MYMINT = (33, 221, 159)
+EWERED = (150, 40, 35)
+SOCBLUE = (54, 176, 230)
+WONJUN = (230, 214, 41)
+JIMIN = (235, 131, 21)
+YUNJEONG = (146, 68, 230)
+MINBEOM = (86, 173, 41)
+SEUNGMIN = (209, 12, 12)
+MINHO = (0, 5, 153)
+TAK = (204, 86, 204)
+KMC = (156, 186, 186)
+
 
 # 전역 변수로 screen을 선언하되 초기화는 하지 않음
 screen = None
@@ -29,7 +42,7 @@ def init_pygame_screen():
         # pygame 초기화 (playsound에서 이미 초기화되었는지 확인)
         if not pygame.get_init():
             pygame.init()
-        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
+        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("전산몬스터")
         
         # 폰트 설정
@@ -52,18 +65,26 @@ def create_flash_effect(surface, intensity):
     flash_surface.set_alpha(intensity)
     surface.blit(flash_surface, (0, 0))
 
-def draw_text(surface, text, x, y, color=BLACK, highlight=False):
+def draw_text(surface, text, x, y, color=BLACK, highlight=False, size=32, align='left'):
     """pygame 화면에 텍스트를 그리는 함수""" 
     font_obj = font
+    if size != 32:
+        font_obj = pygame.font.Font("../neodgm.ttf", size)
     
     if highlight:
-        # 하이라이트된 텍스트는 배경색을 추가
         text_surface = font_obj.render(text, True, color, highlight)
     else:
         text_surface = font_obj.render(text, True, color)
     
-    surface.blit(text_surface, (x, y))
-    return text_surface.get_rect(topleft=(x, y))
+    if align == 'center':
+        text_rect = text_surface.get_rect(center=(x, y))
+    elif align == 'right':
+        text_rect = text_surface.get_rect(right=x, centery=y)
+    else:  # 'left' 또는 기타
+        text_rect = text_surface.get_rect(topleft=(x, y))
+    
+    surface.blit(text_surface, text_rect.topleft)
+    return text_rect
 
 
 def main_menu():
@@ -122,18 +143,18 @@ def main_menu():
             game_started()  # 게임 시작 사운드 재생
             
             # 플래시 효과 (여러 프레임에 걸쳐)
-            for flash_frame in range(8):
+            for flash_frame in range(64):
                 screen.fill(WHITE)
                 screen.blit(title_image, (image_x, current_y))
                 
                 # 플래시 강도 (점점 약해짐)
-                flash_intensity = 255 - (flash_frame * 32)
+                flash_intensity = 255 - (flash_frame * 4)
                 if flash_intensity > 0:
                     create_flash_effect(screen, flash_intensity)
                     
                 pygame.display.flip()
-                pygame.time.wait(150)  # 0.15초 대기
-            
+                pygame.time.wait(3)
+
             # 2초 정적 (이미지만 표시)
             screen.fill(WHITE)
             screen.blit(title_image, (image_x, current_y))
@@ -170,7 +191,7 @@ def main_menu():
             screen.blit(title_image, (image_x, image_y))
             
             # 메뉴 옵션들
-            options = ["졸업 모드", "기록 보기", "모험 모드", " 제작자  ", "환경 설정", " 도움말  "]
+            options = ["졸업 모드", "기록 보기", "모험 모드", "스태프 롤", "환경 설정", " *도움말 "]
             
             # 메뉴 옵션들을 2x3 격자로 배치
             for i, option in enumerate(options):
@@ -178,7 +199,7 @@ def main_menu():
                 y = int(i // 2) * 60 + SCREEN_HEIGHT * 0.6  # 이미지 아래쪽에 배치
                 
                 if i == current_index:
-                    draw_text(screen, f"> {option}", x, y, WHITE, BLACK)  # 하이라이트는 노란색 배경
+                    draw_text(screen, f"> {option}", x, y, WHITE, BLACK)
                 else:
                     draw_text(screen, f"  {option}", x, y, BLACK)  # 일반 텍스트는 검은색
             
@@ -314,27 +335,94 @@ def show_credits():
     
     screen.fill(WHITE)
     
-    y_center = SCREEN_HEIGHT // 2 - 160  # 8줄 * 40 / 2 = 160
-    
-    draw_text(screen, "제작자", SCREEN_WIDTH // 2 - 96, y_center, BLACK)  # "제작자" 3글자 * 32 = 96
+    y_center = SCREEN_HEIGHT // 2 - (210+120*4-40)/2
+    LeftAlign = SCREEN_WIDTH*3 //8
+    RightAlign = SCREEN_WIDTH*5 //8
+
+    draw_text(screen, "배급", SCREEN_WIDTH // 2 - (32*4)/2, y_center, BLACK, highlight=False, size=64)
+    y_center += 70
+    startingpoint = SCREEN_WIDTH // 2 - (32*19)/2
+    draw_text(screen, "전산학부 ", startingpoint, y_center, BLUE, highlight=False, size=64)
+    startingpoint += 32*9
+    draw_text(screen, "집행위원회", startingpoint, y_center, SOCBLUE, highlight=False, size=64)
+    y_center += 140
+
+    ystart = y_center
+    draw_text(screen, "개발", LeftAlign - (16*4)/2, y_center, BLACK)
+    y_center += 40
+    draw_text(screen, "이준서", LeftAlign - (16*6)/2, y_center, MYMINT)
+    y_center += 80
+
+    draw_text(screen, "기획", LeftAlign - (16*4)/2, y_center, BLACK)
+    y_center += 40
+    startingpoint = LeftAlign - (16*20)/2
+    draw_text(screen, "이준서", startingpoint, y_center, MYMINT)
+    startingpoint += 16*7
+    draw_text(screen, "조원준", startingpoint, y_center, WONJUN)
+    startingpoint+= 16*7
+    draw_text(screen, "박지민", startingpoint, y_center, JIMIN)
+    y_center += 80
+
+    draw_text(screen, "시나리오", LeftAlign - (16*8)/2, y_center, BLACK)
+    y_center += 40
+    startingpoint = LeftAlign - (16*13)/2
+    draw_text(screen, "박지민" , startingpoint, y_center, JIMIN)
+    startingpoint += 16*7
+    draw_text(screen, "조원준", startingpoint, y_center, WONJUN)
+    y_center += 80
+
+    draw_text(screen, "밸런싱", LeftAlign - (16*6)/2, y_center, BLACK)
+    y_center += 40
+    draw_text(screen, "조원준", LeftAlign - (16*6)/2, y_center, WONJUN)
+    y_center += 80
+
+    y_center = ystart
+
+    draw_text(screen, "음악", RightAlign - (16*4)/2, y_center, BLACK)
+    y_center += 40
+    draw_text(screen, "이준서", RightAlign - (16*6)/2, y_center, MYMINT)
+    y_center += 80
+
+    draw_text(screen, "디자인", RightAlign - (16*6)/2, y_center, BLACK)
+    y_center += 40
+    startingpoint = RightAlign - (16*20)/2
+    draw_text(screen, "김민범", startingpoint, y_center, MINBEOM)
+    startingpoint += 16*7
+    draw_text(screen, "황윤정", startingpoint, y_center, YUNJEONG)
+    startingpoint += 16*7
+    draw_text(screen, "이준서", startingpoint, y_center, MYMINT)
+    y_center += 80
+
+    draw_text(screen, "QA", RightAlign - (16*2)/2, y_center, BLACK)
+    y_center += 40
+    startingpoint = RightAlign - (16*20)/2
+    draw_text(screen, "탁한진", startingpoint, y_center, TAK)
+    startingpoint += 16*7
+    draw_text(screen, "이승민", startingpoint, y_center, SEUNGMIN)
+    startingpoint += 16*7
+    draw_text(screen, "정민호", startingpoint, y_center, MINHO)
+    y_center += 80
+
+    draw_text(screen, "Special Thanks", RightAlign - (16*14)/2, y_center, BLACK)
+    y_center += 40
+    startingpoint = RightAlign - (16*16)/2
+    draw_text(screen, "EWWrim", startingpoint, y_center, EWERED)
+    startingpoint += 16*7
+    draw_text(screen, "& ", startingpoint, y_center, BLACK)
+    startingpoint += 16*2
+    draw_text(screen, "kmc7468", startingpoint, y_center, KMC)
     y_center += 80
     
-    draw_text(screen, "SemiWest", SCREEN_WIDTH // 2 - 128, y_center, BLACK)  # "SemiWest" 8글자 * 16 = 128 (영문은 절반)
-    y_center += 80
-    
-    draw_text(screen, "special thank to", SCREEN_WIDTH // 2 - 256, y_center, BLACK)  # 16글자 * 16 = 256
-    y_center += 80
-    
-    draw_text(screen, "eweRim", SCREEN_WIDTH // 2 - 96, y_center, BLACK)  # "eweRim" 6글자 * 16 = 96
-    y_center += 80
-    
-    draw_text(screen, "감사링", SCREEN_WIDTH // 2 - 96, y_center, BLACK)  # "감사링" 3글자 * 32 = 96
-    y_center += 80
-    
-    draw_text(screen, "아무 키나 눌러 메뉴로 돌아가기", 50, SCREEN_HEIGHT - 100, GRAY)
+    draw_text(screen, "Enter를 눌러 메뉴로 돌아가기", 50, SCREEN_HEIGHT - 100, GRAY)
     
     pygame.display.flip()
-    wait_for_key()
+    #엔터 키를 눌러 메뉴로 돌아가기
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    waiting = False
 
 def show_help():
     """도움말을 pygame으로 표시"""

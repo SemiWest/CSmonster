@@ -1,5 +1,5 @@
 import copy
-from monster import *
+from ForGrd.monsterForGrd import *
 from items import *
 
 battleScript = {

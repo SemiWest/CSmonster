@@ -1309,27 +1309,32 @@ def battle(getplayer, getenemy, turn, endturn, screen=None):
             else:
                 color = (255, 0, 255)  # 마젠타색
 
-            screen.fill((255, 255, 255))
-            draw_text(screen, f"졸업 연구가 끝났다.", sX//2-100, sY//2)
+            screen.fill(BLACK)
+            draw_text(screen, f"졸업 연구가 끝났다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, WHITE, BLACK, 64, 'center')
             pygame.display.flip()
             wait_for_key()
+
+            # 화면 전체 페이드 효과-검은색->흰색, 0.4초간 점점 빠르게
+            for flash_frame in range(160):
+                screen.fill((flash_frame**2//100, flash_frame**2//100, flash_frame**2//100))  # 흰색으로 페이드
+                pygame.display.flip()
+                pygame.time.wait(2)  # 0.01초 대기
 
             play_music("../music/ending.wav")
             screen.fill((255, 255, 255))
-            draw_text(screen, f"{player.name}은/는 최종 학점 {player.gpa}로 졸업했다.", sX//2-200, sY//2)
+            draw_text(screen, f"{player.name}은/는 최종 학점 {player.gpa}로 졸업했다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, BLACK, WHITE, 64, 'center')
             pygame.display.flip()
             wait_for_key()
 
             screen.fill((255, 255, 255))
-            draw_text(screen, f"{player.name}의 최종 성적: {player.grade}", sX//2-150, sY//2, color)
+            draw_text(screen, f"{player.name}의 최종 성적: {player.grade}", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, color, WHITE, 64, 'center')
             pygame.display.flip()
             wait_for_key()
 
-            # 간단한 엔딩 화면 표시 (ASCII 아트 대신 텍스트로)
-            screen.fill((0, 255, 255))  # 시안 배경
-            draw_text(screen, "KAIST", sX//2-50, sY//2-50)
-            draw_text(screen, "전산몬스터", sX//2-80, sY//2)
-            draw_text(screen, "졸업을 축하합니다!", sX//2-120, sY//2+50)
+            # 엔딩 화면 = Graduation.jpg * 8배 사이즈
+            graduation_image = pygame.image.load("../img/Graduation.jpg")
+            graduation_image = pygame.transform.scale(graduation_image, (graduation_image.get_width() * 8, graduation_image.get_height() * 8))
+            screen.blit(graduation_image, (0, 0))
             pygame.display.flip()
             wait_for_key()
 

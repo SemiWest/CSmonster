@@ -1,4 +1,3 @@
-from game_menu import *
 from ForGrd.battleForGrd import *
 import csv
 
@@ -14,7 +13,7 @@ def wild_monster(lists):
     # 랜덤으로 야생 몬스터 선택
     return copy.deepcopy(random.choice(lists))
 
-def save_game_log_csv(filename, player, turn, totalhap):
+def save_game_log_csv(filename, player, turn):
     # 절대 경로 생성
     base_dir = os.path.dirname(os.path.abspath(__file__))  # 현재 파일의 디렉터리
     filepath = os.path.join(base_dir, filename)  # 절대 경로로 파일 생성
@@ -27,7 +26,7 @@ def save_game_log_csv(filename, player, turn, totalhap):
             writer.writerow(['이름', '최종 스테이지', '총 전투 횟수', 'GPA', '성적'])
         
         # 게임 결과 데이터 저장
-        writer.writerow([player.name, turn, totalhap, player.gpa, player.grade])
+        writer.writerow([player.name, turn, player.totalhap, player.gpa, player.grade])
 
 def draw_text_input_box(screen, font, x, y, width, height, text, active):
     """텍스트 입력 박스를 그리는 함수"""
@@ -81,7 +80,7 @@ def get_text_input(screen, font, prompt):
         pygame.display.flip()
         clock.tick(60)
 
-def show_game_result(screen, font, Me, turn, endturn, totalhap):
+def show_game_result(screen, font, Me, turn, endturn):
     """게임 결과를 pygame 화면에 표시하는 함수"""
     clock = pygame.time.Clock()
     
@@ -125,7 +124,7 @@ def show_game_result(screen, font, Me, turn, endturn, totalhap):
             y_offset += 30
         
         # 총 전투 횟수
-        battle_surface = font.render(f"총 전투 횟수: {totalhap}", True, BLACK)
+        battle_surface = font.render(f"총 전투 횟수: {Me.totalhap}", True, BLACK)
         screen.blit(battle_surface, (50, y_offset))
         y_offset += 50
         
@@ -148,13 +147,15 @@ def show_game_result(screen, font, Me, turn, endturn, totalhap):
         pygame.display.flip()
         clock.tick(60)
 
-def game_start(totalhap, Me):
+def game_start():
     # pygame 화면 초기화 강제 실행
     from game_menu import init_pygame_screen
     init_pygame_screen()
     
     # 이제 초기화된 pygame 전역 변수들 가져오기
     from game_menu import screen, font
+    
+    Me = Player()
     
     # 이름 입력
     while True:
@@ -223,9 +224,9 @@ def game_start(totalhap, Me):
         battlehap = battle(Me, met_monster, turn, endturn, screen)
         if battlehap == 0:
             turn = 1
-            totalhap = 0
+            player.totalhap = 0
             continue
-        totalhap += battlehap
+        Me.totalhap += battlehap
         # 전투 종료 후 몬스터 상태 업데이트
         # 몬스터가 쓰러진 상태라면 게임오바
         if Me.gameover():
@@ -235,7 +236,9 @@ def game_start(totalhap, Me):
     stop_music()
     
     # 게임 결과를 pygame 화면에 표시
-    show_game_result(screen, font, Me, turn, endturn, totalhap)
+    show_game_result(screen, font, Me, turn, endturn)
     
     # 게임 로그 저장
-    save_game_log_csv("game_log.csv", Me, turn, totalhap)
+    save_game_log_csv("game_log.csv", Me, turn)
+
+    return Me
