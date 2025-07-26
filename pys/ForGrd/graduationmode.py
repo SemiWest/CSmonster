@@ -5,6 +5,8 @@ from ForGrd.battleForGrd import *
 from game_menu import *
 import copy
 
+# 나의 흔적
+
 def wait_for_key():
     """키 입력 대기 - 스페이스바나 엔터키만 인식"""
     pygame.event.clear()
