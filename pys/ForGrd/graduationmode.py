@@ -3,8 +3,6 @@ import csv
 from ForGrd.battleForGrd import *
 import copy
 
-<<<<<<< HEAD
-=======
 # 나의 흔적
 
 def wait_for_key():
@@ -22,7 +20,6 @@ def wait_for_key():
                     return event.key
         pygame.time.wait(50)
 
->>>>>>> 1218a5c672b452febe8954c6b003ba084f202431
 def save_game_log_csv(filename, player, final_semester):
     """게임 결과를 CSV에 저장"""
     try:
