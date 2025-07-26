@@ -1,6 +1,4 @@
 from playsound import *
-from player import *
-from ForGrd.playerForGrd import *
 
 # 색상 정의
 BLACK = (0, 0, 0)
@@ -77,7 +75,7 @@ def draw_text(surface, text, x, y, color=BLACK, highlight=False, size=32, align=
         text_surface = font_obj.render(text, True, color)
     
     if align == 'center':
-        text_rect = text_surface.get_rect(center=(x, y))
+        text_rect = text_surface.get_rect(centerx=x, top=y)
     elif align == 'right':
         text_rect = text_surface.get_rect(right=x, centery=y)
     else:  # 'left' 또는 기타
@@ -214,7 +212,7 @@ def main_menu():
                     if event.key == pygame.K_RETURN:  # Enter 키
                         option_select_sound()
                         main_menu_reload = True
-                        return options[current_index]
+                        return options[current_index], screen
                     elif event.key == pygame.K_ESCAPE or event.key == pygame.K_q or event.key == pygame.K_BACKSPACE:
                         option_escape_sound()
                         return False

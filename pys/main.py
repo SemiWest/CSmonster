@@ -1,7 +1,6 @@
 from adventure import *
 import ForGrd.graduationmode as graduationmode
 import option
-import csv
 import sys
 
 music_volume = 50
@@ -28,12 +27,6 @@ def wild_monster(lists):
     # 랜덤으로 야생 몬스터 선택
     return copy.deepcopy(random.choice(lists))
 
-def Adventure_mode(endturn = 100):
-    return game_start(endturn)
-
-def graduation_mode():
-    return graduationmode.game_start()
-    
 initialize_channels()
 change_options(music_on, music_volume, effectsound, ESVolume, effect_channel, music_channel)
 set_difficulty(difficulty)
@@ -43,18 +36,20 @@ pygame.mixer.Channel(1).set_volume(ESVolume / 100)  # 효과음 볼륨 설정
 while True:   
     clear_screen()
     sys.stdin.flush()
-    start = main_menu()
+    start, screen = main_menu()
     if   start == "졸업 모드":
         stop_music()
-        Me = graduation_mode()
+        Me = graduationmode.game_start(screen)
 
     elif start == "기록 보기":
         from game_menu import show_records
         show_records()
         clear_screen()
+    
     elif start == "모험 모드":
         stop_music()
-        Me = Adventure_mode(50)
+        Me = game_start(screen, 50)
+    
     elif start == "환경 설정":
         music_volume, music_on, effectsound, ESVolume, difficulty = option.set(music_volume, music_on, effectsound, ESVolume, difficulty)
         change_options(music_on, music_volume, effectsound, ESVolume, effect_channel, music_channel)
@@ -64,12 +59,15 @@ while True:
         clear_screen()
         if music_on == False and pygame.mixer.music.get_busy():
             pygame.mixer.music.stop()            
+    
     elif start == "스태프 롤":
         from game_menu import show_credits
         show_credits()
+
     elif start == " *도움말 ":
         from game_menu import show_help
         show_help()
+
     else:
         break
 

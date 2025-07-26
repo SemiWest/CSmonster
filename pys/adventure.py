@@ -1,13 +1,8 @@
-from battle import *
+import random
 import csv
-
-# 전역 변수들
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-BLUE = (0, 0, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-GRAY = (128, 128, 128)
+from playsound import *
+from battle import *
+import copy
 
 def wild_monster(lists):
     # 랜덤으로 야생 몬스터 선택
@@ -37,48 +32,50 @@ def draw_text_input_box(screen, font, x, y, width, height, text, active):
     text_surface = font.render(text, True, BLACK)
     screen.blit(text_surface, (x + 5, y + 5))
 
-def get_text_input(screen, font, prompt):
+def get_text_input(screen, prompt):
     """pygame에서 텍스트 입력을 받는 함수"""
-    clock = pygame.time.Clock()
     input_text = ""
-    input_active = True
     
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                return "플레이어"
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    return input_text
+                if event.key == pygame.K_RETURN and input_text.strip():
+                    return input_text.strip()
                 elif event.key == pygame.K_BACKSPACE:
                     input_text = input_text[:-1]
-                else:
-                    if len(input_text) < 10:  # 10자 제한
-                        input_text += event.unicode
+                elif len(input_text) < 10 and event.unicode.isprintable():
+                    input_text += event.unicode
         
-        screen.fill(WHITE)
+        screen.fill(BLACK)
         
         # 프롬프트 텍스트 출력
-        prompt_surface = font.render(prompt, True, BLACK)
-        screen.blit(prompt_surface, (50, 100))
+        draw_text(screen, prompt, SCREEN_WIDTH//2, SCREEN_HEIGHT//2-100, WHITE, 32, align='center')
         
         # 입력 박스 그리기
-        draw_text_input_box(screen, font, 50, 150, 640, 40, input_text, input_active)
+        box_x = SCREEN_WIDTH//2 - 160
+        box_y = SCREEN_HEIGHT//2
+        box_width = 320
+        box_height = 40
         
-        # 입력 안내 텍스트
-        if len(input_text) > 10:
-            error_text = font.render("이름은 10자 이내로 입력해주세요.", True, RED)
-            screen.blit(error_text, (50, 200))
-        elif len(input_text) == 0:
-            help_text = font.render("이름을 입력해주세요. (Enter로 확인)", True, GRAY)
-            screen.blit(help_text, (50, 200))
+        pygame.draw.rect(screen, WHITE, (box_x, box_y, box_width, box_height))
+        pygame.draw.rect(screen, BLUE, (box_x, box_y, box_width, box_height), 2)
+        
+        # 입력된 텍스트 표시
+        if input_text:
+            draw_text(screen, input_text + "_", box_x + 8, box_y + 8, BLACK)
         else:
-            help_text = font.render("Enter로 확인", True, GRAY)
-            screen.blit(help_text, (50, 200))
+            draw_text(screen, "_", box_x + 8, box_y + 8, GRAY)
+        
+        # 안내 텍스트
+        if len(input_text) == 0:
+            draw_text(screen, "이름을 입력해주세요 (최대 10자)", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, GRAY, 32, align='center')
+        else:
+            draw_text(screen, "Enter로 확인", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, GRAY, 32, align='center')
         
         pygame.display.flip()
-        clock.tick(60)
+        pygame.time.wait(50)
 
 def show_game_result(screen, font, Me, turn, endturn):
     """게임 결과를 pygame 화면에 표시하는 함수"""
@@ -124,7 +121,7 @@ def show_game_result(screen, font, Me, turn, endturn):
             y_offset += 30
         
         # 총 전투 횟수
-        battle_surface = font.render(f"총 전투 횟수: {player.totalhap}", True, BLACK)
+        battle_surface = font.render(f"총 전투 횟수: {Me.totalhap}", True, BLACK)
         screen.blit(battle_surface, (50, y_offset))
         y_offset += 50
         
@@ -147,7 +144,7 @@ def show_game_result(screen, font, Me, turn, endturn):
         pygame.display.flip()
         clock.tick(60)
 
-def game_start(endturn):
+def game_start(screen, endturn, Me_name="넙죽이"):
     # pygame 화면 초기화 강제 실행
     from game_menu import init_pygame_screen
     init_pygame_screen()
@@ -155,21 +152,15 @@ def game_start(endturn):
     # 이제 초기화된 pygame 전역 변수들 가져오기
     from game_menu import screen, font
     
-    Me = Player()  # 플레이어 객체 생성
-
-    # 이름 입력
-    while True:
-        newname = get_text_input(screen, font, "이름을 입력하세요:")
-        if len(newname) > 10:
-            continue  # 10자 초과시 다시 입력
-        elif len(newname) < 1:
-            continue  # 빈 이름시 다시 입력
-        else:
-            Me.name = newname
-            break
+    # 새로운 플레이어 생성
+    player = Player(name=Me_name, Etype="학생")
     
-    Me.nowCSmon = Me.csMons[0]
-    Me.nowCSmon.update_fullreset()
+    # 이름 입력
+    newname = get_text_input(screen, "이름을 입력하세요:")
+    player.name = newname
+    
+    player.nowCSmon = player.csMons[0]
+    player.nowCSmon.update_fullreset()
     
     # 게임 초기값 설정
     turn = 1
@@ -220,24 +211,24 @@ def game_start(endturn):
                 met_monster.hpShield = True
             met_monster.update_fullreset()
             
-        battlehap = battle(Me, met_monster, turn, endturn, screen)
+        battlehap = battle(player, met_monster, turn, endturn, screen)
         if battlehap == 0:
             turn = 1
-            totalhap = 0
+            player.totalhap = 0
             continue
-        totalhap += battlehap
+        player.totalhap += battlehap
         # 전투 종료 후 몬스터 상태 업데이트
         # 몬스터가 쓰러진 상태라면 게임오바
-        if Me.gameover():
+        if player.gameover():
             break
         turn += 1
     
     stop_music()
     
     # 게임 결과를 pygame 화면에 표시
-    show_game_result(screen, font, Me, turn, endturn)
+    show_game_result(screen, font, player, turn, endturn)
     
     # 게임 로그 저장
-    save_game_log_csv("game_log.csv", Me, turn)
+    save_game_log_csv("game_log.csv", player, turn)
 
-    return Me
+    return player
