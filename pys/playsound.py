@@ -98,11 +98,30 @@ def play_effect(file_path, esp_volume = 100):
         sound.set_volume(ESVolume / esp_volume)  # 볼륨 설정
         effect_channel.play(sound)  # 효과음 재생
 
-# def get_ch_with_sound(stdscr):
-#     stdscr.refresh()
-#     curses.flushinp()
-#     stdscr.getch()
-#     play_effect("../sound/Conv_end.mp3")
+def wait_for_key():
+    """키 입력 대기 (pygame)"""
+    pygame.event.clear()
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return None
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER or event.key == pygame.K_SPACE:
+                    option_select_sound()
+                    return 'enter'
+                elif event.key == pygame.K_ESCAPE or event.key == pygame.K_q or event.key == pygame.K_BACKSPACE:
+                    return 'escape'
+                elif event.key == pygame.K_UP or event.key == pygame.K_w:
+                    return 'up'
+                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                    return 'down'
+                elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                    return 'left'
+                elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    return 'right'
+        pygame.time.wait(50)
 
 def option_select_sound():
     play_effect("../sound/Option_select.mp3")
@@ -114,7 +133,6 @@ def option_change_sound():
     play_effect("../sound/Option_change.mp3")
 
 def catching():
-
     play_effect("../sound/Catch.mp3", 33)
 
 def caught():

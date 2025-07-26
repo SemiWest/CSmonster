@@ -1,24 +1,7 @@
 import random
 import csv
-from playsound import *
 from ForGrd.battleForGrd import *
-from game_menu import *
 import copy
-
-def wait_for_key():
-    """키 입력 대기 - 스페이스바나 엔터키만 인식"""
-    pygame.event.clear()
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return pygame.K_ESCAPE
-            elif event.type == pygame.KEYDOWN:
-                # 스페이스바나 엔터키만 허용
-                if (event.key == pygame.K_SPACE or 
-                    event.key == pygame.K_RETURN or 
-                    event.key == pygame.K_KP_ENTER):
-                    return event.key
-        pygame.time.wait(50)
 
 def save_game_log_csv(filename, player, final_semester):
     """게임 결과를 CSV에 저장"""
@@ -72,7 +55,7 @@ def semester_intro_screen(player, screen):
     # 학기별 제목 설정
     if semester_name == "새터":
         title = "새터"
-        description = "당신은 카이스트에 갓 입학한 새내기입니다. "
+        description = ("당신은 카이스트에 갓 입학한 새내기입니다.", "전산학부에 걸맞는 인재인지 확인하기 위해 프밍기 학점인정시험을 신청했습니다.")
     elif semester_name == "3-여름방학":
         title = "몰입캠프"
         description = "당신은 몰입캠프 참가에 성공했습니다. 한달 간 코딩 실력을 키워봅시다."
@@ -85,92 +68,35 @@ def semester_intro_screen(player, screen):
     
     # 제목과 설명 표시
     draw_text(screen, title, SCREEN_WIDTH//2, SCREEN_HEIGHT//2-70, WHITE, size=64, align='center')
-    draw_text(screen, description, SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, WHITE, align='center')
+    if isinstance(description, tuple):
+        for i, line in enumerate(description):
+            draw_text(screen, line, SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100 + i*40, WHITE, align='center')
+    else:    
+        draw_text(screen, description, SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, WHITE, align='center')
     
+    pygame.display.flip()
+    wait_for_key()
+
+    screen.fill(WHITE)
     # 등장 과목 표시
     monsters = player.get_current_semester_monsters()
-    y_offset = 320
-    draw_text(screen, "이번 학기 과목:", SCREEN_WIDTH//2 - 112, y_offset, BLACK)
+    draw_text(screen, "이번 학기에 수강할 과목", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, align='center')
     
     for i, monster_name in enumerate(monsters):
-        draw_text(screen, f"- {monster_name}", SCREEN_WIDTH//2 - 96, y_offset + 40 + i*40, BLACK)
-    
-    # 플레이어 정보 표시
-    info_y = SCREEN_HEIGHT - 200
-    draw_text(screen, f"레벨: {player.level}  체력: {player.currentHp}/{player.maxHp}", 
-             SCREEN_WIDTH//2 - 200, info_y, BLACK)
-    draw_text(screen, f"딘즈: {player.deans_count}회  장짤: {player.jangzal_count}/3", 
-             SCREEN_WIDTH//2 - 200, info_y + 40, BLACK)
+        draw_text(screen, f"{monster_name}", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 +100 + i*40, BLACK, size=64, align='center')
     
     draw_text(screen, "아무 키나 눌러 시작...", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 60, BLACK)
     
     pygame.display.flip()
     wait_for_key()
 
-def coop_individual_selection_screen(player, screen):
-    """코옵/개별연구 선택 화면"""
-    selected_index = 0
-    options = [
-        ("코옵", "승리 시 '회사원' 칭호 획득"),
-        ("개별연구", "승리 시 '대학원생' 칭호 획득"),
-        ("건너뛰기", "이벤트를 건너뜀")
-    ]
-    
-    while True:
-        screen.fill(WHITE)
-        
-        # 제목
-        draw_text(screen, "특별 이벤트 선택", SCREEN_WIDTH//2 - 128, 150, BLACK)
-        draw_text(screen, "코옵 또는 개별연구를 선택하세요", SCREEN_WIDTH//2 - 192, 200, BLACK)
-        
-        # 옵션 표시
-        for i, (option, desc) in enumerate(options):
-            y_pos = 280 + i * 80
-            color = BLACK
-            
-            if i == selected_index:
-                # 선택된 항목 하이라이트
-                pygame.draw.rect(screen, BLACK, 
-                               (SCREEN_WIDTH//2 - 180, y_pos - 5, 360, 35))
-                color = WHITE
-            
-            draw_text(screen, f"{i+1}. {option}", SCREEN_WIDTH//2 - 160, y_pos, color)
-            draw_text(screen, desc, SCREEN_WIDTH//2 - 160, y_pos + 30, BLACK)
-        
-        draw_text(screen, "↑↓ 키로 선택, Enter로 확인", 
-                 SCREEN_WIDTH//2 - 160, SCREEN_HEIGHT - 60, BLACK)
-        
-        pygame.display.flip()
-        
-        # 키 입력 처리
-        key = wait_for_key()
-        
-        if key == pygame.K_UP and selected_index > 0:
-            selected_index -= 1
-        elif key == pygame.K_DOWN and selected_index < len(options) - 1:
-            selected_index += 1
-        elif key == pygame.K_RETURN:
-            if selected_index == 2:  # 건너뛰기
-                return None
-            else:
-                return options[selected_index][0]
-        elif key == pygame.K_ESCAPE:
-            return None
-
 def semester_result_screen(player, screen):
     """학기 결과 화면"""
     screen.fill(WHITE)
     
     # 학기 결과 제목
-    draw_text(screen, f"{player.current_semester} 학기 결과", SCREEN_WIDTH//2 - 128, 120, BLACK)
-    
-    # 처치한 과목 수
-    total_monsters = len(player.get_current_semester_monsters())
-    passed_monsters = player.semester_progress
-    
-    draw_text(screen, f"처치한 과목: {passed_monsters} / {total_monsters}", 
-             SCREEN_WIDTH//2 - 128, 180, BLACK)
-    
+    draw_text(screen, f"성적표", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
+        
     # 성적 정보
     if player.current_semester in player.semester_grades:
         grade_info = player.semester_grades[player.current_semester]
@@ -180,14 +106,13 @@ def semester_result_screen(player, screen):
                  SCREEN_WIDTH//2 - 160, 220, grade_color)
     
     # 딘즈 달성 여부
-    hp_percentage = (player.currentHp / player.maxHp) * 100
     current_gpa = player.semester_grades.get(player.current_semester, {}).get("gpa", 0.0)
     
-    if current_gpa >= 4.2 or hp_percentage >= 90:
+    if current_gpa >= 4.2:
         draw_text(screen, "★ 딘즈 리스트 달성! ★", SCREEN_WIDTH//2 - 128, 260, GREEN)
     
     # 장짤 경고
-    if passed_monsters == 0 and total_monsters >= 2:
+    if current_gpa < 2.7:
         draw_text(screen, "⚠ 장짤 발생! ⚠", SCREEN_WIDTH//2 - 96, 300, RED)
         draw_text(screen, f"장짤 누적: {player.jangzal_count}/3", SCREEN_WIDTH//2 - 96, 330, RED)
     
@@ -209,16 +134,6 @@ def semester_result_screen(player, screen):
     
     pygame.display.flip()
     wait_for_key()
-
-def show_battle_start_message(screen, monster_name, current, total):
-    """전투 시작 메시지"""
-    screen.fill(WHITE)
-    
-    draw_text(screen, f"과목 {current}/{total}: {monster_name}", SCREEN_WIDTH//2 - 128, 300, BLACK)
-    draw_text(screen, "전투를 시작합니다!", SCREEN_WIDTH//2 - 112, 360, BLACK)
-    
-    pygame.display.flip()
-    pygame.time.wait(1500)
 
 def show_final_result(player, screen):
     """최종 결과 화면"""
@@ -335,17 +250,6 @@ def game_start(screen, Me_name="넙죽이"):
         # 학기 시작 화면
         semester_intro_screen(player, screen)
         
-        # 특별 이벤트 처리
-        if player.current_semester == "코옵/개별":
-            choice = coop_individual_selection_screen(player, screen)
-            if choice:
-                player.coop_or_individual = choice
-            else:
-                # 건너뛰기 선택 시 다음 학기로
-                if not player.advance_semester():
-                    break
-                continue
-        
         # 학기별 전투 진행
         semester_monsters = player.get_current_semester_monsters()
         
@@ -369,9 +273,6 @@ def game_start(screen, Me_name="넙죽이"):
                 # 기본 몬스터 생성
                 enemy_monster = copy.deepcopy(monsters["프밍기"])
                 enemy_monster.name = monster_name
-            
-            # 전투 시작 메시지
-            show_battle_start_message(screen, monster_name, i+1, len(semester_monsters))
             
             # 전투 진행
             battle_result = battle(player, enemy_monster, 0, screen)

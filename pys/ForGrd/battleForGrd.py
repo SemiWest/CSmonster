@@ -14,7 +14,7 @@ sX, sY = 32, 32
 stX = sX+20
 stY = sY+568
 esX, esY = sX+20, sY+36
-psX, psY = sX+460, sY+347
+psX, psY = sX+632, sY+347
 
 # 기존 이미지들 그대로 유지
 BACKGROUND = pygame.image.load("../img/background.png")
@@ -35,24 +35,18 @@ ETC = pygame.image.load("../img/ETC.png")
 # 기존 함수들 그대로 유지
 def display_type(screen, y, x, type):
     """타입 표시 (pygame)"""
-    if type == "전산이론":
+    if type == "CT":
         screen.blit(CST, (x, y))
-    elif type == "데이터 과학":
+    elif type == "DS":
         screen.blit(DTS, (x, y))
-    elif type == "시스템-네트워크":
+    elif type == "SN":
         screen.blit(SYS, (x, y))
-    elif type == "소프트웨어디자인":
-        screen.blit(EVENT, (x, y))
-    elif type == "시큐어컴퓨팅":
+    elif type == "PS":
         screen.blit(PS, (x, y))
-    elif type == "비주얼컴퓨팅":
+    elif type == "*":
         screen.blit(EVENT, (x, y))
-    elif type == "인공지능-정보서비스":
+    elif type == "AI":
         screen.blit(AI, (x, y))
-    elif type == "소셜컴퓨팅":
-        screen.blit(EVENT, (x, y))
-    elif type == "인터랙티브컴퓨팅":
-        screen.blit(EVENT, (x, y))
 
 def hpcolor(ratio):
     """체력 상태에 따른 색상 선택"""
@@ -122,34 +116,11 @@ def display_status(screen, detail=False):
     screen.blit(STAT, (psX, psY))
     screen.blit(ME, (sX+320-ME.get_width()//2, sY+536-ME.get_height()))
     
-    # 플레이어 스킬 레벨 표시 (전산몬 슬롯 대신)
-    skill_levels = ["전산이론", "데이터 과학", "시스템-네트워크", "소프트웨어디자인", "시큐어컴퓨팅"]
-    for i, skill_type in enumerate(skill_levels):
-        if i < 6:  # 최대 6개 슬롯
-            level = player.learned_skills.get(skill_type, 0)
-            if level > 0:
-                color = GREEN if level >= 3 else YELLOW if level >= 2 else WHITE
-                draw_text(screen, f"Lv{level}", psX+64+i*32, psY+16, color)
-            else:
-                draw_text(screen, "◓", psX+64+i*32, psY+16, GRAY)
-    
     draw_text(screen, f"{player.name}", psX+64, psY+52, WHITE)
     draw_text(screen, f"lv.{player.level}", psX+384, psY+52, WHITE)
     
     # 플레이어 체력바
     animate_health_bar(screen, psY+104, psX+135, player.currentHp, player.currentHp, player.maxHp)
-    
-    # 플레이어 주력 스킬 타입 표시
-    main_skills = []
-    for skill_type, level in player.learned_skills.items():
-        if level > 0:
-            main_skills.append(skill_type)
-    
-    for i, skill_type in enumerate(main_skills[:2]):  # 최대 2개 타입
-        display_type(screen, psY, psX+470+i*124, skill_type)
-        
-    if detail:
-        display_player_details(screen, player, sX+1264)
 
     screen.blit(TEXT, (sX+8, sY+536))
 
@@ -185,32 +156,6 @@ def display_player_details(screen, player, x):
                 if isinstance(detail, tuple) and len(detail) >= 3:
                     draw_text(screen, detail[0], x + detail[1], y_pos, detail[2])
 
-# 기존 wait_for_key 함수 그대로 유지
-def wait_for_key():
-    """키 입력 대기 (pygame)"""
-    pygame.event.clear()
-    
-    waiting = True
-    while waiting:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                return None
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER or event.key == pygame.K_SPACE:
-                    return 'enter'
-                elif event.key == pygame.K_ESCAPE or event.key == pygame.K_q or event.key == pygame.K_BACKSPACE:
-                    return 'escape'
-                elif event.key == pygame.K_UP or event.key == pygame.K_w:
-                    return 'up'
-                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    return 'down'
-                elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    return 'left'
-                elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    return 'right'
-        pygame.time.wait(50)
-
 def select_player_skill(screen):
     """플레이어 스킬 선택"""
     available_skills = player.get_available_skills()
@@ -233,7 +178,7 @@ def select_player_skill(screen):
             y_pos = stY + int(i / 2) * 56
             
             prefix = "> " if i == current_index else "  "
-            draw_text(screen, f"{prefix}{skill['name']})", x_pos, y_pos)
+            draw_text(screen, f"{prefix}{skill['name']}", x_pos, y_pos)
             
             if i == current_index:
                 # 선택된 스킬 상세정보 표시
@@ -317,7 +262,6 @@ def select_action(screen):
         
         key = wait_for_key()
         if key == 'enter':
-            option_select_sound()
             return current_index
         elif len(options) == 1:
             current_index = 0
@@ -514,7 +458,6 @@ def select_item(screen, temp=None):
                 pygame.display.flip()
                 wait_for_key()
                 continue
-            option_select_sound()
             return current_index
         elif key == 'escape':
             option_escape_sound()

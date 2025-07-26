@@ -7,32 +7,32 @@ import random
 """ 코파일럿이 만들어놓은거임 수정하면 될듯? -이준서"""
 PLAYER_SKILLS = {
     "*": [
-        {"name": "타자치기", "damage": 10, "type": "전산이론", "description": "한글은 500타, 영어는 독수리타법"}
+        {"name": "타자치기", "damage": 10, "type": "CT", "description": "한글은 500타, 영어는 독수리타법"}
     ],
-    "전산이론": [
-        {"name": "이론공격", "damage": 30, "type": "전산이론", "description": "기본적인 이론 공격", "mp_cost": 5},
-        {"name": "정리증명", "damage": 60, "type": "전산이론", "description": "강력한 증명 공격", "level": 3, "mp_cost": 15},
-        {"name": "수학적귀납법", "damage": 80, "type": "전산이론", "description": "논리적 사고의 극한", "level": 5, "mp_cost": 25}
+    "CT": [
+        {"name": "이론공격", "damage": 30, "type": "CT", "description": "기본적인 이론 공격"},
+        {"name": "정리증명", "damage": 60, "type": "CT", "description": "강력한 증명 공격", "level": 3},
+        {"name": "수학적귀납법", "damage": 80, "type": "CT", "description": "논리적 사고의 극한", "level": 5}
     ],
-    "데이터 과학": [
-        {"name": "데이터분석", "damage": 35, "type": "데이터 과학", "description": "데이터로 약점 파악", "mp_cost": 8},
-        {"name": "빅데이터", "damage": 70, "type": "데이터 과학", "description": "대량 데이터로 압박", "level": 3, "mp_cost": 18},
-        {"name": "머신러닝", "damage": 90, "type": "데이터 과학", "description": "AI의 힘을 빌린 공격", "level": 5, "mp_cost": 30}
+    "DS": [
+        {"name": "데이터분석", "damage": 35, "type": "DS", "description": "데이터로 약점 파악"},
+        {"name": "빅데이터", "damage": 70, "type": "DS", "description": "대량 데이터로 압박", "level": 3},
+        {"name": "머신러닝", "damage": 90, "type": "DS", "description": "AI의 힘을 빌린 공격", "level": 5}
     ],
-    "시스템-네트워크": [
-        {"name": "시스템콜", "damage": 25, "type": "시스템-네트워크", "description": "시스템 명령으로 공격", "mp_cost": 6},
-        {"name": "네트워크공격", "damage": 55, "type": "시스템-네트워크", "description": "네트워크를 통한 침투", "level": 3, "mp_cost": 16},
-        {"name": "커널해킹", "damage": 85, "type": "시스템-네트워크", "description": "시스템 핵심부 조작", "level": 5, "mp_cost": 28}
+    "SN": [
+        {"name": "시스템콜", "damage": 25, "type": "SN", "description": "시스템 명령으로 공격"},
+        {"name": "네트워크공격", "damage": 55, "type": "SN", "description": "네트워크를 통한 침투", "level": 3},
+        {"name": "커널해킹", "damage": 85, "type": "SN", "description": "시스템 핵심부 조작", "level": 5}
     ],
-    "소프트웨어디자인": [
-        {"name": "코딩", "damage": 40, "type": "소프트웨어디자인", "description": "기본 프로그래밍 실력", "mp_cost": 10},
-        {"name": "알고리즘", "damage": 65, "type": "소프트웨어디자인", "description": "최적화된 알고리즘", "level": 3, "mp_cost": 20},
-        {"name": "아키텍처설계", "damage": 95, "type": "소프트웨어디자인", "description": "완벽한 시스템 설계", "level": 5, "mp_cost": 35}
+    "PS": [
+        {"name": "코딩", "damage": 40, "type": "PS", "description": "기본 프로그래밍 실력"},
+        {"name": "알고리즘", "damage": 65, "type": "PS", "description": "최적화된 알고리즘", "level": 3},
+        {"name": "아키텍처설계", "damage": 95, "type": "PS", "description": "완벽한 시스템 설계", "level": 5}
     ],
-    "시큐어컴퓨팅": [
-        {"name": "보안스캔", "damage": 20, "type": "시큐어컴퓨팅", "description": "취약점을 찾아 공격", "mp_cost": 4},
-        {"name": "암호화공격", "damage": 50, "type": "시큐어컴퓨팅", "description": "보안을 뚫고 침투", "level": 3, "mp_cost": 14},
-        {"name": "해킹마스터", "damage": 75, "type": "시큐어컴퓨팅", "description": "완벽한 해킹 기술", "level": 5, "mp_cost": 22}
+    "AI": [
+        {"name": "보안스캔", "damage": 20, "type": "AI", "description": "취약점을 찾아 공격"},
+        {"name": "암호화공격", "damage": 50, "type": "AI", "description": "보안을 뚫고 침투", "level": 3},
+        {"name": "해킹마스터", "damage": 75, "type": "AI", "description": "완벽한 해킹 기술", "level": 5}
     ]
 }
 
@@ -71,11 +71,11 @@ class Player:
         
         # 스킬 시스템 (플레이어가 직접 배우는 스킬들)
         self.learned_skills = {
-            "전산이론": 1,  # 각 타입별 스킬 레벨
-            "데이터 과학": 0,
-            "시스템-네트워크": 0,
-            "소프트웨어디자인": 0,  # 기본적으로 코딩은 할 수 있음
-            "시큐어컴퓨팅": 0
+            "CT": 1,  # 각 타입별 스킬 레벨
+            "DS": 0,
+            "SN": 0,
+            "PS": 0,  # 기본적으로 코딩은 할 수 있음
+            "AI": 0
         }
         
         # 아이템 인벤토리
@@ -133,7 +133,7 @@ class Player:
         skill_type = skill["type"]
         
         # 몬스터의 타입 가져오기
-        target_types = getattr(target_monster, 'type', ['전산이론'])
+        target_types = getattr(target_monster, 'type', ['CT'])
         if isinstance(target_types, str):
             target_types = [target_types]
         
@@ -171,14 +171,6 @@ class Player:
         if not skill:
             return None, "스킬을 찾을 수 없습니다"
         
-        # MP 체크
-        mp_cost = skill.get("mp_cost", 0)
-        if self.currentMp < mp_cost:
-            return None, "MP가 부족합니다"
-        
-        # MP 소모
-        self.currentMp -= mp_cost
-        
         # 데미지 계산
         damage, effectiveness = self.calculate_damage(skill, target_monster)
         
@@ -192,7 +184,6 @@ class Player:
             "damage": damage,
             "effectiveness": effectiveness,
             "skill": skill,
-            "mp_used": mp_cost
         }, "성공"
     
     def can_use_pnr(self):
@@ -228,32 +219,28 @@ class Player:
         heal_amount = int(self.maxHp * 0.1)
         self.heal(heal_amount)
         
-        # MP 회복
-        mp_heal = int(self.maxMp * 0.2)
-        self.recover_mp(mp_heal)
-        
         # 과목별 스킬 성장
         self.grow_skill_from_monster(monster_name)
     
     def grow_skill_from_monster(self, monster_name):
         """몬스터 처치에 따른 스킬 성장"""
         skill_growth_map = {
-            "프밍기": "소프트웨어디자인",
-            "이산구조": "전산이론",
-            "데이타구조": "소프트웨어디자인", 
-            "논리회로": "전산이론",
-            "시프": "시스템-네트워크",
-            "시스템": "시스템-네트워크",
-            "네트워크": "시스템-네트워크",
-            "운영체제": "시스템-네트워크",
-            "데이터베이스": "데이터 과학",
-            "컴구조": "시스템-네트워크",
-            "알고리즘": "소프트웨어디자인",
-            "소공": "소프트웨어디자인",
-            "캡스톤": "소프트웨어디자인",
-            "졸업연구": "데이터 과학",
-            "개별연구": "데이터 과학",
-            "인턴": "소프트웨어디자인"
+            "프밍기": "PS",
+            "이산구조": "CT",
+            "데이타구조": "PS", 
+            "논리회로": "CT",
+            "시프": "SN",
+            "시스템": "SN",
+            "네트워크": "SN",
+            "운영체제": "SN",
+            "데이터베이스": "DS",
+            "컴구조": "SN",
+            "알고리즘": "PS",
+            "소공": "PS",
+            "캡스톤": "PS",
+            "졸업연구": "DS",
+            "개별연구": "DS",
+            "인턴": "PS"
         }
         
         skill_type = skill_growth_map.get(monster_name)
@@ -342,30 +329,21 @@ class Player:
         
         # 스탯 증가
         old_max_hp = self.maxHp
-        old_max_mp = self.maxMp
         
         self.maxHp += 20
-        self.maxMp += 10
         self.attack += 3
         self.defense += 2
         self.speed += 1
         
         # 체력과 MP 완전 회복
         self.currentHp = self.maxHp
-        self.currentMp = self.maxMp
         
         # 다음 레벨 필요 경험치
         self.expToNext = int(self.expToNext * 1.2)
-        
-        print(f"Debug: 레벨업! Lv.{self.level} HP: {old_max_hp}->{self.maxHp} MP: {old_max_mp}->{self.maxMp}")
-    
+
     def heal(self, amount):
         """체력 회복"""
         self.currentHp = min(self.maxHp, self.currentHp + amount)
-    
-    def recover_mp(self, amount):
-        """MP 회복"""
-        self.currentMp = min(self.maxMp, self.currentMp + amount)
     
     def take_damage(self, damage):
         """데미지 받기"""
@@ -400,11 +378,3 @@ class Player:
             return "딘즈 엔딩"
         else:
             return "일반 졸업 엔딩"
-
-# 기존 호환성을 위한 NPC 플레이어
-Hanjin = Player(name="한진", Etype="동기")
-Hanjin.level = 4
-Hanjin.maxHp = 180
-Hanjin.currentHp = 180
-Hanjin.attack = 32
-Hanjin.defense = 23

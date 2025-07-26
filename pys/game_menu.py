@@ -84,7 +84,6 @@ def draw_text(surface, text, x, y, color=BLACK, highlight=False, size=32, align=
     surface.blit(text_surface, text_rect.topleft)
     return text_rect
 
-
 def main_menu():
     def menu_logic():
         init_pygame_screen()
@@ -232,18 +231,6 @@ def main_menu():
             clock.tick(60)  # 60 FPS
     
     return menu_logic()
-
-def wait_for_key():
-    """키 입력을 기다리는 함수"""
-    pygame.event.clear()  # 이벤트 큐 정리
-    waiting = True
-    while waiting:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.KEYDOWN:
-                return
 
 def show_records():
     """기록 보기 화면을 pygame으로 표시"""
