@@ -3,6 +3,26 @@ import csv
 from ForGrd.battleForGrd import *
 import copy
 
+<<<<<<< HEAD
+=======
+# 나의 흔적
+
+def wait_for_key():
+    """키 입력 대기 - 스페이스바나 엔터키만 인식"""
+    pygame.event.clear()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return pygame.K_ESCAPE
+            elif event.type == pygame.KEYDOWN:
+                # 스페이스바나 엔터키만 허용
+                if (event.key == pygame.K_SPACE or 
+                    event.key == pygame.K_RETURN or 
+                    event.key == pygame.K_KP_ENTER):
+                    return event.key
+        pygame.time.wait(50)
+
+>>>>>>> 1218a5c672b452febe8954c6b003ba084f202431
 def save_game_log_csv(filename, player, final_semester):
     """게임 결과를 CSV에 저장"""
     try:
