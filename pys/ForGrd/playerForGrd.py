@@ -7,7 +7,7 @@ import random
 """ 코파일럿이 만들어놓은거임 수정하면 될듯? -이준서"""
 PLAYER_SKILLS = {
     "*": [
-        {"name": "타자치기", "damage": 10, "type": "CT", "description": "한글은 500타, 영어는 독수리타법"}
+        {"name": "타자치기", "damage": 10, "type": "*", "description": "한글은 500타, 영어는 독수리타법"}
     ],
     "CT": [
         {"name": "이론공격", "damage": 30, "type": "CT", "description": "기본적인 이론 공격"},
@@ -55,8 +55,10 @@ class Player:
         self.current_semester = "새터"
         self.semester_order = ["새터", "1-1", "1-2", "2-1", "2-2", "3-1", "3-여름방학", "3-2", "4-1", "4-여름방학", "4-2"]
         self.semester_progress = 0
+        self.canBeMetMonsters = ["프밍기"]
+        self.thisSemesterMonsters = []
+        self.clearedMonsters = []
         self.completed_semesters = []
-        self.defeated_monsters = []
         
         # PNR 시스템
         self.pnr_available = True
@@ -101,19 +103,6 @@ class Player:
         self.concentration = 50
         self.grade = "A+"
         self.totalhap = 0
-    
-    def get_current_semester_monsters(self):
-        """현재 학기에서 싸워야 할 몬스터(과목) 목록"""
-        if self.current_semester == "새터":
-            return ["프밍기"]
-        elif self.current_semester == "3-여름방학":
-            return [777]
-        elif self.current_semester == "4-여름방학":
-            if random.random() < 0.5:
-                return [888]
-            else: return [999]
-        else:
-            return ["프밍기"]
     
     def get_available_skills(self):
         """사용 가능한 스킬 목록 반환"""

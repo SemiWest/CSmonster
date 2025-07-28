@@ -88,7 +88,6 @@ Linger = Items(
     canuse_on_fainted=True,
     )
 
-
 items = {
     "빈 슬롯": Noneitem,
     "아메리카노": americano,

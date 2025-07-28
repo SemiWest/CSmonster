@@ -8,15 +8,17 @@ def set_difficulty(difficulty_level):
 # 몬스터 타입 상성
 # 타입별 상성표 (공격타입 -> 방어타입 -> 배율)
 TYPE_EFFECTIVENESS = {
-    "CT": {"CT": 1.0, "DS": 0.0, "PS": 2.0, "SN": 0.5, "AI": 1.0},
-    "DS": {"CT": 1.0, "DS": 1.0, "PS": 1.0, "SN": 2.0, "AI": 0.5},
-    "PS": {"CT": 1.0, "DS": 0.5, "PS": 2.0, "SN": 1.0, "AI": 0.0},
-    "SN": {"CT": 1.0, "DS": 1.0, "PS": 0.0, "SN": 1.0, "AI": 1.0},
-    "AI": {"CT": 2.0, "DS": 0.5, "PS": 1.0, "SN": 0.5, "AI": 1.0},
+    "*" : {"CT": 1.0, "DS": 1.0, "PS": 1.0, "SN": 1.0, "AI": 1.0, "*": 1.0},
+    "CT": {"CT": 1.0, "DS": 0.0, "PS": 2.0, "SN": 0.5, "AI": 1.0, "*": 1.0},
+    "DS": {"CT": 1.0, "DS": 1.0, "PS": 1.0, "SN": 2.0, "AI": 0.5, "*": 1.0},
+    "PS": {"CT": 1.0, "DS": 0.5, "PS": 2.0, "SN": 1.0, "AI": 0.0, "*": 1.0},
+    "SN": {"CT": 1.0, "DS": 1.0, "PS": 0.0, "SN": 1.0, "AI": 1.0, "*": 1.0},
+    "AI": {"CT": 2.0, "DS": 0.5, "PS": 1.0, "SN": 0.5, "AI": 1.0, "*": 1.0},
 }
 
 # 타입 코드
 type_dict = {
+    "*": "기타",
     "CT": "전산이론",
     "DS": "데이터과학",
     "PS": "문제해결",
@@ -443,10 +445,89 @@ cs371.skills = {
 }
 
 # 기계학습	인공지능	라티오스
+csML = Monster(
+    Num = 1000, name="기계학습", 
+    HP = 110, ATK = 100, DEF = 90, SPD = 80, 
+    type=["AI"], SeonSu=[],
+    image="../img/monsters/데이타구조.png",
+    description="기계학습설명"
+)
+csML.skills = {
+    '기계 공격': Monster.Skill(
+        name='기계 공격', 
+        effect_type="Pdamage",
+        type="AI",
+        skW=70,
+        description="기계학습 기법을 사용해 상대에게 강력한 공격을 한다."),
+}
+
 # 프밍이	전산이론	치코리타
+cs220 = Monster(
+    Num = 220, name="프로그래밍의 이해", 
+    HP = 110, ATK = 100, DEF = 90, SPD = 80, 
+    type=["PS"], SeonSu=[],
+    image="../img/monsters/데이타구조.png",
+    description="프로그래밍의 이해 설명"
+)
+cs220.skills = {
+    '이해의 공격': Monster.Skill(
+        name='이해의 공격', 
+        effect_type="Pdamage",
+        type="PS",
+        skW=70,
+        description="이해한다."),
+}
+
 # 코옵	(이벤트)	야도란
+coop = Monster(
+    Num = 888, name="코옵", 
+    HP = 110, ATK = 100, DEF = 90, SPD = 80, 
+    type=["*"], SeonSu=[],
+    image="../img/monsters/데이타구조.png",
+    description="코옵설명"
+)
+coop.skills = {
+    '코옵 공격': Monster.Skill(
+        name='코옵 공격', 
+        effect_type="Pdamage",
+        type="*",
+        skW=70,
+        description="코옵 기법을 사용해 상대에게 강력한 공격을 한다."),
+}
+
 # 몰캠	(이벤트)	고라파덕
+madcamp = Monster(
+    Num = 777, name="몰입캠프", 
+    HP = 110, ATK = 100, DEF = 90, SPD = 80, 
+    type=["*"], SeonSu=[],
+    image="../img/monsters/데이타구조.png",
+    description="몰입캠프설명"
+)
+madcamp.skills = {
+    '딥러닝 공격': Monster.Skill(
+        name='딥러닝 공격', 
+        effect_type="Pdamage",
+        type="인공지능",
+        skW=70,
+        description="딥러닝 기법을 사용해 상대에게 강력한 공격을 한다."),
+}
+
 # 개별연구	(이벤트)	폴리곤
+study = Monster(
+    Num = 999, name="개별연구", 
+    HP = 110, ATK = 100, DEF = 90, SPD = 80, 
+    type=["*"], SeonSu=[],
+    image="../img/monsters/데이타구조.png",
+    description="개별연구설명"
+)
+study.skills = {
+    '연구 공격': Monster.Skill(
+        name='연구 공격', 
+        effect_type="Pdamage",
+        type="*",
+        skW=70,
+        description="개별연구 기법을 사용해 상대에게 강력한 공격을 한다."),
+}
 
 monsters = {
     "프밍기": cs101,
@@ -455,6 +536,17 @@ monsters = {
     "시프": cs230,
     "OS": cs330,
     "알고개": cs300,
+    "전산기조직": cs311,
+    "프로그래밍언어": cs320,
+    "전산망개론": cs341,
+    "데이터베이스개론": cs360,
+    "문제해결기법": cs202,
+    "딥러닝개론": cs371,
+    "기계학습": csML,
+    "프로그래밍의 이해": cs220,
+    "코옵": coop,
+    "몰입캠프": madcamp,
+    "개별연구": study,
 }
 
 def monsterget():
