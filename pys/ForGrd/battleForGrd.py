@@ -420,6 +420,7 @@ def select_item(screen, temp=None):
     """아이템 선택 - 플레이어용"""
     descriptions = [i.description for i in player.items]
     coloring = [False]*len(player.items)
+    
     for i in range(len(player.items)):
         if player.items[i].name == "빈 슬롯":
             coloring[i] = CYAN
@@ -493,6 +494,7 @@ def item_phase(screen):
     wait_for_key()
 
     # 아이템 효과 적용
+    # heal, damage, buff, 
     if selected_item.effect == "heal":
         heal_amount = max(selected_item.fixed, int(player.maxHp * selected_item.varied))
         player.heal(heal_amount)
