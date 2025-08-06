@@ -63,6 +63,18 @@ def save_game_log_csv(filename, player, final_semester):
     except Exception as e:
         return False, f"저장 실패: {str(e)}"
 
+def get_current_semester_monsters(player):
+    length = len(player.canBeMetMonsters)
+    if length == 0:
+        return False
+    elif length == 1:
+        player.thisSemesterMonsters = [player.canBeMetMonsters.pop()]
+    else:
+        a = player.canBeMetMonsters.pop(random.randint(0, length-1))
+        b = player.canBeMetMonsters.pop(random.randint(0, length-2))
+        player.thisSemesterMonsters = [a, b]
+    return True
+
 def semester_intro_screen(player, screen):
     """학기 시작 화면"""
     screen.fill(BLACK)
@@ -96,7 +108,7 @@ def semester_intro_screen(player, screen):
 
     screen.fill(WHITE)
     # 등장 과목 표시
-    monsters = player.get_current_semester_monsters()
+    
     draw_text(screen, "이번 학기에 수강할 과목", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, align='center')
     
     for i, monster_name in enumerate(monsters):
@@ -266,21 +278,9 @@ def game_start(screen, Me_name="넙죽이"):
     while game_running and not player.gameover():
         # 학기 시작 화면
         semester_intro_screen(player, screen)
-        
-        # 학기별 전투 진행
-        semester_monsters = player.get_current_semester_monsters()
-        
-        print(f"Debug: {player.current_semester} 학기, 과목들: {semester_monsters}")
-        
-        if not semester_monsters:
-            print(f"Debug: {player.current_semester}에 과목이 없습니다!")
-            # 과목이 없으면 자동으로 다음 학기로
-            if not player.advance_semester():
-                break
-            continue
-        
+
         # 각 과목과 전투
-        for i, monster_name in enumerate(semester_monsters):
+        for i, monster_name in enumerate(player.thisSemesterMonsters):
             print(f"Debug: {monster_name}와 전투 시작")
             
             # 몬스터 생성
@@ -312,7 +312,7 @@ def game_start(screen, Me_name="넙죽이"):
         semester_result_screen(player, screen)
         
         # 다음 학기로 진행
-        print(f"Debug: 현재 진행도 {player.semester_progress}/{len(semester_monsters)}")
+        print(f"Debug: 현재 진행도 {player.semester_progress}/{len(player.semester_order)}")
         if not player.advance_semester():
             # 모든 학기 완료
             print("Debug: 모든 학기 완료!")

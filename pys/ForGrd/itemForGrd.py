@@ -78,7 +78,7 @@ SnackBar = Items(
     grade="노말",
     fixed=15
 )
-
+# 아이디어가 필요해요
 SmallRock = Items(
     name="작은 돌멩이",
     description="돌멩이를 던진다. 상대에게 10의 피해를 준다.", 
