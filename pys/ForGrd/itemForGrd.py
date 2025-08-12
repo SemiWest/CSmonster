@@ -2,11 +2,11 @@ class Items:
     def __init__(self, name, description, effect, grade="노말", fixed=0, varied=0, buffto="", canuse_on_fainted=False):
         self.name = name            # 이름
         self.description = description  # 설명
-        self.effect = effect        # 효과: heal, damage, buff 등
+        self.effect = effect        # 효과: heal, damage, buff, debuff 등
         self.grade = grade          # 노말, 레어, 에픽, 레전더리
         self.fixed = fixed
         self.varied = varied
-        self.buffto = buffto        # 버프 대상
+        self.buffto = buffto        # 버프 대상 (예: speed, defense 등)
         self.canuse_on_fainted = canuse_on_fainted 
 
 # 플레이어와 적 전산몬스터 생성
@@ -55,36 +55,39 @@ LectureNote = Items(
 # 레어 (새로 2개 추가)
 AirPods = Items(
     name="에어팟",
-    description="에어팟을 주고 노동요를 틀어준다. 흥이 올라 속도가 오른다.", 
+    description="에어팟을 주고 노동요를 틀어준다. 흥이 올라 속도가 50% 오른다.", 
     effect="buff",
     grade="레어",
-    varied=5,
+    varied=0.5,
     buffto="speed"
 )
 
-VitaminWater = Items(
-    name="비타민 워터",
-    description="비타민 워터를 마신다. 30의 체력을 회복한다.", 
-    effect="heal",
+Ransomware = Items(
+    name="랜섬웨어",
+    description="상대에게 랜섬웨어를 건다. 상대의 방어력을 50% 감소시킨다.", 
+    effect="debuff",
     grade="레어",
-    fixed=30
+    buffto="defense",
+    varied=0.5,
 )
 
 # 노말 (새로 2개 추가)
 SnackBar = Items(
     name="에너지바",
-    description="에너지바를 먹는다. 15의 체력을 회복한다.", 
+    description="에너지바를 먹는다. 10 또는 최대 체력의 10% 중 큰 값을 회복한다.", 
     effect="heal",
     grade="노말",
-    fixed=15
+    fixed=10,
+    varied=0.1
 )
-# 아이디어가 필요해요
-SmallRock = Items(
-    name="작은 돌멩이",
-    description="돌멩이를 던진다. 상대에게 10의 피해를 준다.", 
-    effect="damage",
+
+Virus = Items(
+    name="바이러스",
+    description="상대에게 바이러스를 건다. 상대의 이동속도를 10% 감소시킨다.", 
+    effect="debuff",
     grade="노말",
-    fixed=10
+    varied=0.1,
+    buffto="speed"
 )
 
 # 아이템 목록
@@ -95,7 +98,7 @@ items = {
     "아메리카노": Americano,
     "렉쳐노트": LectureNote,
     "에어팟": AirPods,
-    "비타민 워터": VitaminWater,
+    "랜섬웨어": Ransomware,
     "에너지바": SnackBar,
-    "작은 돌멩이": SmallRock
+    "바이러스": Virus
 }

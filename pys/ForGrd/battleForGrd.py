@@ -480,7 +480,11 @@ def select_item(screen, temp=None):
 
 def item_phase(screen):
     """아이템 사용 단계 - 플레이어용"""
+
+    # TODO: 등급에 따라 아이쳄 색 표현
+
     playerCurrentHP = player.currentHp
+    enemyCurrentHP = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
     
     item_num = select_item(screen)
     if item_num == -1:
@@ -494,7 +498,8 @@ def item_phase(screen):
     wait_for_key()
 
     # 아이템 효과 적용
-    # heal, damage, buff, 
+    # heal, damage, buff, debuff
+    
     if selected_item.effect == "heal":
         heal_amount = max(selected_item.fixed, int(player.maxHp * selected_item.varied))
         player.heal(heal_amount)
@@ -503,8 +508,46 @@ def item_phase(screen):
         
         display_status(screen)
         draw_text(screen, f"  {player.name}의 체력이 {heal_amount} 회복되었다!", stX, stY, WHITE)
-        pygame.display.flip()
-        wait_for_key()
+
+    elif selected_item.effect == "damage":
+        damage_amount = max(selected_item.fixed, int(enemyCSmon.maxHp * selected_item.varied))
+        # 데미지 구현을 잘 했는지 모르겠음 ㅇㅅㅇ
+        enemyCSmon.take_damage(damage_amount)
+
+        enemy_hp_after = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
+        animate_health_bar(screen, esY+104, esX+135, enemyCurrentHP, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
+
+
+        display_status(screen)
+        draw_text(screen, f"  {enemyCSmon.name}에게 {damage_amount}의 데미지를 입혔다!", stX, stY, WHITE)
+
+    elif selected_item.effect == "buff":
+        # 버프 대상: speed, defense
+        if selected_item.buffto == "speed":
+            player.speed += int(player.speed * selected_item.varied)
+            display_status(screen)
+            draw_text(screen, f"  {player.name}의 속도가 {int(selected_item.varied * 100)}% 증가했다!", stX, stY, WHITE)
+        
+        elif selected_item.buffto == "defense":
+            player.defense += int(player.defense * selected_item.varied)
+            display_status(screen)
+            draw_text(screen, f"  {player.name}의 방어력이 {int(selected_item.varied * 100)}% 증가했다!", stX, stY, WHITE)
+        
+    elif selected_item.effect == "debuff":
+        # 디버프 대상: speed, defense
+        if selected_item.debuffto == "speed":
+            enemyCSmon.speed -= int(enemyCSmon.speed * selected_item.varied)
+            display_status(screen)
+            draw_text(screen, f"  {enemyCSmon.name}의 속도가 {int(selected_item.varied * 100)}% 감소했다!", stX, stY, WHITE)
+        
+        elif selected_item.debuffto == "defense":
+            enemyCSmon.defense -= int(enemyCSmon.defense * selected_item.varied)
+            display_status(screen)
+            draw_text(screen, f"  {enemyCSmon.name}의 방어력이 {int(selected_item.varied * 100)}% 감소했다!", stX, stY, WHITE)
+
+
+    pygame.display.flip()
+    wait_for_key()
     
     # 아이템 제거
     from ForGrd.itemForGrd import Noneitem

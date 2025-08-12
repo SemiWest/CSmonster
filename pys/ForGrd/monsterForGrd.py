@@ -69,6 +69,13 @@ class Monster:
         self.CATK = int(self.ATK * Vatk)  # 공격력
         self.CDEF = int(self.DEF * Vdef)  # 방어력
         self.CSPD = int(self.SPD * Vspd)
+
+    
+    def take_damage(self, damage):
+        """ 몬스터가 데미지를 받았을 때 호출되는 메서드 """
+        self.nowhp -= damage
+        if self.nowhp < 0:
+            self.nowhp = 0
         
     def update(self):
         # HP = [ { (종족값 x 2) + 개체값 + 100 } x 레벨/100 ] + 10
