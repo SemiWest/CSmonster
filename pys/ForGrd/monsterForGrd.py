@@ -37,11 +37,17 @@ def comp(atskilltype, tgtype):
     - 2: 일반적인 효과.
     """
     return TYPE_EFFECTIVENESS[atskilltype][tgtype]/2
+def NumToName(mon_num):
+        for value in monsters.values():
+            if value.Num == mon_num:
+                return value.name
+        return "error"
 
 class Monster:
-    def __init__(self, Num, name, HP, ATK, DEF, SPD, type=["CT"], SeonSu = [], image="../img/monsters/데이타구조.png", description=""):
+    def __init__(self, Num, name, credit, HP, ATK, DEF, SPD, type=["CT"], SeonSu = [], image="../img/monsters/데이타구조.png", description=""):
         self.Num = Num  # 몬스터 번호
         self.name = name
+        self.credit = credit
         self.level = 5
         self.exp = 0
         self.type = type  # 타입 (데이터 과학, 시스템-네트워크, 전산이론, 시큐어컴퓨팅, 인공지능)
@@ -127,7 +133,7 @@ class Monster:
 
 # 플레이어와 적 전산몬스터 생성
 Nonemonster = Monster(
-    Num = -1, name="빈 슬롯", 
+    Num = -1, name="빈 슬롯", credit = 3,
     HP = 0, ATK = 0, DEF = 0, SPD = 0,
     type=["CT"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
@@ -135,7 +141,7 @@ Nonemonster = Monster(
 
 # 프밍기	전산이론	팽도리
 cs101 = Monster(
-    Num = 101, name="프밍기", 
+    Num = 101, name="프밍기", credit= 3,
     HP = 30, ATK = 56, DEF = 35, SPD = 72, 
     type=["CT"], SeonSu=[206, 204, 230], 
     image="../img/monsters/데이타구조.png", 
@@ -166,7 +172,7 @@ cs101.skills = {
 
 # 이산	전산이론	이상해씨
 cs204 = Monster(
-    Num = 204, name="이산구조", 
+    Num = 204, name="이산구조", credit = 3,
     HP = 57, ATK = 24, DEF = 86, SPD = 23, 
     type=["CT"], SeonSu=[300, 320],
     image="../img/monsters/데이타구조.png",
@@ -203,7 +209,7 @@ cs204.skills = {
 
 # 데구	데이터 과학	파이리
 cs206 = Monster(
-    Num = 206, name="데이타구조", 
+    Num = 206, name="데이타구조", credit = 3,
     HP = 39, ATK = 52, DEF = 43, SPD = 65, 
     type=["DS"], SeonSu=[360],
     image="../img/monsters/데이타구조.png",
@@ -239,7 +245,7 @@ cs206.skills = {
 
 # 시프	시 넽	레츠고이브이
 cs230 = Monster(
-    Num = 230, name="시프", 
+    Num = 230, name="시프", credit = 3,
     HP = 65, ATK = 60, DEF = 50, SPD = 85, 
     type=["SN"], SeonSu=[311, 341],
     image="../img/monsters/데이타구조.png",
@@ -275,7 +281,7 @@ cs230.skills = {
 
 # OS	시 넽	거북왕
 cs330 = Monster(
-    Num = 330, name="OS", 
+    Num = 330, name="OS", credit = 4,
     HP =65, ATK = 65, DEF = 60, SPD = 130, 
     type = ["SN"], SeonSu=[],
     image="../img/monsters/데이타구조.png",  
@@ -309,10 +315,10 @@ cs330.skills = {
 
 # 알고개	PS	피카츄
 cs300 = Monster(
-    Num = 300, name = "알고개", 
+    Num = 300, name = "알고개", credit = 3,
     HP = 67, ATK = 89, DEF = 116, SPD = 33, 
     type = ["PS"], SeonSu=[202],
-    image="../img/monsters/알고개.png",
+    image="../img/monsters/데이타구조.png",
     description="알고리즘과 문제해결 능력을 기르는 과목이다. 알고리즘의 기초를 다진다.")
 cs300.skills = {
     '퀵소트': Monster.Skill(
@@ -345,10 +351,10 @@ cs300.skills = {
 
 # 아키	시 넽	꼬부기
 cs311 = Monster(
-    Num = 301, name="전산기조직", 
+    Num = 311, name="전산기조직", credit = 3,
     HP = 70, ATK = 80, DEF = 90, SPD = 60, 
     type=["SN"], SeonSu=[330],
-    image="../img/monsters/전산기조직.png",
+    image="../img/monsters/데이타구조.png",
     description="전산기조직설명"
 )
 cs311.skills = {
@@ -362,7 +368,7 @@ cs311.skills = {
 
 # PL	전산이론	메타몽
 cs320 = Monster(
-    Num = 302, name="프로그래밍언어", 
+    Num = 320, name="프로그래밍언어", credit = 3,
     HP = 80, ATK = 70, DEF = 90, SPD = 60, 
     type=["CT"], SeonSu=[220],
     image="../img/monsters/데이타구조.png",
@@ -379,7 +385,7 @@ cs320.skills = {
 
 # 네떡	시 넽	잠만보
 cs341 = Monster(
-    Num = 303, name="전산망개론", 
+    Num = 341, name="전산망개론", credit = 3,
     HP = 90, ATK = 80, DEF = 70, SPD = 60, 
     type=["SN"], SeonSu=[330],
     image="../img/monsters/데이타구조.png",
@@ -396,7 +402,7 @@ cs341.skills = {
 
 # 디비개	데이터 과학	리자몽
 cs360 = Monster(
-    Num = 360, name="데이터베이스개론", 
+    Num = 360, name="데이터베이스개론", credit = 3,
     HP = 100, ATK = 90, DEF = 80, SPD = 70, 
     type=["DS"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
@@ -413,9 +419,9 @@ cs360.skills = {
 
 # 문해기	PS	마자용
 cs202 = Monster(
-    Num = 202, name="문제해결기법", 
+    Num = 202, name="문제해결기법", credit = 3,
     HP = 80, ATK = 70, DEF = 90, SPD = 60, 
-    type=["PS"], SeonSu=[300],
+    type=["PS"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
     description="문제해결기법"
 )
@@ -430,7 +436,7 @@ cs202.skills = {
 
 # 딥러개	인공지능	망나뇽
 cs371 = Monster(
-    Num = 371, name="딥러닝개론", 
+    Num = 371, name="딥러닝개론", credit = 3,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["AI"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
@@ -446,14 +452,14 @@ cs371.skills = {
 }
 
 # 기계학습	인공지능	라티오스
-csML = Monster(
-    Num = 1000, name="기계학습", 
+cs376 = Monster(
+    Num = 376, name="기계학습", credit = 3,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["AI"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
     description="기계학습설명"
 )
-csML.skills = {
+cs376.skills = {
     '기계 공격': Monster.Skill(
         name='기계 공격', 
         effect_type="Pdamage",
@@ -464,7 +470,7 @@ csML.skills = {
 
 # 프밍이	전산이론	치코리타
 cs220 = Monster(
-    Num = 220, name="프로그래밍의 이해", 
+    Num = 220, name="프로그래밍의 이해", credit = 3,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["PS"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
@@ -481,7 +487,7 @@ cs220.skills = {
 
 # 코옵	(이벤트)	야도란
 coop = Monster(
-    Num = 888, name="코옵", 
+    Num = 888, name="코옵", credit = 123123,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["*"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
@@ -498,7 +504,7 @@ coop.skills = {
 
 # 몰캠	(이벤트)	고라파덕
 madcamp = Monster(
-    Num = 777, name="몰입캠프", 
+    Num = 777, name="몰입캠프", credit = 234234,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["*"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
@@ -515,7 +521,7 @@ madcamp.skills = {
 
 # 개별연구	(이벤트)	폴리곤
 study = Monster(
-    Num = 999, name="개별연구", 
+    Num = 999, name="개별연구", credit = 345345,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["*"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
@@ -543,12 +549,9 @@ monsters = {
     "데이터베이스개론": cs360,
     "문제해결기법": cs202,
     "딥러닝개론": cs371,
-    "기계학습": csML,
+    "기계학습": cs376,
     "프로그래밍의 이해": cs220,
     "코옵": coop,
     "몰입캠프": madcamp,
     "개별연구": study,
 }
-
-def monsterget():
-    pass

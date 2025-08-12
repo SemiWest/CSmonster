@@ -5,6 +5,22 @@ import random
 
 # 플레이어 스킬 정의
 """ 코파일럿이 만들어놓은거임 수정하면 될듯? -이준서"""
+GPASCORE = {
+    "A+": 4.3,
+    "A0": 4.0,
+    "A-": 3.7,
+    "B+": 3.3,
+    "B0": 3.0,
+    "B-": 2.7,
+    "C+": 2.3,
+    "C0": 2.0,
+    "C-": 1.7,
+    "F": 0.0,
+    "W": 0.0,  # 수강 취소
+    "P": 4.3,  # Pass
+    "NR": 0.0  # None Record
+}
+
 PLAYER_SKILLS = {
     "*": [
         {"name": "타자치기", "damage": 10, "type": "*", "description": "한글은 500타, 영어는 독수리타법"}
@@ -57,7 +73,9 @@ class Player:
         self.semester_progress = 0
         self.canBeMetMonsters = ["프밍기"]
         self.thisSemesterMonsters = []
+        self.thisSemesterGpas = []
         self.clearedMonsters = []
+        self.gpas = []
         self.completed_semesters = []
         
         # PNR 시스템
@@ -65,7 +83,6 @@ class Player:
         self.pnr_used = False
         
         # 성적 및 상태 관리
-        self.semester_grades = {}
         self.jangzal_count = 0
         self.warning_count = 0
         self.deans_count = 0
@@ -89,20 +106,6 @@ class Player:
             copy.deepcopy(Noneitem), 
             copy.deepcopy(Noneitem)
         ]
-        
-        # 전투 관련
-        self.battle_stats = {
-            "turns_used": 0,
-            "items_used": 0,
-            "damage_taken": 0
-        }
-        
-        # 기존 호환성 유지 (일부 기능에서 필요할 수 있음)
-        self.gpa = "0.0"
-        self.knowhow = 100
-        self.concentration = 50
-        self.grade = "A+"
-        self.totalhap = 0
     
     def get_available_skills(self):
         """사용 가능한 스킬 목록 반환"""
@@ -196,10 +199,23 @@ class Player:
             self.pnr_available = False
             return False, "PNR 실패... 5% 확률로 실패했습니다."
     
+    def calcGPA(self, Option):
+        sum1, sum2 = 0, 0
+        if Option == 1:    
+            for credit, gpa in self.thisSemesterGpas:
+                sum1 += GPASCORE[gpa]*credit
+                sum2 += credit
+        elif Option == 2:
+            for credit, gpa in self.gpas:
+                sum1 += GPASCORE[gpa]*credit
+                sum2 += credit
+        if sum2 == 0:
+            return "0.00"
+        return f"{(sum1 / sum2):.2f}"
+
     def complete_monster(self, monster_name):
         """몬스터(과목) 처치 완료"""
         self.semester_progress += 1
-        self.defeated_monsters.append(monster_name)
         
         # 경험치 획득
         self.gain_exp(50)
@@ -238,15 +254,11 @@ class Player:
             print(f"Debug: {skill_type} 스킬이 {self.learned_skills[skill_type]} 레벨로 상승!")
     
     def advance_semester(self):
-        """다음 학기로 진행"""
-        # 학기 성적 계산
-        self.calculate_semester_grade()
-        
+        """다음 학기로 진행"""        
         # 학기 초기화
         self.completed_semesters.append(self.current_semester)
         old_progress = self.semester_progress
         self.semester_progress = 0
-        self.battle_stats = {"turns_used": 0, "items_used": 0, "damage_taken": 0}
         
         # 다음 학기 결정
         current_index = self.semester_order.index(self.current_semester)
@@ -258,52 +270,7 @@ class Player:
             return True
         else:
             print("졸업!")
-            return False
-    
-    def calculate_semester_grade(self):
-        """학기 성적 계산"""
-        total_monsters = len(self.get_current_semester_monsters())
-        passed_monsters = self.semester_progress
-        
-        if total_monsters == 0:
-            return
-        
-        # 성적 계산
-        success_rate = passed_monsters / total_monsters
-        
-        if success_rate >= 0.9:
-            grade = "A+"
-            gpa = 4.5
-        elif success_rate >= 0.8:
-            grade = "A"
-            gpa = 4.0
-        elif success_rate >= 0.7:
-            grade = "B+"
-            gpa = 3.5
-        elif success_rate >= 0.6:
-            grade = "B"
-            gpa = 3.0
-        elif success_rate >= 0.5:
-            grade = "C"
-            gpa = 2.0
-        else:
-            grade = "F"
-            gpa = 0.0
-        
-        self.semester_grades[self.current_semester] = {"grade": grade, "gpa": gpa}
-        
-        # 장짤 체크
-        if passed_monsters == 0 and total_monsters >= 2:
-            self.jangzal_count += 1
-            if self.jangzal_count >= 3:
-                self.warning_count += 1
-                self.jangzal_count = 0
-        
-        # 딘즈 체크
-        hp_percentage = (self.currentHp / self.maxHp) * 100
-        if gpa >= 4.2 or hp_percentage >= 90:
-            self.deans_count += 1
-            self.titles.append(f"{self.current_semester} 딘즈")
+            return False        
     
     def gain_exp(self, amount):
         """경험치 획득 및 레벨업"""
@@ -354,8 +321,8 @@ class Player:
             self.currentHp = self.maxHp  # 자동 부활
             return False
         
-        # 체력이 0 이하이거나 학사 경고 3회
-        return not self.is_alive() or self.warning_count >= 3
+        # 학사 경고 3회
+        return self.warning_count >= 3
     
     def get_final_ending(self):
         """최종 엔딩 결정"""
