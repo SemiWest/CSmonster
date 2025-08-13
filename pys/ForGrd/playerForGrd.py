@@ -23,32 +23,32 @@ GPASCORE = {
 
 PLAYER_SKILLS = {
     "*": [
-        {"name": "타자치기", "damage": 10, "type": "*", "description": "한글은 500타, 영어는 독수리타법"}
+        {"name": "타자치기", "damage": 30, "type": "*", "description": "한글은 500타, 영어는 독수리타법"}
     ],
     "CT": [
         {"name": "이론공격", "damage": 30, "type": "CT", "description": "기본적인 이론 공격"},
-        {"name": "정리증명", "damage": 60, "type": "CT", "description": "강력한 증명 공격", "level": 3},
-        {"name": "수학적귀납법", "damage": 80, "type": "CT", "description": "논리적 사고의 극한", "level": 5}
+        {"name": "정리증명", "damage": 60, "type": "CT", "description": "강력한 증명 공격"},
+        {"name": "수학적귀납법", "damage": 80, "type": "CT", "description": "논리적 사고의 극한"}
     ],
     "DS": [
         {"name": "데이터분석", "damage": 35, "type": "DS", "description": "데이터로 약점 파악"},
-        {"name": "빅데이터", "damage": 70, "type": "DS", "description": "대량 데이터로 압박", "level": 3},
-        {"name": "머신러닝", "damage": 90, "type": "DS", "description": "AI의 힘을 빌린 공격", "level": 5}
+        {"name": "빅데이터", "damage": 70, "type": "DS", "description": "대량 데이터로 압박"},
+        {"name": "머신러닝", "damage": 90, "type": "DS", "description": "AI의 힘을 빌린 공격"}
     ],
     "SN": [
         {"name": "시스템콜", "damage": 25, "type": "SN", "description": "시스템 명령으로 공격"},
-        {"name": "네트워크공격", "damage": 55, "type": "SN", "description": "네트워크를 통한 침투", "level": 3},
-        {"name": "커널해킹", "damage": 85, "type": "SN", "description": "시스템 핵심부 조작", "level": 5}
+        {"name": "네트워크공격", "damage": 55, "type": "SN", "description": "네트워크를 통한 침투"},
+        {"name": "커널해킹", "damage": 85, "type": "SN", "description": "시스템 핵심부 조작"}
     ],
     "PS": [
         {"name": "코딩", "damage": 40, "type": "PS", "description": "기본 프로그래밍 실력"},
-        {"name": "알고리즘", "damage": 65, "type": "PS", "description": "최적화된 알고리즘", "level": 3},
-        {"name": "아키텍처설계", "damage": 95, "type": "PS", "description": "완벽한 시스템 설계", "level": 5}
+        {"name": "알고리즘", "damage": 65, "type": "PS", "description": "최적화된 알고리즘"},
+        {"name": "아키텍처설계", "damage": 95, "type": "PS", "description": "완벽한 시스템 설계"}
     ],
     "AI": [
         {"name": "보안스캔", "damage": 20, "type": "AI", "description": "취약점을 찾아 공격"},
-        {"name": "암호화공격", "damage": 50, "type": "AI", "description": "보안을 뚫고 침투", "level": 3},
-        {"name": "해킹마스터", "damage": 75, "type": "AI", "description": "완벽한 해킹 기술", "level": 5}
+        {"name": "암호화공격", "damage": 50, "type": "AI", "description": "보안을 뚫고 침투"},
+        {"name": "해킹마스터", "damage": 75, "type": "AI", "description": "완벽한 해킹 기술"}
     ]
 }
 
@@ -59,11 +59,11 @@ class Player:
         
         # 플레이어 기본 스탯
         self.level = 1
-        self.maxHp = 100
-        self.currentHp = 100
-        self.attack = 20
-        self.defense = 15
-        self.speed = 10
+        self.maxHp = 30
+        self.currentHp = 30
+        self.attack = 56
+        self.defense = 35
+        self.speed = 72
         self.exp = 0
         self.expToNext = 100
         
@@ -90,7 +90,8 @@ class Player:
         
         # 스킬 시스템 (플레이어가 직접 배우는 스킬들)
         self.learned_skills = {
-            "CT": 1,  # 각 타입별 스킬 레벨
+            "*": 1,  # 기본 스킬
+            "CT": 0,  # 각 타입별 스킬 레벨
             "DS": 0,
             "SN": 0,
             "PS": 0,  # 기본적으로 코딩은 할 수 있음
@@ -113,10 +114,7 @@ class Player:
         for skill_type, level in self.learned_skills.items():
             if level > 0:
                 skills = PLAYER_SKILLS.get(skill_type, [])
-                for skill in skills:
-                    required_level = skill.get("level", 1)
-                    if level >= required_level:
-                        available.append(skill)
+                available.append(skills[level-1])
         return available
     
     def calculate_damage(self, skill, target_monster):
@@ -229,27 +227,10 @@ class Player:
     
     def grow_skill_from_monster(self, monster_name):
         """몬스터 처치에 따른 스킬 성장"""
-        skill_growth_map = {
-            "프밍기": "PS",
-            "이산구조": "CT",
-            "데이타구조": "PS", 
-            "논리회로": "CT",
-            "시프": "SN",
-            "시스템": "SN",
-            "네트워크": "SN",
-            "운영체제": "SN",
-            "데이터베이스": "DS",
-            "컴구조": "SN",
-            "알고리즘": "PS",
-            "소공": "PS",
-            "캡스톤": "PS",
-            "졸업연구": "DS",
-            "개별연구": "DS",
-            "인턴": "PS"
-        }
-        
-        skill_type = skill_growth_map.get(monster_name)
-        if skill_type and self.learned_skills[skill_type] < 5:
+        if self.learned_skills["*"] !=0:
+            self.learned_skills["*"] = 0
+        skill_type = monsters[monster_name].type[0]
+        if self.learned_skills[skill_type] < 5:
             self.learned_skills[skill_type] += 1
             print(f"Debug: {skill_type} 스킬이 {self.learned_skills[skill_type]} 레벨로 상승!")
     
@@ -303,9 +284,8 @@ class Player:
     
     def take_damage(self, damage):
         """데미지 받기"""
-        actual_damage = max(1, damage - self.defense)
+        actual_damage = damage/(self.defense)*random.randint(85,100)
         self.currentHp -= actual_damage
-        self.battle_stats["damage_taken"] += actual_damage
         if self.currentHp < 0:
             self.currentHp = 0
         return actual_damage

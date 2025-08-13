@@ -68,10 +68,8 @@ def save_game_log_csv(filename, player, final_semester):
         return False, f"저장 실패: {str(e)}"
 
 def get_current_semester_monsters(player):
-    if "데이터베이스개론" in player.clearedMonsters and "2-2" in player.completed_semesters and "기계학습" not in player.clearedMonsters:
-        player.canBeMetMonsters.append("기계학습")
     length = len(player.canBeMetMonsters)
-    if length == 0:
+    if length <= 0:
         return False
     elif length == 1:
         player.thisSemesterMonsters = [player.canBeMetMonsters.pop()]
@@ -111,6 +109,16 @@ def semester_intro_screen(player, screen):
     pygame.display.flip()
     wait_for_key()
 
+    if semester_name == "3-여름방학":
+        player.thisSemesterMonsters = ["몰입캠프"]
+        return
+    elif semester_name == "4-여름방학":
+        player.thisSemesterMonsters = random.sample([["코옵"],["개별연구"]], 1)
+        return
+ 
+
+    if "데이터베이스개론" in player.clearedMonsters and "2-2" in player.completed_semesters and "기계학습" not in player.clearedMonsters:
+        player.canBeMetMonsters.append("기계학습")
     # 등장 과목 표시
     screen.fill(WHITE)
     draw_text(screen, f"현재 수강할 수 있는 과목들", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-200, BLACK, size=32, align='center')
@@ -294,6 +302,8 @@ def game_start(screen, Me_name="넙죽이"):
                 player.thisSemesterGpas.append(gpa)
                 player.canBeMetMonsters.append(monster_name)
                 
+            player.complete_monster(monster_name)
+
         # 학기 결과 화면
         semester_result_screen(player, screen)
         

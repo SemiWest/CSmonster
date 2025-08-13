@@ -386,7 +386,7 @@ def enemy_attack_phase(screen):
             # 데미지 계산
             skill_power = getattr(skill, 'skW', 30)
             enemy_attack = getattr(enemyCSmon, 'ATK', 15)
-            base_damage = int((skill_power * enemy_attack) / 50)
+            base_damage = int(skill_power * enemy_attack)
             
             damage = player.take_damage(base_damage)
             
