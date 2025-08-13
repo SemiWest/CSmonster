@@ -23,32 +23,40 @@ GPASCORE = {
 
 PLAYER_SKILLS = {
     "*": [
-        {"name": "타자치기", "damage": 10, "type": "*", "description": "한글은 500타, 영어는 독수리타법"}
-    ],
-    "CT": [
-        {"name": "이론공격", "damage": 30, "type": "CT", "description": "기본적인 이론 공격"},
-        {"name": "정리증명", "damage": 60, "type": "CT", "description": "강력한 증명 공격", "level": 3},
-        {"name": "수학적귀납법", "damage": 80, "type": "CT", "description": "논리적 사고의 극한", "level": 5}
-    ],
-    "DS": [
-        {"name": "데이터분석", "damage": 35, "type": "DS", "description": "데이터로 약점 파악"},
-        {"name": "빅데이터", "damage": 70, "type": "DS", "description": "대량 데이터로 압박", "level": 3},
-        {"name": "머신러닝", "damage": 90, "type": "DS", "description": "AI의 힘을 빌린 공격", "level": 5}
-    ],
-    "SN": [
-        {"name": "시스템콜", "damage": 25, "type": "SN", "description": "시스템 명령으로 공격"},
-        {"name": "네트워크공격", "damage": 55, "type": "SN", "description": "네트워크를 통한 침투", "level": 3},
-        {"name": "커널해킹", "damage": 85, "type": "SN", "description": "시스템 핵심부 조작", "level": 5}
+        {"name": "타자치기", "damage": 10, "type": "*", "description": "한글은 100타, 영어는 독수리타법", "level": 1},
+        {"name": "Python", "damage": 15, "type": "*", "description": "파이썬을 다룰 줄 안다", "level": 2}
     ],
     "PS": [
-        {"name": "코딩", "damage": 40, "type": "PS", "description": "기본 프로그래밍 실력"},
-        {"name": "알고리즘", "damage": 65, "type": "PS", "description": "최적화된 알고리즘", "level": 3},
-        {"name": "아키텍처설계", "damage": 95, "type": "PS", "description": "완벽한 시스템 설계", "level": 5}
+        {"name": "논리왕", "damage": 20, "type": "PS", "description": "상대를 논리로 누른다", "level": 1},
+        {"name": "Master Theorem", "damage": 30, "type": "PS", "description": "상대의 복잡도를 분석한다", "level": 2},
+        {"name": "그리디", "damage": 50, "type": "PS", "description": "나에게 항상 이익이 되는 선택을 한다", "level": 3},
+        {"name": "PNP", "damage": 70, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 4},
+        {"name": "리트코드", "damage": 80, "type": "PS", "description": "리트코드에 상대를 이기는 방법을 검색한다", "level": 5}
+    ],
+    "CS": [
+        {"name": "이산화", "damage": 25, "type": "CS", "description": "상대를 이산화해 분해해버린다", "level": 1},
+        {"name": "순수 함수", "damage": 50, "type": "CS", "description": "순수 함수를 호출해 공격한다", "level": 2},
+        {"name": "RUST", "damage": 50, "type": "CS", "description": "메모리 관리를 더 이상 하지 않아도 된다. 이제 공격에 집중해보자", "level": 3},
+        {"name": "팬파인애플애플팬", "damage": 90, "type": "CS", "description": "학부장을 호출한다", "level": 4}
+    ],
+    "SYS": [
+        {"name": "스택오버플로우", "damage": 25, "type": "SYS", "description": "상대의 머리를 과부화시킨다", "level": 1},
+        {"name": "DDOS", "damage": 55, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보낸다", "level": 3},
+        {"name": "CTRL^C", "damage": 45, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2},
+        {"name": "핀토스", "damage": 85, "type": "SYS", "description": "핀토스를 끝낸 자. 어떤 과제가 와도 이겨낼 수 있다.", "level": 4},
+        {"name": "구글 검색", "damage": 95, "type": "SYS", "description": "구글에 상대를 이기는 방법을 검색한다", "level": 5}
+    ],
+    "DS": [
+        {"name": "Q", "damage": 30, "type": "DS", "description": "Queue를 만들어 때린다", "level": 1},
+        {"name": "OOP", "damage": 55, "type": "DS", "description": "상대를 객채화시킨다", "level": 2},
+        {"name": "RDBMS", "damage": 65, "type": "DS", "description": "상대와 나의 관계를 정의한다", "level": 3},
+        {"name": "SQL 인젝션", "damage": 75, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 4},
+        {"name": "빅데이터 분석", "damage": 85, "type": "DS", "description": "지금까지 진행된 모든 사용자의 플레이 기록을 분석해 공격을 가한다.", "level": 5}
     ],
     "AI": [
-        {"name": "보안스캔", "damage": 20, "type": "AI", "description": "취약점을 찾아 공격"},
-        {"name": "암호화공격", "damage": 50, "type": "AI", "description": "보안을 뚫고 침투", "level": 3},
-        {"name": "해킹마스터", "damage": 75, "type": "AI", "description": "완벽한 해킹 기술", "level": 5}
+        {"name": "'회귀'분석", "damage": 80, "type": "AI", "description": "'과거로 회귀'해 상대를 분석하고 다시 돌아와 공격한다", "level": 5},
+        {"name": "오버피팅", "damage": 90, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 6},
+        {"name": "GPT 호출", "damage": 100, "type": "AI", "description": "GPT에게 공격해달라고 한다", "level": 9}
     ]
 }
 
