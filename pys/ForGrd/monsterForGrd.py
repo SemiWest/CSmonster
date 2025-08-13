@@ -9,12 +9,12 @@ def set_difficulty(difficulty_level):
 # 타입별 상성표 (공격타입 -> 방어타입 -> 배율)
 # CT: 격투 (체급이 높음) / DS: 불꽃 (무상성) / PS: 노말 / SN: 강철 (방어) / AI: 드래곤에서 모티브
 TYPE_EFFECTIVENESS = {
-    "*" : {"CT": 1.0, "DS": 1.0, "PS": 1.0, "SN": 1.0, "AI": 1.0, "*": 1.0},
-    "CT": {"CT": 1.0, "DS": 0.0, "PS": 2.0, "SN": 0.5, "AI": 1.0, "*": 1.0},
-    "DS": {"CT": 1.0, "DS": 1.0, "PS": 1.0, "SN": 2.0, "AI": 0.5, "*": 1.0},
-    "PS": {"CT": 1.0, "DS": 0.5, "PS": 2.0, "SN": 1.0, "AI": 0.0, "*": 1.0},
-    "SN": {"CT": 1.0, "DS": 1.0, "PS": 0.0, "SN": 1.0, "AI": 1.0, "*": 1.0},
-    "AI": {"CT": 2.0, "DS": 0.5, "PS": 1.0, "SN": 0.5, "AI": 1.0, "*": 1.0},
+    "*" : {"CT": 1.0, "DS": 1.0, "PS": 1.0, "SYS": 1.0, "AI": 1.0, "*": 1.0},
+    "CT": {"CT": 1.0, "DS": 0.0, "PS": 2.0, "SYS": 0.5, "AI": 1.0, "*": 1.0},
+    "DS": {"CT": 1.0, "DS": 1.0, "PS": 1.0, "SYS": 2.0, "AI": 0.5, "*": 1.0},
+    "PS": {"CT": 1.0, "DS": 0.5, "PS": 2.0, "SYS": 1.0, "AI": 0.0, "*": 1.0},
+    "SYS": {"CT": 1.0, "DS": 1.0, "PS": 0.0, "SYS": 1.0, "AI": 1.0, "*": 1.0},
+    "AI": {"CT": 2.0, "DS": 0.5, "PS": 1.0, "SYS": 0.5, "AI": 1.0, "*": 1.0},
 }
 
 # 타입 코드
@@ -23,7 +23,7 @@ type_dict = {
     "CT": "전산이론",
     "DS": "데이터과학",
     "PS": "문제해결",
-    "SN": "시스템 네트워크",
+    "SYS": "시스템 네트워크",
     "AI": "인공지능",
 }
 
@@ -254,7 +254,7 @@ cs206.skills = {
 cs230 = Monster(
     Num = 230, name="시프", credit = 3,
     HP = 65, ATK = 60, DEF = 50, SPD = 85, 
-    type=["SN"], SeonSu=[311, 341],
+    type=["SYS"], SeonSu=[311, 341],
     image="../img/monsters/데이타구조.png",
     description="시프설명"
 )
@@ -290,7 +290,7 @@ cs230.skills = {
 cs330 = Monster(
     Num = 330, name="OS", credit = 4,
     HP =65, ATK = 65, DEF = 60, SPD = 130, 
-    type = ["SN"], SeonSu=[],
+    type = ["SYS"], SeonSu=[],
     image="../img/monsters/데이타구조.png",  
     description="전산과 과목 중 가장 악명이 높다. 자전거를 손을 놓고 타게 만드는 과목이다.")
 cs330.skills = {
@@ -360,7 +360,7 @@ cs300.skills = {
 cs311 = Monster(
     Num = 311, name="전산기조직", credit = 3,
     HP = 70, ATK = 80, DEF = 90, SPD = 60, 
-    type=["SN"], SeonSu=[330],
+    type=["SYS"], SeonSu=[330],
     image="../img/monsters/데이타구조.png",
     description="전산기조직설명"
 )
@@ -394,7 +394,7 @@ cs320.skills = {
 cs341 = Monster(
     Num = 341, name="전산망개론", credit = 3,
     HP = 90, ATK = 80, DEF = 70, SPD = 60, 
-    type=["SN"], SeonSu=[330],
+    type=["SYS"], SeonSu=[330],
     image="../img/monsters/데이타구조.png",
     description="네트워크설명"
 )

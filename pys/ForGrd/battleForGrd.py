@@ -40,7 +40,7 @@ def display_type(screen, y, x, type):
         screen.blit(CST, (x, y))
     elif type == "DS":
         screen.blit(DTS, (x, y))
-    elif type == "SN":
+    elif type == "SYS":
         screen.blit(SYS, (x, y))
     elif type == "PS":
         screen.blit(PS, (x, y))
