@@ -54,9 +54,9 @@ PLAYER_SKILLS = {
         {"name": "빅데이터 분석", "damage": 85, "type": "DS", "description": "지금까지 진행된 모든 사용자의 플레이 기록을 분석해 공격을 가한다.", "level": 5}
     ],
     "AI": [
-        {"name": "'회귀'분석", "damage": 80, "type": "AI", "description": "'과거로 회귀'해 상대를 분석하고 다시 돌아와 공격한다", "level": 5},
-        {"name": "오버피팅", "damage": 90, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 6},
-        {"name": "GPT 호출", "damage": 100, "type": "AI", "description": "GPT에게 공격해달라고 한다", "level": 9}
+        {"name": "'회귀'분석", "damage": 80, "type": "AI", "description": "'과거로 회귀'해 상대를 분석하고 다시 돌아와 공격한다", "level": 4},
+        {"name": "오버피팅", "damage": 90, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 5},
+        {"name": "샘 올트먼", "damage": 100, "type": "AI", "description": "상대에게 특화된 GPT를 만든다", "level": 6}
     ]
 }
 
@@ -100,7 +100,7 @@ class Player:
         self.learned_skills = {
             "CT": 1,  # 각 타입별 스킬 레벨
             "DS": 0,
-            "SN": 0,
+            "SYS": 0,
             "PS": 0,  # 기본적으로 코딩은 할 수 있음
             "AI": 0
         }
@@ -242,12 +242,12 @@ class Player:
             "이산구조": "CT",
             "데이타구조": "PS", 
             "논리회로": "CT",
-            "시프": "SN",
-            "시스템": "SN",
-            "네트워크": "SN",
-            "운영체제": "SN",
+            "시프": "SYS",
+            "시스템": "SYS",
+            "네트워크": "SYS",
+            "운영체제": "SYS",
             "데이터베이스": "DS",
-            "컴구조": "SN",
+            "컴구조": "SYS",
             "알고리즘": "PS",
             "소공": "PS",
             "캡스톤": "PS",
