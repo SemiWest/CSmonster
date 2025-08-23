@@ -15,7 +15,7 @@ sX, sY = 32, 32
 stX = sX+20
 stY = sY+568
 esX, esY = sX+20, sY+36
-psX, psY = sX+632, sY+347
+psX, psY = sX+582, sY+347
 
 # 기존 이미지들 그대로 유지
 BACKGROUND = pygame.image.load("../img/background.png")
@@ -115,7 +115,7 @@ def display_status(screen, detail=False):
     enemy_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
     enemy_max_hp = getattr(enemyCSmon, 'HP', 100)
     animate_health_bar(screen, esY+104, esX+135, enemy_hp, enemy_hp, enemy_max_hp)
-    
+
     # 적 타입 표시
     enemy_types = getattr(enemyCSmon, 'type', ['전산이론'])
     if isinstance(enemy_types, str):
@@ -129,36 +129,43 @@ def display_status(screen, detail=False):
     
     draw_text(screen, f"{player.name}", psX+64, psY+52, WHITE)
     draw_text(screen, f"lv.{player.level}", psX+384, psY+52, WHITE)
+
+    # 플레이어 타입 표시
+    player_type = player.playertype()
+    display_type(screen, psY, psX+470, player_type)
     
     # 플레이어 체력바
     player_hp = getattr(player, 'nowhp', getattr(player, 'HP', 100))
     player_max_hp = getattr(player, 'HP', 100)
     animate_health_bar(screen, psY+104, psX+135, player_hp, player_hp, player_max_hp)
 
+    if detail:
+        display_player_details(screen, player, sX+1264)
+
     screen.blit(TEXT, (sX+8, sY+536))
 
 def display_player_details(screen, player, x):
     """플레이어 상세 정보 출력"""
     details = [
-        (("이름", 0, WHITE), (f"{player.name}", 192, CYAN)),
-        (("레벨", 0, WHITE), (f"{player.level}", 192, CYAN)),
-        (("다음 레벨까지", 0, WHITE), (f"{player.expToNext - player.exp}", 192, BLUE), ("경험치 남음", 352, WHITE)),
+        (("이름", 0, WHITE), (f"{player.name}", 228, CYAN)),
+        (("레벨", 0, WHITE), (f"{player.level}", 228, CYAN)),
+        (("다음 레벨까지", 0, WHITE), (f"{player.max_exp - player.exp}", 228, BLUE), ("경험치 남음", 352, WHITE)),
         "",
-        (("체력", 0, WHITE), (f"{player.nowhp}"+"/"+f"{player.HP}", 192, CYAN)),
-        (("공격", 0, WHITE), (f"{player.attack}", 192, CYAN)),
-        (("방어", 0, WHITE), (f"{player.defense}", 192, CYAN)),
-        (("속도", 0, WHITE), (f"{player.speed}", 192, CYAN)),
+        (("체력", 0, WHITE), (f"{player.nowhp}"+"/"+f"{player.HP}", 228, CYAN)),
+        (("공격", 0, WHITE), (f"{player.ATK}", 228, CYAN)),
+        (("방어", 0, WHITE), (f"{player.DEF}", 228, CYAN)),
+        (("속도", 0, WHITE), (f"{player.SPD}", 228, CYAN)),
         "",
-        (("현재 학기", 0, WHITE), (f"{player.current_semester}", 192, WHITE)),
-        (("PNR 사용가능", 0, WHITE), (f"{'가능' if player.can_use_pnr() else '불가능'}", 192, GREEN if player.can_use_pnr() else RED)),
+        (("현재 학기", 0, WHITE), (f"{player.current_semester}", 228, WHITE)),
         "",
-        (("스킬 레벨", 0, WHITE), ("", 0, WHITE)),
+        (("스킬 별 레벨", 0, WHITE), ("", 0, WHITE)),
+        (("  *   ", 0 , EVENTC), (f"Level {player.learned_skills["*"]}", 228, GRAY if player.learned_skills["*"] == 0 else WHITE if player.learned_skills["*"] < 2 else YELLOW if player.learned_skills["*"] < 4 else ORANGE if player.learned_skills["*"] < 5 else RED)),
+        (("  CT  ", 0 , CTC), (f"Level {player.learned_skills["CT"]}", 228, GRAY if player.learned_skills["CT"] == 0 else WHITE if player.learned_skills["CT"] < 2 else YELLOW if player.learned_skills["CT"] < 4 else ORANGE if player.learned_skills["CT"] < 5 else RED)),
+        (("  DS  ", 0 , DSC), (f"Level {player.learned_skills["DS"]}", 228, GRAY if player.learned_skills["DS"] == 0 else WHITE if player.learned_skills["DS"] < 2 else YELLOW if player.learned_skills["DS"] < 4 else ORANGE if player.learned_skills["DS"] < 5 else RED)),
+        (("  PS  ", 0 , PSC), (f"Level {player.learned_skills["PS"]}", 228, GRAY if player.learned_skills["PS"] == 0 else WHITE if player.learned_skills["PS"] < 2 else YELLOW if player.learned_skills["PS"] < 4 else ORANGE if player.learned_skills["PS"] < 5 else RED)),
+        (("  SYS ", 0 , SYSC), (f"Level {player.learned_skills["SYS"]}", 228, GRAY if player.learned_skills["SYS"] == 0 else WHITE if player.learned_skills["SYS"] < 2 else YELLOW if player.learned_skills["SYS"] < 4 else ORANGE if player.learned_skills["SYS"] < 5 else RED)),
+        (("  AI  ", 0 , AIC), (f"Level {player.learned_skills["AI"]}", 228, GRAY if player.learned_skills["AI"] == 0 else WHITE if player.learned_skills["AI"] < 2 else YELLOW if player.learned_skills["AI"] < 4 else ORANGE if player.learned_skills["AI"] < 5 else RED)),
     ]
-    
-    # 스킬 레벨 추가
-    for skill_type, level in player.learned_skills.items():
-        if level > 0:
-            details.append(((f"  {skill_type}", 0, WHITE), (f"Lv.{level}", 192, GREEN if level >= 3 else YELLOW if level >= 2 else WHITE)))
     
     for i, detail_item in enumerate(details):
         y_pos = sY + 50 + i * 40
@@ -196,16 +203,22 @@ def select_player_skill(screen):
             
             if i == current_index:
                 # 선택된 스킬 상세정보 표시
-                draw_text(screen, f"{skill['description']}", sX+64, stY+160, WHITE)
-                draw_text(screen, f"타입: {skill['type']}", sX+64, stY+200, WHITE)
-                draw_text(screen, f"위력: {skill['damage']}", sX+64, stY+240, WHITE)
+                # 선택된 스킬의 상세정보 표시
+                infoY = sY+536
+                display_type(screen, infoY, sX+600, skill['type'])
+                if len(skill['description']) > 17:
+                    draw_text(screen, f"{skill['description'][:17]}", sX+760, infoY+60, WHITE)
+                    draw_text(screen, f"{skill['description'][17:]}", sX+760, infoY+100, WHITE)
+                else:
+                    draw_text(screen, f"{skill['description']}", sX+760, infoY+60, WHITE)
+                draw_text(screen, f"위력: {skill['damage']}", sX+760, infoY+20, WHITE)
                 
                 if effectiveness > 1.5:
-                    draw_text(screen, "효과: 뛰어남!", sX+64, stY+280, GREEN)
+                    draw_text(screen, "효과: 뛰어남!",  sX+960, infoY+20, GREEN)
                 elif effectiveness < 0.8:
-                    draw_text(screen, "효과: 별로...", sX+64, stY+280, BLUE)
+                    draw_text(screen, "효과: 별로...",  sX+960, infoY+20, BLUE)
                 else:
-                    draw_text(screen, "효과: 보통", sX+64, stY+280, WHITE)
+                    draw_text(screen, "효과: 보통",  sX+960, infoY+20, WHITE)
 
         pygame.display.flip()
         
@@ -257,10 +270,6 @@ def select_action(screen):
             prefix = "> " if i == current_index else "  "
             draw_text(screen, f"{prefix}{option}", x_pos, y_pos, color)
         
-        # PNR 안내 메시지
-        if player.can_use_pnr():
-            draw_text(screen, "※ PNR: 95% 확률로 과목 패스 (1-2학기 통합 1회)", stX, stY+200, BLUE)
-
         pygame.display.flip()
         
         key = wait_for_key()
