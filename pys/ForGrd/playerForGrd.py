@@ -21,37 +21,53 @@ GPASCORE = {
     "NR": 0.0  # None Record
 }
 
+GPACOLOR = {
+    "A+": (255, 215, 0),    # Gold
+    "A0": (255, 215, 0),    # Gold
+    "A-": (255, 215, 0),    # Gold
+    "B+": (192, 192, 192),  # Silver
+    "B0": (192, 192, 192), # Silver
+    "B-": (192, 192, 192), # Silver
+    "C+": (205, 127, 50),  # Bronze
+    "C0": (205, 127, 50),  # Bronze
+    "C-": (205, 127, 50), # Bronze
+    "F": (255, 0, 0),       # Red
+    "W": (128, 128, 128),   # Gray
+    "P": (0, 255, 0),       # Green
+    "NR": (0, 0, 0)          # Black
+}
+
 PLAYER_SKILLS = {
     "*": [
-        {"name": "타자치기", "damage": 10, "type": "*", "description": "한글은 100타, 영어는 독수리타법", "level": 1},
-        {"name": "Python", "damage": 15, "type": "*", "description": "파이썬을 다룰 줄 안다", "level": 2}
+        {"name": "타자치기", "damage": 30, "type": "*", "description": "한글은 100타, 영어는 독수리타법", "level": 1},
+        {"name": "Python", "damage": 50, "type": "*", "description": "파이썬을 다룰 줄 안다", "level": 2}
     ],
     "PS": [
-        {"name": "논리왕", "damage": 20, "type": "PS", "description": "상대를 논리로 누른다", "level": 1},
-        {"name": "Master Theorem", "damage": 30, "type": "PS", "description": "상대의 복잡도를 분석한다", "level": 2},
-        {"name": "그리디", "damage": 50, "type": "PS", "description": "나에게 항상 이익이 되는 선택을 한다", "level": 3},
-        {"name": "PNP", "damage": 70, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 4},
-        {"name": "리트코드", "damage": 80, "type": "PS", "description": "리트코드에 상대를 이기는 방법을 검색한다", "level": 5}
+        {"name": "논리왕", "damage": 60, "type": "PS", "description": "상대를 논리로 누른다", "level": 1},
+        {"name": "Master Theorem", "damage": 80, "type": "PS", "description": "상대의 복잡도를 분석한다", "level": 2},
+        {"name": "그리디", "damage": 90, "type": "PS", "description": "나에게 항상 이익이 되는 선택을 한다", "level": 3},
+        {"name": "PNP", "damage": 90, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 4},
+        {"name": "리트코드", "damage": 110, "type": "PS", "description": "리트코드에 상대를 이기는 방법을 검색한다", "level": 5}
     ],
-    "CS": [
-        {"name": "이산화", "damage": 25, "type": "CS", "description": "상대를 이산화해 분해해버린다", "level": 1},
-        {"name": "순수 함수", "damage": 50, "type": "CS", "description": "순수 함수를 호출해 공격한다", "level": 2},
-        {"name": "RUST", "damage": 50, "type": "CS", "description": "메모리 관리를 더 이상 하지 않아도 된다. 이제 공격에 집중해보자", "level": 3},
-        {"name": "팬파인애플애플팬", "damage": 90, "type": "CS", "description": "학부장을 호출한다", "level": 4}
+    "CT": [
+        {"name": "이산화", "damage": 60, "type": "CT", "description": "상대를 이산화해 분해해버린다", "level": 1},
+        {"name": "순수 함수", "damage": 80, "type": "CT", "description": "순수 함수를 호출해 공격한다", "level": 2},
+        {"name": "RUST", "damage": 80, "type": "CT", "description": "메모리 관리를 더 이상 하지 않아도 된다. 이제 공격에 집중해보자", "level": 3},
+        {"name": "팬파인애플애플팬", "damage": 90, "type": "CT", "description": "학부장을 호출한다", "level": 4}
     ],
     "SYS": [
-        {"name": "스택오버플로우", "damage": 25, "type": "SYS", "description": "상대의 머리를 과부화시킨다", "level": 1},
-        {"name": "DDOS", "damage": 55, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보낸다", "level": 3},
-        {"name": "CTRL^C", "damage": 45, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2},
+        {"name": "스택오버플로우", "damage": 60, "type": "SYS", "description": "상대의 머리를 과부화시킨다", "level": 1},
+        {"name": "CTRL^C", "damage": 65, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2},
+        {"name": "DDOS", "damage": 70, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보낸다", "level": 3},
         {"name": "핀토스", "damage": 85, "type": "SYS", "description": "핀토스를 끝낸 자. 어떤 과제가 와도 이겨낼 수 있다.", "level": 4},
-        {"name": "구글 검색", "damage": 95, "type": "SYS", "description": "구글에 상대를 이기는 방법을 검색한다", "level": 5}
+        {"name": "구글 검색", "damage": 100, "type": "SYS", "description": "구글에 상대를 이기는 방법을 검색한다", "level": 5}
     ],
     "DS": [
-        {"name": "Q", "damage": 30, "type": "DS", "description": "Queue를 만들어 때린다", "level": 1},
-        {"name": "OOP", "damage": 55, "type": "DS", "description": "상대를 객채화시킨다", "level": 2},
+        {"name": "Q", "damage": 60, "type": "DS", "description": "Queue를 만들어 때린다", "level": 1},
+        {"name": "OOP", "damage": 65, "type": "DS", "description": "상대를 객채화시킨다", "level": 2},
         {"name": "RDBMS", "damage": 65, "type": "DS", "description": "상대와 나의 관계를 정의한다", "level": 3},
         {"name": "SQL 인젝션", "damage": 75, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 4},
-        {"name": "빅데이터 분석", "damage": 85, "type": "DS", "description": "지금까지 진행된 모든 사용자의 플레이 기록을 분석해 공격을 가한다.", "level": 5}
+        {"name": "빅데이터 분석", "damage": 120, "type": "DS", "description": "지금까지 진행된 모든 사용자의 플레이 기록을 분석해 공격을 가한다.", "level": 5}
     ],
     "AI": [
         {"name": "'회귀'분석", "damage": 80, "type": "AI", "description": "'과거로 회귀'해 상대를 분석하고 다시 돌아와 공격한다", "level": 4},
@@ -59,21 +75,50 @@ PLAYER_SKILLS = {
         {"name": "샘 올트먼", "damage": 100, "type": "AI", "description": "상대에게 특화된 GPT를 만든다", "level": 6}
     ]
 }
+def Comp(skill, target):
+    multiplier = 1
+    for typ in target.type:
+        multiplier *= comp(skill["type"], typ)
+    return multiplier
+
+def gpaColor(gpa):
+    if len(gpa) >= 3:
+        gpa = float(gpa)
+        if gpa >= 4.3:
+            return GPACOLOR["A+"]
+        elif gpa >= 4.0:
+            return GPACOLOR["A0"]
+        elif gpa >= 3.7:
+            return GPACOLOR["A-"]
+        elif gpa >= 3.3:
+            return GPACOLOR["B+"]
+        elif gpa >= 3.0:
+            return GPACOLOR["B0"]
+        elif gpa >= 2.7:
+            return GPACOLOR["B-"]
+        elif gpa >= 2.3:
+            return GPACOLOR["C+"]
+        elif gpa >= 2.0:
+            return GPACOLOR["C0"]
+        elif gpa >= 1.7:
+            return GPACOLOR["C-"]
+        else:
+            return GPACOLOR["F"]
+    else: return GPACOLOR[gpa]
 
 class Player:
-    def __init__(self, name="Unknown", Etype="학생"):
+    def __init__(self, name="Unknown"):
         self.name = name
-        self.Etype = Etype
-        
-        # 플레이어 기본 스탯
-        self.level = 1
-        self.maxHp = 30
-        self.currentHp = 30
-        self.attack = 56
-        self.defense = 35
-        self.speed = 72
+        self.level = 5
         self.exp = 0
-        self.expToNext = 100
+
+        self.H = 30
+
+        self.A = 56
+        self.D = 60
+        self.SP = 90
+        self.skills = {}  # 스킬 저장
+        self.usedskill = None
         
         # 학기 진행 시스템
         self.current_semester = "새터"
@@ -115,46 +160,49 @@ class Player:
             copy.deepcopy(Noneitem), 
             copy.deepcopy(Noneitem)
         ]
+        self.update_fullreset()  # 초기화 시 스탯 업데이트
     
+    def playertype(self):
+        """플레이어의 주력 스킬 타입 반환"""
+        return max(self.learned_skills, key=lambda k: self.learned_skills[k])
+
     def get_available_skills(self):
         """사용 가능한 스킬 목록 반환"""
         available = []
         for skill_type, level in self.learned_skills.items():
             if level > 0:
-                skills = PLAYER_SKILLS.get(skill_type, [])
-                available.append(skills[level-1])
+                skilllist = PLAYER_SKILLS.get(skill_type, [])
+                available.append(skilllist[level-1])
         return available
     
-    def calculate_damage(self, skill, target_monster):
-        """데미지 계산"""
-        base_damage = skill["damage"]
-        skill_type = skill["type"]
+    def update_battle(self, Vatk, Vdef, Vspd):
+        self.CATK = int(self.ATK * Vatk)  # 공격력
+        self.CDEF = int(self.DEF * Vdef)  # 방어력
+        self.CSPD = int(self.SPD * Vspd)
+
+    def take_damage(self, damage):
+        self.nowhp -= damage
+        if self.nowhp < 0:
+            self.nowhp = 0
         
-        # 몬스터의 타입 가져오기
-        target_types = getattr(target_monster, 'type', ['CT'])
-        if isinstance(target_types, str):
-            target_types = [target_types]
+    def update(self):
+        self.type = self.playertype()  # 플레이어 타입 설정
+        # HP = [ { (종족값 x 2) + 개체값 + 100 } x 레벨/100 ] + 10
+        self.HP = int((self.H * 2 + 31 + 100) * (self.level / 100)) + 10
+
+        # E = [ { (종족값 x 2) + 개체값} x 레벨/100 + 5 ]
+        self.ATK = int((self.A * 2 + 31) * (self.level / 100)) + 5
+        self.DEF = int((self.D * 2 + 31) * (self.level / 100)) + 5
+        self.SPD = int((self.SP * 2 + 31) * (self.level / 100)) + 5
         
-        # 상성 계산 (여러 타입에 대해 최대 효과 선택)
-        effectiveness = 1.0
-        for target_type in target_types:
-            type_effectiveness = TYPE_EFFECTIVENESS.get(skill_type, {}).get(target_type, 1.0)
-            effectiveness = max(effectiveness, type_effectiveness)
+        self.max_exp = int((self.level ** 3))  # 경험치 필요량
+
+        self.update_battle(1 ,1 ,1)
         
-        # 플레이어 공격력 적용
-        attack_multiplier = (100 + self.attack) / 100
-        
-        # 몬스터 방어력 적용
-        target_defense = getattr(target_monster, 'DEF', 10)
-        defense_reduction = 100 / (100 + target_defense)
-        
-        # 난수 (0.9 ~ 1.1)
-        random_factor = random.uniform(0.9, 1.1)
-        
-        final_damage = int(base_damage * attack_multiplier * effectiveness * defense_reduction * random_factor)
-        
-        return max(1, final_damage), effectiveness
-    
+    def update_fullreset(self):
+        self.update()
+        self.nowhp = self.HP  # 현재 체력 회복
+
     def use_skill(self, skill_name, target_monster):
         """스킬 사용"""
         # 스킬 찾기
@@ -170,7 +218,7 @@ class Player:
             return None, "스킬을 찾을 수 없습니다"
         
         # 데미지 계산
-        damage, effectiveness = self.calculate_damage(skill, target_monster)
+        damage, effectiveness = self.damage(skill, target_monster)
         
         # 몬스터에게 데미지 적용
         if hasattr(target_monster, 'nowhp'):
@@ -184,26 +232,20 @@ class Player:
             "skill": skill,
         }, "성공"
     
+    def damage(self, skill, target):
+        # 데미지 계산
+        basedmg = ((2*self.level + 10)/250)*self.CATK/(target.CDEF) 
+        
+        # 상성
+        multiplier = Comp(skill, target)
+        
+        return int(multiplier * (basedmg*skill["damage"]+2) * random.uniform(0.85, 1.00)), multiplier
+    
     def can_use_pnr(self):
         """PNR 사용 가능 여부"""
         return (self.pnr_available and 
                 self.current_semester in ["1-1", "1-2"] and 
                 not self.pnr_used)
-    
-    def use_pnr_in_battle(self):
-        """전투 중 PNR 사용"""
-        if not self.can_use_pnr():
-            return False, "PNR 사용 불가"
-        
-        # 95% 확률로 성공
-        if random.random() < 0.95:
-            self.pnr_used = True
-            self.pnr_available = False
-            return True, "PNR 성공! 과목을 패스했습니다!"
-        else:
-            self.pnr_used = True
-            self.pnr_available = False
-            return False, "PNR 실패... 5% 확률로 실패했습니다."
     
     def calcGPA(self, Option):
         sum1, sum2 = 0, 0
@@ -224,19 +266,13 @@ class Player:
         self.semester_progress += 1
         
         # 경험치 획득
-        self.gain_exp(50)
-        
-        # 체력 회복
-        heal_amount = int(self.maxHp * 0.1)
-        self.heal(heal_amount)
+        self.gain_exp(monsters[monster_name].drop_exp)
         
         # 과목별 스킬 성장
         self.grow_skill_from_monster(monster_name)
     
     def grow_skill_from_monster(self, monster_name):
         """몬스터 처치에 따른 스킬 성장"""
-        if self.learned_skills["*"] !=0:
-            self.learned_skills["*"] = 0
         skill_type = monsters[monster_name].type[0]
         if self.learned_skills[skill_type] < 5:
             self.learned_skills[skill_type] += 1
@@ -264,49 +300,27 @@ class Player:
     def gain_exp(self, amount):
         """경험치 획득 및 레벨업"""
         self.exp += amount
-        while self.exp >= self.expToNext:
+        while self.exp >= self.max_exp:
             self.level_up()
     
     def level_up(self):
-        """레벨업"""
-        self.exp -= self.expToNext
-        self.level += 1
-        
-        # 스탯 증가
-        old_max_hp = self.maxHp
-        
-        self.maxHp += 20
-        self.attack += 3
-        self.defense += 2
-        self.speed += 1
-        
-        # 체력과 MP 완전 회복
-        self.currentHp = self.maxHp
-        
-        # 다음 레벨 필요 경험치
-        self.expToNext = int(self.expToNext * 1.2)
-
-    def heal(self, amount):
-        """체력 회복"""
-        self.currentHp = min(self.maxHp, self.currentHp + amount)
-    
-    def take_damage(self, damage):
-        """데미지 받기"""
-        actual_damage = damage/(self.defense)*random.randint(85,100)
-        self.currentHp -= actual_damage
-        if self.currentHp < 0:
-            self.currentHp = 0
-        return actual_damage
+        while self.exp >= self.max_exp:
+            current_hp = self.HP
+            self.level += 1
+            self.update()
+            if self.is_alive():
+                self.nowhp += (self.HP-current_hp)
+            self.exp -= self.max_exp  # 레벨업 시 경험치 차감
     
     def is_alive(self):
         """생존 여부"""
-        return self.currentHp > 0
+        return self.nowhp > 0
     
     def gameover(self):
         """게임 오버 조건"""
         # 1-1은 학사경고 없음 (부활 가능)
         if self.current_semester == "1-1" and not self.is_alive():
-            self.currentHp = self.maxHp  # 자동 부활
+            self.nowhp = self.HP  # 자동 부활
             return False
         
         # 학사 경고 3회

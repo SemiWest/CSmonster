@@ -77,7 +77,7 @@ def draw_text(surface, text, x, y, color=BLACK, highlight=False, size=32, align=
     if align == 'center':
         text_rect = text_surface.get_rect(centerx=x, top=y)
     elif align == 'right':
-        text_rect = text_surface.get_rect(right=x, centery=y)
+        text_rect = text_surface.get_rect(right=x, top=y)
     else:  # 'left' 또는 기타
         text_rect = text_surface.get_rect(topleft=(x, y))
     

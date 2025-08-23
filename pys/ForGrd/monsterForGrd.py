@@ -36,7 +36,7 @@ def comp(atskilltype, tgtype):
     - 0: 효과가 없다.
     - 2: 일반적인 효과.
     """
-    return TYPE_EFFECTIVENESS[atskilltype][tgtype]/2
+    return TYPE_EFFECTIVENESS[atskilltype][tgtype]
 def NumToName(mon_num):
         for value in monsters.values():
             if value.Num == mon_num:
@@ -49,7 +49,6 @@ class Monster:
         self.name = name
         self.credit = credit
         self.level = 5
-        self.exp = 0
         self.type = type  # 타입 (데이터 과학, 시스템-네트워크, 전산이론, 시큐어컴퓨팅, 인공지능)
         self.SeonSu = SeonSu  # 이 과목을 선수과목으로 하는 과목들
         self.image = image
@@ -76,7 +75,6 @@ class Monster:
         self.CDEF = int(self.DEF * Vdef)  # 방어력
         self.CSPD = int(self.SPD * Vspd)
 
-    
     def take_damage(self, damage):
         """ 몬스터가 데미지를 받았을 때 호출되는 메서드 """
         self.nowhp -= damage
@@ -92,7 +90,6 @@ class Monster:
         self.DEF = int((self.D * 2 + self.IV[2]) * (self.level / 100)) + 5
         self.SPD = int((self.SP * 2 + self.IV[3]) * (self.level / 100)) + 5
         
-        self.max_exp = int((self.level ** 3))  # 경험치 필요량
         self.drop_exp = int(self.level * (30-10*difficulty))  # 드랍 경험치
 
         self.update_battle(1 ,1 ,1)
@@ -101,17 +98,28 @@ class Monster:
         self.update()
         self.nowhp = self.HP  # 현재 체력 회복
 
-    def level_up(self):
-        while self.exp >= self.max_exp:
-            current_hp = self.HP
-            self.level += 1
-            self.update()
-            if self.is_alive():
-                self.nowhp += (self.HP-current_hp)
-            self.exp -= self.max_exp  # 레벨업 시 경험치 차감
-
     def is_alive(self):
         return self.nowhp > 0
+
+    def use_skill(self, player, skill):
+        """스킬 사용"""
+        if skill.effect_type == "Sdamage" or skill.effect_type == "Pdamage":
+            # 데미지 계산
+            damage, effectiveness = skill.damage(player, self)
+            
+            # 몬스터에게 데미지 적용
+            if hasattr(player, 'nowhp'):
+                player.nowhp -= damage
+                if player.nowhp < 0:
+                    player.nowhp = 0
+            
+            return {
+                "damage": damage,
+                "effectiveness": effectiveness,
+                "skill": skill,
+            }, "성공"
+        else:
+            return None, "미구현임"
 
     class Skill:
         def __init__(self, name, effect_type, type, skW, priority=0, description=""):
@@ -129,13 +137,11 @@ class Monster:
             
             # 상성
             multiplier = self.Comp(target)
-            
-            return multiplier * (basedmg*self.skW+2) * random.uniform(0.85, 1.00)
+            return int(multiplier * (basedmg*self.skW+2) * random.uniform(0.85, 1.00)), multiplier
 
         def Comp(self, target):
             multiplier = 1
-            for typ in target.type:
-                multiplier *= comp(self.skill_type, typ)
+            multiplier *= comp(self.skill_type, target.type)
             return multiplier
 
 # 플레이어와 적 전산몬스터 생성
@@ -158,20 +164,20 @@ cs101.skills = {
     'Hello, World!': Monster.Skill(
         name='Hello, World!', 
         effect_type="Pdamage",
-        type="전산이론",
+        type="CT",
         skW=30, 
         priority=1, 
         description="근본중의 근본인 Hello, World!를 출력해 상대에게 데미지를 준다. 반드시 선제공격한다."),
     '휴보는 내 친구': Monster.Skill(
         name='휴보는 내 친구', 
         effect_type="buff",
-        type="전산이론",
+        type="CT",
         skW=9, 
         description="휴보에게서 에너지가 가득 담긴 비퍼를 받는다. 공격력을 크게 올린다."),
     'CSV 접근': Monster.Skill(
         name='CSV 접근', 
         effect_type="Sdamage", 
-        type="데이터 과학",
+        type="DS",
         skW=50,
         description="CSV 파일에 접근하여 상대의 구조를 파헤친다."),
     
@@ -189,26 +195,26 @@ cs204.skills = {
     'Modus Pones': Monster.Skill(
         name='Modus Pones', 
         effect_type="Sdamage",
-        type="비주얼컴퓨팅",
+        type="DS",
         skW=40,
         priority=-1, 
         description="만약 내가 나중에 공격한다면, 공격은 명중한다. 반드시 나중에 공격한다. 반드시 명중한다."),
     '삼단논법': Monster.Skill(
         name='삼단논법', 
         effect_type="Pdamage",
-        type="전산이론",
+        type="CT",
         skW=60, 
         description="아리스토텔레스의 현명함을 빌려 상대를 공격한다."),
     '이산화': Monster.Skill(
         name='이산화', 
         effect_type="halve_hp",
-        type="시큐어컴퓨팅",
+        type="PS",
         skW=0,
         description="상대를 이산화시켜 HP를 반으로 줄인다."),
     '무한루프그래프': Monster.Skill(
         name='무한루프그래프', 
         effect_type="reflect", 
-        type = "전산이론",
+        type = "CT",
         skW=0,
         priority=4, 
         description="무한 루프 그래프를 만들어 상대의 공격을 흘려보낸다."),
@@ -226,26 +232,26 @@ cs206.skills = {
     'StackOverflow': Monster.Skill(
         name='StackOverflow', 
         effect_type="Sdamage",
-        type="전산이론",
+        type="CT",
         skW=100,
         description="스택 오버플로우를 일으켜 공격한다."),
     'FIFO': Monster.Skill(
         name='FIFO', 
         effect_type="reflect", 
-        type="데이터 과학",
+        type="DS",
         skW=0.5,
         priority=4, 
         description="큐를 U자로 만들어 상대를 향하게 한다. 상대의 공격을 절반의 피해로 상대에게 출력한다."),
     '트리 구축': Monster.Skill(
         name='트리 구축', 
         effect_type="Sdamage",
-        type="데이터 과학",
+        type="DS",
         skW=50,
         description="거대한 트리를 상대에게 쓰러뜨린다. 반드시 명중한다."),
     'HashMap': Monster.Skill(
         name='HashMap', 
         effect_type="buff",
-        type="데이터 과학",
+        type="DS",
         skW=3,
         description="해시맵을 사용하여 최적의 공격 방법을 찾는다. 특수공격을 올린다."),
 }
@@ -262,26 +268,26 @@ cs230.skills = {
     'BufferOverflow': Monster.Skill(
         name='BufferOverflow', 
         effect_type="Sdamage",
-        type="시스템-네트워크",
+        type="SYS",
         skW=100,
         description="버퍼 오버플로우를 일으켜 공격한다."),
     '페이지 폴트': Monster.Skill(
         name='페이지 폴트', 
         effect_type="Sdamage", 
-        type="시큐어컴퓨팅",
+        type="PS",
         skW=70,
         description="상대가 사용중인 페이지를 페이징 파일로 옮겨버린다."),
     '시프 스킬 3': Monster.Skill(
         name='미정', 
         effect_type="Sdamage", 
-        type="시큐어컴퓨팅",
+        type="PS",
         skW=50,
         priority=1,
         description="어떻게 해서 공격한다. 선제공격한다."),
     '셀프 디버그': Monster.Skill(
         name='셀프 디버그', 
         effect_type="heal", 
-        type="시스템-네트워크",
+        type="SYS",
         skW=0.5,
         description="자기 자신을 디버깅해 에러를 고친다. 체력을 최대 체력의 절반만큼 회복한다."),
 }
@@ -297,25 +303,25 @@ cs330.skills = {
     '우주방사선': Monster.Skill(
         name='우주방사선', 
         effect_type="buff", 
-        type="시스템-네트워크",
+        type="SYS",
         skW=(random.randint(8, 15), random.randint(-16, -9)),
         description="무작위로 능력치 하나를 크게 올리고 대신 능력치 하나를 낮춘다."),
     'System32 삭제': Monster.Skill(
         name='System32 삭제', 
         effect_type="Sdamage", 
-        type="시큐어컴퓨팅",
+        type="PS",
         skW=130,
         description="상대의 운영체제 폴더를 삭제한다. 명중률이 낮다."),
     '페이지 폴트': Monster.Skill(
         name='페이지 폴트', 
         effect_type="Sdamage", 
-        type="시큐어컴퓨팅",
+        type="PS",
         skW=70,
         description="상대가 사용중인 페이지를 페이징 파일로 옮겨버린다."),
     '셀프 디버그': Monster.Skill(
         name='셀프 디버그', 
         effect_type="heal", 
-        type="시스템-네트워크",
+        type="SYS",
         skW=0.5,
         description="자기 자신을 디버깅해 에러를 고친다. 체력을 최대 체력의 절반만큼 회복한다."),
 }
@@ -331,26 +337,26 @@ cs300.skills = {
     '퀵소트': Monster.Skill(
         name='퀵소트', 
         effect_type="buff",
-        type="전산이론",
+        type="CT",
         skW=(10,12),
         priority=1, 
         description="빠르게 정렬해 방어와 특수 방어를 모두 크게 올린다."),
     '빅O': Monster.Skill(
         name='빅O', 
         effect_type="Pdamage",
-        type="전산이론",
+        type="CT",
         skW=60, 
         description="총 방어 수치가 높은 만큼 더 강하게 공격한다."),
     '이산화2': Monster.Skill(
         name='이산화2', 
         effect_type="halve_hp",
-        type="시큐어컴퓨팅",
+        type="PS",
         skW=0,
         description="상대를 이산화시켜 HP를 반으로 줄인다."),
     '무한루프그래프': Monster.Skill(
         name='무한루프그래프', 
         effect_type="reflect", 
-        type = "전산이론",
+        type = "CT",
         skW=0,
         priority=4, 
         description="무한 루프 그래프를 만들어 상대의 공격을 흘려보낸다."),
@@ -368,7 +374,7 @@ cs311.skills = {
     '프로그래밍 언어': Monster.Skill(
         name='프로그래밍 언어', 
         effect_type="Pdamage",
-        type="전산이론",
+        type="CT",
         skW=70, 
         description="프로그래밍 언어를 사용해 상대에게 강력한 공격을 한다."),
 }
@@ -385,7 +391,7 @@ cs320.skills = {
     '프로그래밍 언어': Monster.Skill(
         name='프로그래밍 언어', 
         effect_type="Pdamage",
-        type="전산이론",
+        type="CT",
         skW=70, 
         description="프로그래밍 언어를 사용해 상대에게 강력한 공격을 한다."),
 }
@@ -402,7 +408,7 @@ cs341.skills = {
     '네트워크 공격': Monster.Skill(
         name='네트워크 공격', 
         effect_type="Pdamage",
-        type="시스템-네트워크",
+        type="SYS",
         skW=70,
         description="네트워크를 통해 상대에게 강력한 공격을 한다."),
 }
@@ -419,7 +425,7 @@ cs360.skills = {
     '데이터베이스 공격': Monster.Skill(
         name='데이터베이스 공격', 
         effect_type="Pdamage",
-        type="데이터 과학",
+        type="DS",
         skW=70, 
         description="데이터베이스를 통해 상대에게 강력한 공격을 한다."),
 }
@@ -436,7 +442,7 @@ cs202.skills = {
     '문제해결 공격': Monster.Skill(
         name='문제해결 공격', 
         effect_type="Pdamage",
-        type="문제해결",
+        type="PS",
         skW=70, 
         description="문제해결 기법을 사용해 상대에게 강력한 공격을 한다."),
 }
@@ -453,7 +459,7 @@ cs371.skills = {
     '딥러닝 공격': Monster.Skill(
         name='딥러닝 공격', 
         effect_type="Pdamage",
-        type="인공지능",
+        type="AI",
         skW=70,
         description="딥러닝 기법을 사용해 상대에게 강력한 공격을 한다."),
 }
@@ -521,7 +527,7 @@ madcamp.skills = {
     '딥러닝 공격': Monster.Skill(
         name='딥러닝 공격', 
         effect_type="Pdamage",
-        type="인공지능",
+        type="AI",
         skW=70,
         description="딥러닝 기법을 사용해 상대에게 강력한 공격을 한다."),
 }
