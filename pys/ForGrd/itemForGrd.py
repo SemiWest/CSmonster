@@ -86,6 +86,17 @@ Ransomware = Items(
     varied=0.5,
 )
 
+Alcohol = Items(
+    name="알코올",
+    description="기분이 좋아지는 미지의 초록 병. 스피드를 30% 올린다.",
+    effect="buff",
+    grade="레어",
+    varied=0.3,
+    buffto="speed",
+    canuse_on_fainted=False,
+    special=False
+)
+
 # 노말 (새로 2개 추가)
 SnackBar = Items(
     name="에너지바",
@@ -115,7 +126,8 @@ items = {
     "에어팟": AirPods,
     "랜섬웨어": Ransomware,
     "에너지바": SnackBar,
-    "바이러스": Virus
+    "바이러스": Virus,
+    "알코올": Alcohol
 }
 
 item_list = [
@@ -126,6 +138,7 @@ item_list = [
     AirPods,
     Ransomware,
     SnackBar,
-    Virus
+    Virus,
+    Alcohol
 ]
 
