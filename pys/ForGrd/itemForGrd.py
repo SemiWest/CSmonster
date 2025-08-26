@@ -101,6 +101,7 @@ items = {
     "랜섬웨어": Ransomware,
     "에너지바": SnackBar,
     "바이러스": Virus
+<<<<<<< HEAD
 }
 
 item_list = [
@@ -113,3 +114,6 @@ item_list = [
     SnackBar,
     Virus
 ]
+=======
+}
+>>>>>>> 0395e80a64eb60298a08bc8da8f7835b895b0719

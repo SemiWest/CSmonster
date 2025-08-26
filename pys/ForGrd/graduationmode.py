@@ -3,8 +3,6 @@ import csv
 from ForGrd.battleForGrd import *
 import copy
 
-# 나의 흔적
-
 def wait_for_key():
     """키 입력 대기 - 스페이스바나 엔터키만 인식"""
     pygame.event.clear()
@@ -19,6 +17,12 @@ def wait_for_key():
                     event.key == pygame.K_KP_ENTER):
                     return event.key
         pygame.time.wait(50)
+
+def addSeonSus(player, monster):
+    for mon_num in monster.SeonSu:
+        monster_name = NumToName(mon_num)
+        if monster_name not in player.canBeMetMonsters and monster_name not in player.clearedMonsters:
+            player.canBeMetMonsters.append(monster_name)
 
 def save_game_log_csv(filename, player, final_semester):
     """게임 결과를 CSV에 저장"""
@@ -65,7 +69,7 @@ def save_game_log_csv(filename, player, final_semester):
 
 def get_current_semester_monsters(player):
     length = len(player.canBeMetMonsters)
-    if length == 0:
+    if length <= 0:
         return False
     elif length == 1:
         player.thisSemesterMonsters = [player.canBeMetMonsters.pop()]
@@ -102,20 +106,41 @@ def semester_intro_screen(player, screen):
             draw_text(screen, line, SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100 + i*40, WHITE, align='center')
     else:    
         draw_text(screen, description, SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, WHITE, align='center')
-    
     pygame.display.flip()
     wait_for_key()
 
-    screen.fill(WHITE)
+    if semester_name == "3-여름방학":
+        player.thisSemesterMonsters = ["몰입캠프"]
+        return
+    elif semester_name == "4-여름방학":
+        player.thisSemesterMonsters = random.choice([["코옵"],["개별연구"]])
+        return
+ 
+
+    if "데이터베이스개론" in player.clearedMonsters and "2-2" in player.completed_semesters and "기계학습" not in player.clearedMonsters:
+        player.canBeMetMonsters.append("기계학습")
     # 등장 과목 표시
-    
-    draw_text(screen, "이번 학기에 수강할 과목", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, align='center')
-    
-    for i, monster_name in enumerate(monsters):
-        draw_text(screen, f"{monster_name}", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 +100 + i*40, BLACK, size=64, align='center')
-    
-    draw_text(screen, "아무 키나 눌러 시작...", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 60, BLACK)
-    
+    screen.fill(WHITE)
+    draw_text(screen, f"현재 수강할 수 있는 과목들", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-200, BLACK, size=32, align='center')
+    for i, monster_name in enumerate(player.canBeMetMonsters):
+        if monster_name in player.clearedMonsters:
+            draw_text(screen, f"{monster_name} (재수강)", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*40, GRAY, size=32, align='center')
+        else:
+            draw_text(screen, f"{monster_name}", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*40, BLACK, size=32, align='center')
+    draw_text(screen, "아무 키나 눌러 넘어가기...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, align='center')
+    pygame.display.flip()
+    wait_for_key()
+
+    get_current_semester_monsters(player)
+
+    screen.fill(WHITE)
+    draw_text(screen, "이번 학기에 수강할 과목", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-200, BLACK, align='center')    
+    for i, monster_name in enumerate(player.thisSemesterMonsters):
+        if monster_name in player.clearedMonsters:
+            draw_text(screen, f"{monster_name} (재수강)", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*80, GRAY, size=64, align='center')
+        else:
+            draw_text(screen, f"{monster_name}", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*80, BLACK, size=64, align='center')
+    draw_text(screen, "아무 키나 눌러 시작...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, align='center')
     pygame.display.flip()
     wait_for_key()
 
@@ -125,42 +150,42 @@ def semester_result_screen(player, screen):
     
     # 학기 결과 제목
     draw_text(screen, f"성적표", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
-        
-    # 성적 정보
-    if player.current_semester in player.semester_grades:
-        grade_info = player.semester_grades[player.current_semester]
-        grade_color = GREEN if grade_info["gpa"] >= 3.0 else RED
-        
-        draw_text(screen, f"학기 성적: {grade_info['grade']} (GPA {grade_info['gpa']})", 
-                 SCREEN_WIDTH//2 - 160, 220, grade_color)
     
-    # 딘즈 달성 여부
-    current_gpa = player.semester_grades.get(player.current_semester, {}).get("gpa", 0.0)
+    # 이번 학기 수강 과목당 성적 표시
+    y_offset = 240
+
+    pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-200, y_offset - 20), (SCREEN_WIDTH//2+200, y_offset - 20), 2)
+    draw_text(screen,       f"과목명",                            SCREEN_WIDTH//2-200, y_offset)
+    draw_text(screen,       f"성적",                              SCREEN_WIDTH//2+200, y_offset, align='right')
+    y_offset += 60
+    for i, monster_name in enumerate(player.thisSemesterMonsters):
+        draw_text(screen,   f"{monster_name}",                      SCREEN_WIDTH//2-200, y_offset + i*40, BLACK)
+        draw_text(screen,   f"{player.thisSemesterGpas[i][1]}",     SCREEN_WIDTH//2+200, y_offset + i*40, gpaColor(player.thisSemesterGpas[i][1]), align='right')
     
-    if current_gpa >= 4.2:
-        draw_text(screen, "★ 딘즈 리스트 달성! ★", SCREEN_WIDTH//2 - 128, 260, GREEN)
+    pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-200, y_offset + len(player.thisSemesterMonsters)*40 + 20), (SCREEN_WIDTH//2+200, y_offset + len(player.thisSemesterMonsters)*40 + 20), 2)
+    y_offset += len(player.thisSemesterMonsters)*40 + 60
+
+    draw_text(screen,       f"학기 GPA",                            SCREEN_WIDTH//2-200, y_offset)
+    draw_text(screen,       f"{player.calcGPA(1)}",                 SCREEN_WIDTH//2+200, y_offset, gpaColor(player.calcGPA(1)), align='right')
+    draw_text(screen,       f"누적 GPA",                            SCREEN_WIDTH//2-200, y_offset + 40)
+    draw_text(screen,       f"{player.calcGPA(2)}",                 SCREEN_WIDTH//2+200, y_offset + 40, gpaColor(player.calcGPA(2)), align='right')
     
-    # 장짤 경고
-    if current_gpa < 2.7:
-        draw_text(screen, "⚠ 장짤 발생! ⚠", SCREEN_WIDTH//2 - 96, 300, RED)
-        draw_text(screen, f"장짤 누적: {player.jangzal_count}/3", SCREEN_WIDTH//2 - 96, 330, RED)
-    
-    # 학사 경고 상태
-    if player.warning_count > 0:
-        draw_text(screen, f"학사 경고: {player.warning_count}/3", SCREEN_WIDTH//2 - 96, 370, RED)
-    
-    # 플레이어 상태
-    draw_text(screen, f"레벨: {player.level}  체력: {player.currentHp}/{player.maxHp}", 
-             SCREEN_WIDTH//2 - 160, 420, BLACK)
-    
-    # PNR 사용 상태
-    if player.pnr_used:
-        draw_text(screen, "PNR 사용함", SCREEN_WIDTH//2 - 80, 460, BLUE)
-    elif player.can_use_pnr():
-        draw_text(screen, "PNR 사용 가능", SCREEN_WIDTH//2 - 96, 460, GREEN)
-    
-    draw_text(screen, "아무 키나 눌러 계속...", SCREEN_WIDTH//2 - 128, SCREEN_HEIGHT - 60, BLACK)
-    
+    pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-200, y_offset + 100), (SCREEN_WIDTH//2+200, y_offset + 100), 2)
+    y_offset += 140
+
+    draw_text(screen, "비고", SCREEN_WIDTH//2, y_offset, BLACK, size=32, align='center')
+    y_offset += 40
+    if float(player.calcGPA(1)) > 4.3:
+        draw_text(screen, "축하합니다! 이번 학기 딘즈를 받았습니다!", SCREEN_WIDTH//2, y_offset, GREEN, align='center')
+        player.deans_count += 1
+    elif float(player.calcGPA(1)) < 2.7:
+        draw_text(screen, "장짤을 당했습니다...", SCREEN_WIDTH//2, y_offset, RED, align='center')
+        player.jangzal_count += 1
+        if float(player.calcGPA(1)) < 2.0:
+            player.warning_count += 1
+            draw_text(screen, "학사 경고까지 받았습니다...", SCREEN_WIDTH//2, y_offset + 40, RED, align='center')
+    else: 
+        draw_text(screen, "없음", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
     pygame.display.flip()
     wait_for_key()
 
@@ -188,7 +213,7 @@ def show_final_result(player, screen):
     
     draw_text(screen, f"최종 레벨: {player.level}", SCREEN_WIDTH//2 - 96, y_offset + 40, BLACK)
     draw_text(screen, f"완료 학기: {len(player.completed_semesters)}", SCREEN_WIDTH//2 - 96, y_offset + 80, BLACK)
-    draw_text(screen, f"처치한 과목: {len(player.defeated_monsters)}", SCREEN_WIDTH//2 - 96, y_offset + 120, BLACK)
+    draw_text(screen, f"처치한 과목: {len(player.clearedMonsters)}", SCREEN_WIDTH//2 - 96, y_offset + 120, BLACK)
     draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2 - 96, y_offset + 160, BLACK)
     
     if player.pnr_used:
@@ -264,7 +289,7 @@ def game_start(screen, Me_name="넙죽이"):
     init_pygame_screen()
 
     # 새로운 플레이어 생성
-    player = Player(name=Me_name, Etype="학생")
+    player = Player(name=Me_name)
     
     # 이름 입력
     newname = get_text_input(screen, "이름을 입력하세요:")
@@ -277,7 +302,9 @@ def game_start(screen, Me_name="넙죽이"):
     game_running = True
     while game_running and not player.gameover():
         # 학기 시작 화면
+        player.pnr_used = False
         semester_intro_screen(player, screen)
+        player.thisSemesterGpas = []
 
         # 각 과목과 전투
         for i, monster_name in enumerate(player.thisSemesterMonsters):
@@ -292,24 +319,39 @@ def game_start(screen, Me_name="넙죽이"):
                 enemy_monster.name = monster_name
             
             # 전투 진행
-            battle_result = battle(player, enemy_monster, 0, screen)
+            battle_result, gpa = battle(player, enemy_monster, screen)
             
-            if battle_result == "승리" or battle_result == "PNR":
+            if battle_result == 1:  # 승리
+                if monster_name in player.clearedMonsters:
+                    player.gpas[player.clearedMonsters.index(monster_name)] = gpa
+                else:
+                    player.clearedMonsters.append(monster_name)
+                    player.gpas.append(gpa)
+                player.thisSemesterGpas.append(gpa)
                 player.complete_monster(monster_name)
-            elif battle_result == "도망":
-                # 도망친 경우 처치하지 않은 것으로 간주
-                pass
-            else:  # 패배
-                if player.gameover():
-                    print("Debug: 게임 오버!")
-                    game_running = False
-                    break
+                addSeonSus(player, enemy_monster)  # 과목들 추가
+            elif battle_result == 2:  # PNR
+                player.clearedMonsters.append(monster_name)
+                player.thisSemesterGpas.append(gpa)
+                player.complete_monster(monster_name)
+                player.gpas.append(gpa)
+                addSeonSus(player, enemy_monster)  # 과목들 추가
+            elif battle_result == 3 or battle_result == 4:
+                player.canBeMetMonsters.append(monster_name)  # 드랍
+                player.thisSemesterGpas.append(gpa)
+            elif battle_result == 0:
+                player.thisSemesterGpas.append(gpa)
+                player.canBeMetMonsters.append(monster_name)
+                player.clearedMonsters.append(monster_name)
+                player.gpas.append(gpa)
+            player.update()
+
+        # 학기 결과 화면
+        semester_result_screen(player, screen)
+        player.update_fullreset()
         
         if not game_running:
             break
-        
-        # 학기 결과 화면
-        semester_result_screen(player, screen)
         
         # 다음 학기로 진행
         print(f"Debug: 현재 진행도 {player.semester_progress}/{len(player.semester_order)}")
