@@ -330,20 +330,21 @@ def game_start(screen, Me_name="넙죽이"):
                 player.thisSemesterGpas.append(gpa)
                 player.complete_monster(monster_name)
                 addSeonSus(player, enemy_monster)  # 과목들 추가
-            elif battle_result == 2:  # PNR
+            elif battle_result == 2:    # PNR
                 player.clearedMonsters.append(monster_name)
                 player.thisSemesterGpas.append(gpa)
                 player.complete_monster(monster_name)
                 player.gpas.append(gpa)
                 addSeonSus(player, enemy_monster)  # 과목들 추가
-            elif battle_result == 3 or battle_result == 4:
+            elif battle_result == 3 or battle_result == 4:      # 3: 드랍
                 player.canBeMetMonsters.append(monster_name)  # 드랍
                 player.thisSemesterGpas.append(gpa)
-            elif battle_result == 0:
+            elif battle_result == 0:            # NR, 패배
                 player.thisSemesterGpas.append(gpa)
                 player.canBeMetMonsters.append(monster_name)
                 player.clearedMonsters.append(monster_name)
                 player.gpas.append(gpa)
+                player.update_fullreset()
             player.update()
 
         # 학기 결과 화면

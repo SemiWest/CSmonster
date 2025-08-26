@@ -537,15 +537,20 @@ def item_phase(screen):
 
     elif selected_item.effect == "damage":
         # GPT(고정 -1) 특별 처리: 상대 체력을 '1'로 만든다
-        if getattr(selected_item, "fixed", None) == -1 or selected_item.name == "GPT":
-            target_after = 1 if enemyCurrentHP > 1 else enemyCurrentHP
-            damage_amount = enemyCurrentHP - target_after
-            enemyCSmon.nowhp = target_after
-        else:
-            base = selected_item.fixed if selected_item.fixed else 0
-            pct  = int(getattr(enemyCSmon, "HP", enemyCurrentHP) * selected_item.varied) if selected_item.varied else 0
-            damage_amount = max(base, pct)
-            enemyCSmon.take_damage(damage_amount)
+        # if getattr(selected_item, "fixed", None) == -1 or selected_item.name == "GPT":
+        #     target_after = 1 if enemyCurrentHP > 1 else enemyCurrentHP
+        #     damage_amount = enemyCurrentHP - target_after
+        #     enemyCSmon.nowhp = target_after
+        # else:
+        #     base = selected_item.fixed if selected_item.fixed else 0
+        #     pct  = int(getattr(enemyCSmon, "HP", enemyCurrentHP) * selected_item.varied) if selected_item.varied else 0
+        #     damage_amount = max(base, pct)
+        #     enemyCSmon.take_damage(damage_amount)
+
+        base = selected_item.fixed if selected_item.fixed else 0
+        pct  = int(getattr(enemyCSmon, "HP", enemyCurrentHP) * selected_item.varied) if selected_item.varied else 0
+        damage_amount = max(base, pct)
+        enemyCSmon.take_damage(damage_amount)
 
         enemy_hp_after = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
         animate_health_bar(screen, esY+104, esX+135, enemyCurrentHP, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
@@ -705,8 +710,10 @@ def battle(getplayer, getenemy, screen=None):
 
         # 5% 체력 회복
         heal_amount = max(1, int(player.HP * 0.05))
+        playerCurrentHP = player.nowhp
         player.heal(heal_amount)
         display_status(screen)
+        animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player.nowhp, player.HP)
         draw_text(screen, f"{player.name}의 체력이 회복되었다!", stX, stY, GREEN)
         pygame.display.flip()
         wait_for_key()
