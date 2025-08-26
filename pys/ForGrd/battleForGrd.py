@@ -691,7 +691,6 @@ def battle(getplayer, getenemy, screen=None):
         draw_text(screen, f"  승리했다!", stX, stY, WHITE)
         pygame.display.flip()
         wait_for_key()
-<<<<<<< HEAD
 
         # 아이템 3개 랜덤 추첨
         reward_items = random.sample([i for i in item_list if i.name != "빈 슬롯"], 3)
@@ -707,11 +706,10 @@ def battle(getplayer, getenemy, screen=None):
         draw_text(screen, f"{selected_item.name}을/를 획득했다!", stX, stY, GREEN)
         pygame.display.flip()
         wait_for_key()
-=======
         if enemy.name in player.clearedMonsters:
             return 1, gpaCalculator(enemyCSmon, hap_num, item_num, False)
         return 1, gpaCalculator(enemyCSmon, hap_num, item_num)
->>>>>>> 0395e80a64eb60298a08bc8da8f7835b895b0719
+    
     elif result == "패배":
         Lose()
         display_status(screen)
