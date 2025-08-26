@@ -68,12 +68,22 @@ class Monster:
         self.participated = False  # 전투에 참여했는지 여부
         self.hpShield = False
         self.usedskill = None
+
+        self.reflect_active = 0.0  # 0이면 반사 없음, 0<r<=1 반사율
+        self.vatk = 1.0           # 공격 배율 (버프 누적)
+        self.vdef = 1.0           # 방어 배율 (버프 누적)
+        self.vspd = 1.0           # 속도 배율 (버프 누적)
+
         self.update_fullreset()
 
     def update_battle(self, Vatk, Vdef, Vspd):
-        self.CATK = int(self.ATK * Vatk)  # 공격력
-        self.CDEF = int(self.DEF * Vdef)  # 방어력
-        self.CSPD = int(self.SPD * Vspd)
+        # 외부에서 배율을 바꿀 때도 호출 가능
+        self.vatk = Vatk
+        self.vdef = Vdef
+        self.vspd = Vspd
+        self.CATK = int(self.ATK * self.vatk)  # 공격력
+        self.CDEF = int(self.DEF * self.vdef)  # 방어력
+        self.CSPD = int(self.SPD * self.vspd)
 
     def take_damage(self, damage):
         """ 몬스터가 데미지를 받았을 때 호출되는 메서드 """
@@ -92,7 +102,7 @@ class Monster:
         
         self.drop_exp = int(self.level * (30-10*difficulty))  # 드랍 경험치
 
-        self.update_battle(1 ,1 ,1)
+        self.update_battle(self.vatk, self.vdef, self.vspd)
         
     def update_fullreset(self):
         self.update()
@@ -103,21 +113,129 @@ class Monster:
 
     def use_skill(self, player, skill):
         """스킬 사용"""
+        damage, effectiveness = 0, 1.0 # 기본값 (모든 스킬 공통 반환용)
+
+        # 데미지형 스킬
         if skill.effect_type == "Sdamage" or skill.effect_type == "Pdamage":
             # 데미지 계산
             damage, effectiveness = skill.damage(player, self)
             
             # 몬스터에게 데미지 적용
+            reflect_ratio = getattr(player, "reflect_active", 0.0)
+            if reflect_ratio and reflect_ratio > 0:
+                # 0<r<=1: r 비율만큼 반사, 방어자는 (1-r)만큼만 실제 피해
+                r = max(0.0, min(1.0, reflect_ratio))
+                reflected = int(damage * r)
+                actual = int(damage * (1.0 - r))
+
+                # 방어자 피해 적용
+                if hasattr(player, 'nowhp'):
+                    player.nowhp -= actual
+                    if player.nowhp < 0:
+                        player.nowhp = 0
+                
+                # 공격자(=self)에게 반사 피해
+                self.nowhp -= reflected
+                if self.nowhp < 0:
+                    self.nowhp = 0
+
+                # 반사막은 1회 소모
+                player.reflect_active = 0.0
+            
+                return {
+                    "damage": actual,
+                    "reflected": reflected,
+                    "effectiveness": effectiveness,
+                    "skill": skill,
+                    "note": "reflect applied",
+                }, "성공"
+            
+            # 평상시 데미지 적용
             if hasattr(player, 'nowhp'):
                 player.nowhp -= damage
                 if player.nowhp < 0:
                     player.nowhp = 0
-            
+
             return {
                 "damage": damage,
                 "effectiveness": effectiveness,
                 "skill": skill,
             }, "성공"
+
+        # --- 비(非)데미지형 스킬들 구현 ---
+        elif skill.effect_type == "heal":
+            # skW가 (0,1] 이면 비율회복, 아니면 절대치 회복
+            if isinstance(skill.skW, (int, float)) and 0 < skill.skW <= 1:
+                heal_amount = int(self.HP * skill.skW)
+            else:
+                heal_amount = int(skill.skW) if isinstance(skill.skW, (int, float)) else 0
+
+            pre = self.nowhp
+            self.nowhp = min(self.HP, self.nowhp + heal_amount)
+            return {
+                "damage": damage,
+                "effectiveness": effectiveness,
+                "heal": self.nowhp - pre,
+                "skill": skill
+            }, "성공"
+        
+        elif skill.effect_type == "halve_hp":
+            # 대상의 현재 HP를 절반으로(내림)
+            if hasattr(player, 'nowhp'):
+                before = player.nowhp
+                player.nowhp = player.nowhp // 2
+                return {
+                    "damage": damage,
+                    "effectiveness": effectiveness,
+                    "halve_from": before,
+                    "halve_to": player.nowhp,
+                    "skill": skill
+                }, "성공"
+            else:
+                return None, "대상 없음"
+            
+        elif skill.effect_type == "reflect":
+            # skW > 0: 그 비율만큼 반사, skW<=0: 완전반사
+            if isinstance(skill.skW, (int, float)):
+                ratio = float(skill.skW)
+                self.reflect_active = 1.0 if ratio <= 0 else min(1.0, ratio)
+            else:
+                self.reflect_active = 1.0
+            return {
+                "damage": damage,
+                "effectiveness": effectiveness,
+                "reflect_ratio": self.reflect_active,
+                "skill": skill
+            }, "성공"
+        
+        elif skill.effect_type == "buff":
+            # 기본 규칙:
+            # - skW 가 숫자: ATK에 +skW% (예: 9 -> +9%)
+            # - skW 가 (a,b): DEF에 +a%, SPD에 +b%
+            # - 음수도 허용(디버프)
+            if isinstance(skill.skW, (int, float)):
+                delta = float(skill.skW) / 100.0
+                self.vatk = max(0.1, self.vatk * (1.0 + delta))
+            elif isinstance(skill.skW, tuple) and len(skill.skW) == 2:
+                a, b = skill.skW
+                # 만약 둘 중 하나가 음수면 해당 능력치 감소
+                self.vdef = max(0.1, self.vdef * (1.0 + float(a) / 100.0))
+                self.vspd = max(0.1, self.vspd * (1.0 + float(b) / 100.0))
+            else:
+                # 우주방사선 같은 랜덤/커스텀 케이스는 여기서도 처리 가능
+                pass
+        
+            # 버프 적용 후 전투스탯 재계산
+            self.update_battle(self.vatk, self.vdef, self.vspd)
+            return {
+                "damage": damage,
+                "effectiveness": effectiveness,
+                "vatk": round(self.vatk, 3),
+                "vdef": round(self.vdef, 3),
+                "vspd": round(self.vspd, 3),
+                "skill": skill
+            }, "성공"
+        
         else:
             return None, "미구현임"
 
