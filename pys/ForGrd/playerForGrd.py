@@ -337,7 +337,6 @@ class Player:
         else:
             return "일반 졸업 엔딩"
         
-<<<<<<< HEAD
     def heal(self, amount: int, allow_revive: bool = False) -> int:
         """체력을 회복하고 실제 회복량을 반환한다.
         nowhp==0일 때 부활을 허용하려면 allow_revive=True로 호출."""
@@ -348,10 +347,3 @@ class Player:
         before = max(0, self.nowhp)
         self.nowhp = min(self.HP, before + amount)
         return self.nowhp - before
-=======
-    def heal(self, amount):
-        """체력 회복"""
-        self.nowhp += amount
-        if self.nowhp > self.HP:
-            self.nowhp = self.HP
->>>>>>> 5cff13426ef5c52b726c71c00d2df574e35534dc

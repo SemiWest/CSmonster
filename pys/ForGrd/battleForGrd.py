@@ -543,7 +543,7 @@ def item_phase(screen):
         animate_health_bar(screen, esY+104, esX+135, enemyCurrentHP, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
 
         display_status(screen)
-        draw_text(screen, f"  {enemyCSmon.name}에게 {real_damage_amount}의 데미지를 입혔다!", stX, stY, WHITE)
+        draw_text(screen, f"  {enemyCSmon.name}에게 {damage_amount}의 데미지를 입혔다!", stX, stY, WHITE)
 
     elif selected_item.effect == "buff":
         if selected_item.buffto == "speed":
@@ -556,11 +556,11 @@ def item_phase(screen):
             draw_text(screen, f"  {player.name}의 방어력이 {int(selected_item.varied * 100)}% 증가했다!", stX, stY, WHITE)
 
     elif selected_item.effect == "debuff":
-        if selected_item.debuffto == "speed":
+        if selected_item.buffto == "speed":
             enemyCSmon.CSPD -= int(enemyCSmon.CSPD * selected_item.varied)
             display_status(screen)
             draw_text(screen, f"  {enemyCSmon.name}의 속도가 {int(selected_item.varied * 100)}% 감소했다!", stX, stY, WHITE)
-        elif selected_item.debuffto == "defense":
+        elif selected_item.buffto == "defense":
             enemyCSmon.CDEF -= int(enemyCSmon.CDEF * selected_item.varied)
             display_status(screen)
             draw_text(screen, f"  {enemyCSmon.name}의 방어력이 {int(selected_item.varied * 100)}% 감소했다!", stX, stY, WHITE)
