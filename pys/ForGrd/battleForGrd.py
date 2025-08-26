@@ -498,8 +498,6 @@ def item_phase(screen):
     """아이템 사용 단계 - 플레이어용"""
     global item_num
 
-    # TODO: 등급에 따라 아이쳄 색 표현
-
     playerCurrentHP = player.nowhp
     enemyCurrentHP = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
     
@@ -512,55 +510,63 @@ def item_phase(screen):
     display_status(screen)
     draw_text(screen, f"  {selected_item.name}을/를 사용했다!", stX, stY, WHITE)
     pygame.display.flip()
-    item_num += 1
+    #item_num += 1
     wait_for_key()
 
     # 아이템 효과 적용
     # heal, damage, buff, debuff
+
+    if selected_item.special:
+        if selected_item.name == "GPT":
+            enemyCSmon.nowhp = 1
+            animate_health_bar(screen, esY+104, esX+135, enemyCurrentHP, 1, getattr(enemyCSmon, 'HP', 100))
+            display_status(screen)
+            draw_text(screen, f"  {enemyCSmon.name}의 체력이 1이 되었다!", stX, stY, WHITE)
     
-    if selected_item.effect == "heal":
+    elif selected_item.effect == "heal":
         heal_amount = max(selected_item.fixed, int(player.HP * selected_item.varied))
         player.heal(heal_amount)
         
         animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player.nowhp, player.HP)
+
+        real_heal_amount = player.nowhp - playerCurrentHP
         
         display_status(screen)
-        draw_text(screen, f"  {player.name}의 체력이 {heal_amount} 회복되었다!", stX, stY, WHITE)
+        draw_text(screen, f"  {player.name}의 체력이 {real_heal_amount} 회복되었다!", stX, stY, WHITE)
 
     elif selected_item.effect == "damage":
-        damage_amount = max(selected_item.fixed, int(enemyCSmon.maxHp * selected_item.varied))
-        # 데미지 구현을 잘 했는지 모르겠음 ㅇㅅㅇ
-        # GPT 아이템 썻을 때를 구현이 어려움
+        damage_amount = max(selected_item.fixed, int(enemyCSmon.HP * selected_item.varied))
         enemyCSmon.take_damage(damage_amount)
 
         enemy_hp_after = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
         animate_health_bar(screen, esY+104, esX+135, enemyCurrentHP, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
 
+        real_damage_amount = enemyCurrentHP - enemy_hp_after
 
         display_status(screen)
-        draw_text(screen, f"  {enemyCSmon.name}에게 {damage_amount}의 데미지를 입혔다!", stX, stY, WHITE)
+        draw_text(screen, f"  {enemyCSmon.name}에게 {real_damage_amount}의 데미지를 입혔다!", stX, stY, WHITE)
 
     elif selected_item.effect == "buff":
         # 버프 대상: speed, defense
         if selected_item.buffto == "speed":
-            player.speed += int(player.speed * selected_item.varied)
+            player.SPD += int(player.SPD * selected_item.varied)
             display_status(screen)
             draw_text(screen, f"  {player.name}의 속도가 {int(selected_item.varied * 100)}% 증가했다!", stX, stY, WHITE)
         
         elif selected_item.buffto == "defense":
-            player.defense += int(player.defense * selected_item.varied)
+            player.DEF += int(player.DEF * selected_item.varied)
             display_status(screen)
             draw_text(screen, f"  {player.name}의 방어력이 {int(selected_item.varied * 100)}% 증가했다!", stX, stY, WHITE)
         
     elif selected_item.effect == "debuff":
         # 디버프 대상: speed, defense
-        if selected_item.debuffto == "speed":
-            enemyCSmon.speed -= int(enemyCSmon.speed * selected_item.varied)
+        if selected_item.buffto == "speed":
+            enemyCSmon.SPD -= int(enemyCSmon.SPD * selected_item.varied)
             display_status(screen)
             draw_text(screen, f"  {enemyCSmon.name}의 속도가 {int(selected_item.varied * 100)}% 감소했다!", stX, stY, WHITE)
         
-        elif selected_item.debuffto == "defense":
-            enemyCSmon.defense -= int(enemyCSmon.defense * selected_item.varied)
+        elif selected_item.buffto == "defense":
+            enemyCSmon.DEF -= int(enemyCSmon.DEF * selected_item.varied)
             display_status(screen)
             draw_text(screen, f"  {enemyCSmon.name}의 방어력이 {int(selected_item.varied * 100)}% 감소했다!", stX, stY, WHITE)
 
@@ -590,8 +596,10 @@ def select_reward_item(screen, items):
             return items[current_index]
         elif key == 'up' and current_index > 0:
             current_index -= 1
+            option_change_sound()
         elif key == 'down' and current_index < len(items)-1:
             current_index += 1
+            option_change_sound()
 
 # 메인 전투 함수 수정
 def battle(getplayer, getenemy, screen=None):
@@ -696,11 +704,20 @@ def battle(getplayer, getenemy, screen=None):
         reward_items = random.sample([i for i in item_list if i.name != "빈 슬롯"], 3)
         selected_item = select_reward_item(screen, reward_items)
         
-        # 플레이어 인벤토리에 추가 (빈 슬롯에만)
+        # 빈 슬롯에 아이템 추가 또는 버리기
         for idx, item in enumerate(player.items):
             if item.name == "빈 슬롯":
                 player.items[idx] = copy.deepcopy(selected_item)
                 break
+        else:
+            # 빈 슬롯이 없으면 버릴 아이템 선택
+            display_status(screen)
+            draw_text(screen, "인벤토리가 가득 찼습니다! 버릴 아이템을 선택하세요.", stX, stY, YELLOW)
+            pygame.display.flip()
+            wait_for_key()
+            option_change_sound()
+            discard_idx = select_item(screen)
+            player.items[discard_idx] = copy.deepcopy(selected_item)
 
         display_status(screen)
         draw_text(screen, f"{selected_item.name}을/를 획득했다!", stX, stY, GREEN)

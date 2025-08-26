@@ -336,3 +336,9 @@ class Player:
             return "딘즈 엔딩"
         else:
             return "일반 졸업 엔딩"
+        
+    def heal(self, amount):
+        """체력 회복"""
+        self.nowhp += amount
+        if self.nowhp > self.HP:
+            self.nowhp = self.HP
