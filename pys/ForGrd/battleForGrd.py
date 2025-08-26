@@ -18,20 +18,20 @@ esX, esY = sX+20, sY+36
 psX, psY = sX+582, sY+347
 
 # 기존 이미지들 그대로 유지
-BACKGROUND = pygame.image.load("./img/background.png")
-STAT = pygame.image.load("./img/stat.png")
-TEXT = pygame.image.load("./img/text.png")
-CST = pygame.image.load("./img/CST.png")
-DTS = pygame.image.load("./img/DTS.png")
-AI = pygame.image.load("./img/AI.png")
-PS = pygame.image.load("./img/PS.png")
-SYS = pygame.image.load("./img/SYS.png")
-EVENT = pygame.image.load("./img/EVENT.png")
-ME = pygame.image.load("./img/monsters/ME.png")
+BACKGROUND = pygame.image.load("../img/background.png")
+STAT = pygame.image.load("../img/stat.png")
+TEXT = pygame.image.load("../img/text.png")
+CST = pygame.image.load("../img/CST.png")
+DTS = pygame.image.load("../img/DTS.png")
+AI = pygame.image.load("../img/AI.png")
+PS = pygame.image.load("../img/PS.png")
+SYS = pygame.image.load("../img/SYS.png")
+EVENT = pygame.image.load("../img/EVENT.png")
+ME = pygame.image.load("../img/monsters/ME.png")
 ME = pygame.transform.scale_by(ME, 10)
-ATK = pygame.image.load("./img/ATK.png")
-SPATK = pygame.image.load("./img/SP.ATK.png")
-ETC = pygame.image.load("./img/ETC.png")
+ATK = pygame.image.load("../img/ATK.png")
+SPATK = pygame.image.load("../img/SP.ATK.png")
+ETC = pygame.image.load("../img/ETC.png")
 
 # 기존 함수들 그대로 유지
 def display_type(screen, y, x, type):

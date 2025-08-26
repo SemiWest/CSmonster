@@ -13,20 +13,20 @@ stY = sY+568
 esX, esY = sX+20, sY+36
 psX, psY = sX+460, sY+347
 
-BACKGROUND = pygame.image.load("./img/background.png")
-STAT = pygame.image.load("./img/stat.png")
-TEXT = pygame.image.load("./img/text.png")
-CST = pygame.image.load("./img/CST.png")
-DTS = pygame.image.load("./img/DTS.png")
-AI = pygame.image.load("./img/AI.png")
-PS = pygame.image.load("./img/PS.png")
-SYS = pygame.image.load("./img/SYS.png")
-EVENT = pygame.image.load("./img/EVENT.png")
-ME = pygame.image.load("./img/monsters/ME.png")
+BACKGROUND = pygame.image.load("../img/background.png")
+STAT = pygame.image.load("../img/stat.png")
+TEXT = pygame.image.load("../img/text.png")
+CST = pygame.image.load("../img/CST.png")
+DTS = pygame.image.load("../img/DTS.png")
+AI = pygame.image.load("../img/AI.png")
+PS = pygame.image.load("../img/PS.png")
+SYS = pygame.image.load("../img/SYS.png")
+EVENT = pygame.image.load("../img/EVENT.png")
+ME = pygame.image.load("../img/monsters/ME.png")
 ME = pygame.transform.scale_by(ME, 10)  # ME 이미지 크기 조정
-ATK = pygame.image.load("./img/ATK.png")
-SPATK = pygame.image.load("./img/SP.ATK.png")
-ETC = pygame.image.load("./img/ETC.png")
+ATK = pygame.image.load("../img/ATK.png")
+SPATK = pygame.image.load("../img/SP.ATK.png")
+ETC = pygame.image.load("../img/ETC.png")
 
 def display_type(screen, y, x, type):
     """타입 표시 (pygame)"""
