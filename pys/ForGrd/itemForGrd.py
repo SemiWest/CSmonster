@@ -1,5 +1,5 @@
 class Items:
-    def __init__(self, name, description, effect, grade="노말", fixed=0, varied=0, buffto="", canuse_on_fainted=False):
+    def __init__(self, name, description, effect, grade="노말", fixed=0, varied=0, buffto="", canuse_on_fainted=False, special = False):
         self.name = name            # 이름
         self.description = description  # 설명
         self.effect = effect        # 효과: heal, damage, buff, debuff 등
@@ -8,6 +8,7 @@ class Items:
         self.varied = varied
         self.buffto = buffto        # 버프 대상 (예: speed, defense 등)
         self.canuse_on_fainted = canuse_on_fainted 
+        self.special = special  # 특수 아이템 여부 (예: GPT)
 
 # 플레이어와 적 전산몬스터 생성
 Noneitem = Items(
@@ -31,7 +32,8 @@ GPT = Items(
     description="AI를 사용해서 싸운다. 상대의 체력을 1로 만든다.",
     effect="damage",
     grade="레전더리",
-    fixed=-1   # (-1로 데미지)
+    fixed=1,   # (-1로 데미지)
+    special=True
 )
 
 # 에픽
