@@ -348,7 +348,8 @@ def game_start(screen, Me_name="넙죽이"):
 
         # 학기 결과 화면
         semester_result_screen(player, screen)
-        player.update_fullreset()
+        # player.update_fullreset()
+        # 학기 끝날때마다 체력 회복 일단 정지
         
         if not game_running:
             break

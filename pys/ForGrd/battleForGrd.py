@@ -516,6 +516,7 @@ def item_phase(screen):
     # 아이템 효과 적용
     # heal, damage, buff, debuff
 
+    # 특수효과 아이템 (GPT)
     if selected_item.special:
         if selected_item.name == "GPT":
             enemyCSmon.nowhp = 1
@@ -697,6 +698,14 @@ def battle(getplayer, getenemy, screen=None):
         Battle_win()
         display_status(screen)
         draw_text(screen, f"  승리했다!", stX, stY, WHITE)
+        pygame.display.flip()
+        wait_for_key()
+
+        # 5% 체력 회복
+        heal_amount = max(1, int(player.HP * 0.05))
+        player.heal(heal_amount)
+        display_status(screen)
+        draw_text(screen, f"{player.name}의 체력이 회복되었다!", stX, stY, GREEN)
         pygame.display.flip()
         wait_for_key()
 
