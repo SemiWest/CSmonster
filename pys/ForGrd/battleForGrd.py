@@ -530,6 +530,7 @@ def item_phase(screen):
     elif selected_item.effect == "damage":
         damage_amount = max(selected_item.fixed, int(enemyCSmon.maxHp * selected_item.varied))
         # 데미지 구현을 잘 했는지 모르겠음 ㅇㅅㅇ
+        # GPT 아이템 썻을 때를 구현이 어려움
         enemyCSmon.take_damage(damage_amount)
 
         enemy_hp_after = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
@@ -573,6 +574,24 @@ def item_phase(screen):
     
     # 적 공격
     enemy_attack_phase(screen)
+
+def select_reward_item(screen, items):
+    """승리 후 아이템 선택 UI"""
+    current_index = 0
+    while True:
+        display_status(screen)
+        draw_text(screen, "승리 보상! 아이템을 선택하세요.", stX, stY, YELLOW)
+        for i, item in enumerate(items):
+            prefix = "> " if i == current_index else "  "
+            draw_text(screen, f"{prefix}{item.name} - {item.description}", stX, stY+60+i*40, WHITE)
+        pygame.display.flip()
+        key = wait_for_key()
+        if key == 'enter':
+            return items[current_index]
+        elif key == 'up' and current_index > 0:
+            current_index -= 1
+        elif key == 'down' and current_index < len(items)-1:
+            current_index += 1
 
 # 메인 전투 함수 수정
 def battle(getplayer, getenemy, screen=None):
@@ -672,9 +691,25 @@ def battle(getplayer, getenemy, screen=None):
         draw_text(screen, f"  승리했다!", stX, stY, WHITE)
         pygame.display.flip()
         wait_for_key()
+
+        # 아이템 3개 랜덤 추첨
+        reward_items = random.sample([i for i in item_list if i.name != "빈 슬롯"], 3)
+        selected_item = select_reward_item(screen, reward_items)
+        
+        # 플레이어 인벤토리에 추가 (빈 슬롯에만)
+        for idx, item in enumerate(player.items):
+            if item.name == "빈 슬롯":
+                player.items[idx] = copy.deepcopy(selected_item)
+                break
+
+        display_status(screen)
+        draw_text(screen, f"{selected_item.name}을/를 획득했다!", stX, stY, GREEN)
+        pygame.display.flip()
+        wait_for_key()
         if enemy.name in player.clearedMonsters:
             return 1, gpaCalculator(enemyCSmon, hap_num, item_num, False)
         return 1, gpaCalculator(enemyCSmon, hap_num, item_num)
+    
     elif result == "패배":
         Lose()
         display_status(screen)

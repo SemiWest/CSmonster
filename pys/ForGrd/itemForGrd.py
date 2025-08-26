@@ -102,3 +102,15 @@ items = {
     "에너지바": SnackBar,
     "바이러스": Virus
 }
+
+item_list = [
+    MonsterZero,
+    GPT,
+    Americano,
+    LectureNote,
+    AirPods,
+    Ransomware,
+    SnackBar,
+    Virus
+]
+
