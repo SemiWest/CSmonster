@@ -10,6 +10,19 @@ class Items:
         self.canuse_on_fainted = canuse_on_fainted 
         self.special = special  # 특수 아이템 여부 (예: GPT)
 
+def get_item_color_by_grade(grade):
+    """아이템 등급에 따라 색상 반환"""
+    if grade == "레전더리":
+        return (255, 215, 0)      # 노란색
+    elif grade == "에픽":
+        return (180, 140, 255)    # 연한 보라색
+    elif grade == "레어":
+        return (80, 220, 120)     # 연한 초록색
+    elif grade == "노말":
+        return (255, 255, 255)    # 흰색
+    else:
+        return (180, 180, 180)    # 기타(회색)
+
 # 플레이어와 적 전산몬스터 생성
 Noneitem = Items(
     name="빈 슬롯", 
@@ -20,7 +33,7 @@ Noneitem = Items(
 
 # 레전더리
 MonsterZero = Items(
-    name="몬스터 제로",
+    name="몬스터제로",
     description="농축된 카페인의 힘으로 체력을 회복한다. 체력을 전부 회복한다.", 
     effect="heal",
     grade="레전더리",
@@ -95,7 +108,7 @@ Virus = Items(
 # 아이템 목록
 items = {
     "빈 슬롯": Noneitem,
-    "몬스터 제로": MonsterZero,
+    "몬스터제로": MonsterZero,
     "GPT": GPT,
     "아메리카노": Americano,
     "렉쳐노트": LectureNote,

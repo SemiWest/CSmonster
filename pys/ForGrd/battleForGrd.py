@@ -1,5 +1,7 @@
+import time
 from game_menu import *
 from ForGrd.playerForGrd import *
+from ForGrd.itemForGrd import get_item_color_by_grade
 
 ''' 전역변수 설정 '''
 hap_num = 0
@@ -48,6 +50,24 @@ def display_type(screen, y, x, type):
         screen.blit(EVENT, (x, y))
     elif type == "AI":
         screen.blit(AI, (x, y))
+
+def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=32, line_spacing=10):
+    """설명 텍스트가 max_width를 넘지 않게 자동 줄바꿈해서 출력"""
+    font = pygame.font.Font("../neodgm.ttf", font_size)
+    words = text.split(' ')
+    lines = []
+    current_line = ""
+    for word in words:
+        test_line = current_line + word + " "
+        if font.size(test_line)[0] <= max_width:
+            current_line = test_line
+        else:
+            lines.append(current_line)
+            current_line = word + " "
+    lines.append(current_line)
+    for i, line in enumerate(lines):
+        surface.blit(font.render(line.strip(), True, color), (x, y + i * (font_size + line_spacing)))
+
 
 def hpcolor(ratio):
     """체력 상태에 따른 색상 선택"""
@@ -434,36 +454,42 @@ def enemy_attack_phase(screen):
 # 기존 아이템 관련 함수들 그대로 유지하되 플레이어용으로 수정
 def select_item(screen, temp=None):
     """아이템 선택 - 플레이어용"""
-    descriptions = [i.description for i in player.items]
-    coloring = [False]*len(player.items)
-    
-    for i in range(len(player.items)):
-        if player.items[i].name == "빈 슬롯":
+
+    # 빈 슬롯을 맨 뒤로 보내기 위해 정렬
+    sorted_items = sorted(player.items, key=lambda x: x.name == "빈 슬롯")
+    descriptions = [i.description for i in sorted_items]
+    coloring = [False]*len(sorted_items)
+
+    for i in range(len(sorted_items)):
+        if sorted_items[i].name == "빈 슬롯":
             coloring[i] = CYAN
-        elif player.items[i].grade == "레어":
-            coloring[i] = GREEN
-        elif player.items[i].grade == "에픽":
-            coloring[i] = PURPLE
-        elif player.items[i].grade == "레전더리":
-            coloring[i] = YELLOW
-    
+        else:
+            coloring[i] = get_item_color_by_grade(sorted_items[i].grade)
+
     display_status(screen)
     current_index = 0
     
     while True:
         display_status(screen)
         
-        for i, item in enumerate(player.items):
-            x_pos = stX + (300 * (i % 2))
-            y_pos = stY + int(i / 2) * 56
-            
+        for i, item in enumerate(sorted_items):
+            x_pos = stX + i * 210
+            y_pos = stY 
+
             color = coloring[i] if coloring[i] else WHITE
             
             prefix = "> " if i == current_index else "  "
             draw_text(screen, f"{prefix}{item.name}", x_pos, y_pos, color)
             
             if i == current_index:
-                draw_text(screen, f"{descriptions[i]}", sX+30, stY+120, WHITE)
+                draw_wrapped_text(
+                    screen,
+                    descriptions[i],
+                    stX,
+                    stY + 60,
+                    WHITE,
+                    max_width=1100
+                )
         
         pygame.display.flip()
         
@@ -481,18 +507,27 @@ def select_item(screen, temp=None):
             return -1
         elif len(player.items) == 1:
             current_index = 0
-        elif key == 'up' and (current_index > 1 and current_index < len(player.items)):
-            current_index -= 2
-            option_change_sound()
-        elif key == 'down' and (current_index >= 0 and current_index < len(player.items)-2):
-            current_index += 2
-            option_change_sound()
-        elif key == 'left' and (current_index % 2 == 1 and current_index < len(player.items) and current_index >= 0):
+        # elif key == 'up' and (current_index > 1 and current_index < len(player.items)):
+        #     current_index -= 2
+        #     option_change_sound()
+        # elif key == 'down' and (current_index >= 0 and current_index < len(player.items)-2):
+        #     current_index += 2
+        #     option_change_sound()
+        # elif key == 'left' and (current_index % 2 == 1 and current_index < len(player.items) and current_index >= 0):
+        #     current_index -= 1
+        #     option_change_sound()
+        # elif key == 'right' and (current_index % 2 == 0 and current_index < len(player.items) and current_index >= 0 and current_index != len(player.items)-1):
+        #     current_index += 1
+        #     option_change_sound()
+
+        elif key == 'left' and current_index > 0:
             current_index -= 1
             option_change_sound()
-        elif key == 'right' and (current_index % 2 == 0 and current_index < len(player.items) and current_index >= 0 and current_index != len(player.items)-1):
+        elif key == 'right' and current_index < len(player.items) - 1:
             current_index += 1
             option_change_sound()
+        
+
 
 def item_phase(screen):
     """아이템 사용 단계 - 플레이어용"""
@@ -595,9 +630,26 @@ def select_reward_item(screen, items):
     while True:
         display_status(screen)
         draw_text(screen, "승리 보상! 아이템을 선택하세요.", stX, stY, YELLOW)
+
+        dark_overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+        dark_overlay.fill((0, 0, 0, 180))  # 마지막 값(120)은 투명도, 0~255
+        screen.blit(dark_overlay, (0, 0))
+
         for i, item in enumerate(items):
+            name_color = get_item_color_by_grade(item.grade)  # 등급별 색상 함수 사용
+
             prefix = "> " if i == current_index else "  "
-            draw_text(screen, f"{prefix}{item.name} - {item.description}", stX, stY+60+i*40, WHITE)
+            # 이름만 색상 적용, 설명은 그대로 WHITE
+            draw_text(screen, f"{prefix}", stX, stY-350+i*100, WHITE)
+            draw_text(screen, f"{item.name}", stX+30, stY-350+i*100, name_color)
+            draw_wrapped_text(
+                screen,
+                item.description,
+                stX+300,
+                stY-350+i*100,
+                WHITE,
+                max_width= psX - sX + 300 # 원하는 최대 너비 지정
+            )
         pygame.display.flip()
         key = wait_for_key()
         if key == 'enter':
