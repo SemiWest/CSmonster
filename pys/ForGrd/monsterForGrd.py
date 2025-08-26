@@ -27,16 +27,21 @@ type_dict = {
     "AI": "인공지능",
 }
 
-def comp(atskilltype, tgtype):
+# 교체: comp 함수
+def comp(atskilltype, tgtypes):
     """
-    공격 타입(atskilltype)과 방어 타입(tgtype)을 입력받아 상성 배율을 반환.
-    상성 배율:
-    - 4: 효과가 굉장히 좋다.
-    - 1: 효과가 별로다.
-    - 0: 효과가 없다.
-    - 2: 일반적인 효과.
+    공격 타입(atskilltype)과 방어 타입(tgtypes: str 또는 list)을 받아 상성 배율을 반환.
+    - 방어 타입이 여러 개인 경우 배율을 곱셈으로 적용.
+    - 존재하지 않는 키가 오면 기본 1.0 처리.
     """
-    return TYPE_EFFECTIVENESS[atskilltype][tgtype]
+    atk_map = TYPE_EFFECTIVENESS.get(atskilltype, TYPE_EFFECTIVENESS["*"])
+    if isinstance(tgtypes, (list, tuple)):
+        m = 1.0
+        for tg in tgtypes:
+            m *= atk_map.get(tg, 1.0)
+        return m
+    else:
+        return atk_map.get(tgtypes, 1.0)
 def NumToName(mon_num):
         for value in monsters.values():
             if value.Num == mon_num:
@@ -68,12 +73,20 @@ class Monster:
         self.participated = False  # 전투에 참여했는지 여부
         self.hpShield = False
         self.usedskill = None
+        self.Vatk = 1.0  # 공격 배율(버프 반영)
+        self.Vdef = 1.0  # 방어 배율(버프 반영)
+        self.Vspd = 1.0  # 스피드 배율(버프 반영)
+        self.reflect_ratio = 0.0  # 반사 비율(0이면 비활성)
         self.update_fullreset()
 
-    def update_battle(self, Vatk, Vdef, Vspd):
-        self.CATK = int(self.ATK * Vatk)  # 공격력
-        self.CDEF = int(self.DEF * Vdef)  # 방어력
-        self.CSPD = int(self.SPD * Vspd)
+    # 교체: update_battle
+    def update_battle(self, Vatk=None, Vdef=None, Vspd=None):
+        if Vatk is not None: self.Vatk = Vatk
+        if Vdef is not None: self.Vdef = Vdef
+        if Vspd is not None: self.Vspd = Vspd
+        self.CATK = int(self.ATK * self.Vatk)  # 공격력(버프 반영)
+        self.CDEF = int(self.DEF * self.Vdef)  # 방어력(버프 반영)
+        self.CSPD = int(self.SPD * self.Vspd)  # 스피드(버프 반영)
 
     def take_damage(self, damage):
         """ 몬스터가 데미지를 받았을 때 호출되는 메서드 """
@@ -92,7 +105,8 @@ class Monster:
         
         self.drop_exp = int(self.level * (30-10*difficulty))  # 드랍 경험치
 
-        self.update_battle(1 ,1 ,1)
+        # 교체: update 마지막 줄 근처
+        self.update_battle(self.Vatk, self.Vdef, self.Vspd)
         
     def update_fullreset(self):
         self.update()
@@ -102,24 +116,120 @@ class Monster:
         return self.nowhp > 0
 
     def use_skill(self, player, skill):
-        """스킬 사용"""
-        if skill.effect_type == "Sdamage" or skill.effect_type == "Pdamage":
-            # 데미지 계산
+        """
+        self: 스킬을 쓰는 몬스터(공격자)
+        player: 대상(상대)
+        """
+        # 1) 데미지 스킬
+        if skill.effect_type in ("Sdamage", "Pdamage"):
             damage, effectiveness = skill.damage(player, self)
-            
-            # 몬스터에게 데미지 적용
             if hasattr(player, 'nowhp'):
-                player.nowhp -= damage
-                if player.nowhp < 0:
-                    player.nowhp = 0
-            
+                player.nowhp = max(0, player.nowhp - damage)
+            msg = f"{self.name}의 {skill.name}! 효과 배율 {effectiveness:.2f}, {player.name}에게 {damage} 피해!"
             return {
+                "skill": skill,
+                "kind": "damage",
                 "damage": damage,
                 "effectiveness": effectiveness,
-                "skill": skill,
+                "message": msg
             }, "성공"
+
+        # 2) 회복 스킬
+        elif skill.effect_type == "heal":
+            if isinstance(skill.skW, (int, float)):
+                if 0 < skill.skW <= 1.0:
+                    heal_amt = int(self.HP * skill.skW)
+                else:
+                    heal_amt = int(skill.skW)
+            else:
+                heal_amt = 0
+            old = self.nowhp
+            self.nowhp = min(self.HP, self.nowhp + heal_amt)
+            healed = self.nowhp - old
+            msg = f"{self.name}의 {skill.name}! 체력 {healed} 회복({self.nowhp}/{self.HP})."
+            return {
+                "skill": skill,
+                "kind": "heal",
+                "healed": healed,
+                "effectiveness": 1.0,
+                "damage": 0,
+                "message": msg
+            }, "성공"
+
+        # 3) 버프 스킬
+        elif skill.effect_type == "buff":
+            def to_mult(v):
+                return 1.0 + (v / 100.0) if abs(v) > 1.0 else 1.0 + v
+
+            a = b = c = 0.0
+            if isinstance(skill.skW, (tuple, list)):
+                if len(skill.skW) >= 1: a = float(skill.skW[0])
+                if len(skill.skW) >= 2: b = float(skill.skW[1])
+                if len(skill.skW) >= 3: c = float(skill.skW[2])
+            elif isinstance(skill.skW, (int, float)):
+                a = float(skill.skW)
+
+            self.Vatk *= to_mult(a)
+            if b != 0.0: self.Vdef *= to_mult(b)
+            if c != 0.0: self.Vspd *= to_mult(c)
+            self.update_battle(self.Vatk, self.Vdef, self.Vspd)
+
+            msg = (f"{self.name}의 {skill.name}! "
+                f"ATK×{self.Vatk:.2f} DEF×{self.Vdef:.2f} SPD×{self.Vspd:.2f} 로 상승/변경.")
+            return {
+                "skill": skill,
+                "kind": "buff",
+                "Vatk": round(self.Vatk, 3),
+                "Vdef": round(self.Vdef, 3),
+                "Vspd": round(self.Vspd, 3),
+                "effectiveness": 1.0,
+                "damage": 0,
+                "message": msg
+            }, "성공"
+
+        # 4) 반사 스킬
+        elif skill.effect_type == "reflect":
+            ratio = 0.0
+            if isinstance(skill.skW, (int, float)):
+                ratio = skill.skW if 0.0 <= skill.skW <= 1.0 else min(1.0, skill.skW / 100.0)
+            self.hpShield = True
+            self.reflect_ratio = ratio
+            msg = f"{self.name}의 {skill.name}! 다음 피격 데미지의 {int(ratio*100)}%를 반사 준비."
+            return {
+                "skill": skill,
+                "kind": "reflect",
+                "ratio": ratio,
+                "effectiveness": 1.0,
+                "damage": 0,
+                "message": msg
+            }, "성공"
+
+        # 5) HP 절반 스킬 (❗중복 damage 키 제거)
+        elif skill.effect_type == "halve_hp":
+            if hasattr(player, 'nowhp'):
+                lost = player.nowhp // 2
+                player.nowhp -= lost
+            else:
+                lost = 0
+            msg = f"{self.name}의 {skill.name}! {player.name}의 HP가 절반으로, {lost} 감소."
+            return {
+                "skill": skill,
+                "kind": "halve_hp",
+                "damage": lost,
+                "effectiveness": 1.0,
+                "message": msg
+            }, "성공"
+
+        # 6) 기본
         else:
-            return None, "미구현임"
+            msg = f"{self.name}의 {skill.name}! (효과 없음)"
+            return {
+                "skill": skill,
+                "kind": "noop",
+                "effectiveness": 1.0,
+                "damage": 0,
+                "message": msg
+            }, "성공"
 
     class Skill:
         def __init__(self, name, effect_type, type, skW, priority=0, description=""):
@@ -132,17 +242,13 @@ class Monster:
             self.consecutive_uses = 0  # 연속 사용 횟수 (리플렉트 계열 스킬에 사용)
 
         def damage(self, target, attacker):
-            # 데미지 계산
-            basedmg = ((2*attacker.level + 10)/250)*attacker.CATK/(target.CDEF) 
-            
-            # 상성
+            basedmg = ((2*attacker.level + 10)/250) * attacker.CATK / max(1, target.CDEF)  # ✅ max(1, ...)
             multiplier = self.Comp(target)
-            return int(multiplier * (basedmg*self.skW+2) * random.uniform(0.85, 1.00)), multiplier
+            return int(multiplier * (basedmg*self.skW + 2) * random.uniform(0.85, 1.00)), multiplier
 
+                # 교체: Skill.Comp
         def Comp(self, target):
-            multiplier = 1
-            multiplier *= comp(self.skill_type, target.type)
-            return multiplier
+            return comp(self.skill_type, getattr(target, "type", "*"))
 
 # 플레이어와 적 전산몬스터 생성
 Nonemonster = Monster(

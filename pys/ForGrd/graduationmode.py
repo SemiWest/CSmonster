@@ -165,27 +165,51 @@ def semester_result_screen(player, screen):
     pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-200, y_offset + len(player.thisSemesterMonsters)*40 + 20), (SCREEN_WIDTH//2+200, y_offset + len(player.thisSemesterMonsters)*40 + 20), 2)
     y_offset += len(player.thisSemesterMonsters)*40 + 60
 
-    draw_text(screen,       f"학기 GPA",                            SCREEN_WIDTH//2-200, y_offset)
-    draw_text(screen,       f"{player.calcGPA(1)}",                 SCREEN_WIDTH//2+200, y_offset, gpaColor(player.calcGPA(1)), align='right')
-    draw_text(screen,       f"누적 GPA",                            SCREEN_WIDTH//2-200, y_offset + 40)
-    draw_text(screen,       f"{player.calcGPA(2)}",                 SCREEN_WIDTH//2+200, y_offset + 40, gpaColor(player.calcGPA(2)), align='right')
+    # GPA 계산(문자 또는 숫자 문자열 가능)
+    sem_gpa = player.calcGPA(1)     # "P" / "NR" / "3.85" 등
+    cum_gpa = player.calcGPA(2)
+
+    draw_text(screen,       f"학기 GPA", SCREEN_WIDTH//2-200, y_offset)
+    draw_text(screen,       f"{sem_gpa}", SCREEN_WIDTH//2+200, y_offset, gpaColor(sem_gpa), align='right')
+    draw_text(screen,       f"누적 GPA", SCREEN_WIDTH//2-200, y_offset + 40)
+    draw_text(screen,       f"{cum_gpa}", SCREEN_WIDTH//2+200, y_offset + 40, gpaColor(cum_gpa), align='right')
     
     pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-200, y_offset + 100), (SCREEN_WIDTH//2+200, y_offset + 100), 2)
     y_offset += 140
 
     draw_text(screen, "비고", SCREEN_WIDTH//2, y_offset, BLACK, size=32, align='center')
     y_offset += 40
-    if float(player.calcGPA(1)) > 4.3:
-        draw_text(screen, "축하합니다! 이번 학기 딘즈를 받았습니다!", SCREEN_WIDTH//2, y_offset, GREEN, align='center')
-        player.deans_count += 1
-    elif float(player.calcGPA(1)) < 2.7:
-        draw_text(screen, "장짤을 당했습니다...", SCREEN_WIDTH//2, y_offset, RED, align='center')
-        player.jangzal_count += 1
-        if float(player.calcGPA(1)) < 2.0:
-            player.warning_count += 1
-            draw_text(screen, "학사 경고까지 받았습니다...", SCREEN_WIDTH//2, y_offset + 40, RED, align='center')
-    else: 
-        draw_text(screen, "없음", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
+
+    # 안전한 숫자 변환
+    def _to_float_or_none(x):
+        try:
+            return float(x)
+        except (TypeError, ValueError):
+            return None
+
+    sem_gpa_num = _to_float_or_none(sem_gpa)
+
+    # 비고 로직
+    if sem_gpa == "P":
+        draw_text(screen, "이번 학기 전과목 P — GPA 산정에서 제외됩니다.", SCREEN_WIDTH//2, y_offset, BLUE, align='center')
+    elif sem_gpa == "NR":
+        draw_text(screen, "이번 학기 전과목 NR — GPA 산정에서 제외됩니다.", SCREEN_WIDTH//2, y_offset, GRAY, align='center')
+    elif sem_gpa_num is not None:
+        if sem_gpa_num > 4.3:
+            draw_text(screen, "축하합니다! 이번 학기 딘즈를 받았습니다!", SCREEN_WIDTH//2, y_offset, GREEN, align='center')
+            player.deans_count += 1
+        elif sem_gpa_num < 2.7:
+            draw_text(screen, "장짤을 당했습니다...", SCREEN_WIDTH//2, y_offset, RED, align='center')
+            player.jangzal_count += 1
+            if sem_gpa_num < 2.0:
+                player.warning_count += 1
+                draw_text(screen, "학사 경고까지 받았습니다...", SCREEN_WIDTH//2, y_offset + 40, RED, align='center')
+        else:
+            draw_text(screen, "없음", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
+    else:
+        # 예외 방어 (혹시 모를 이상값)
+        draw_text(screen, "GPA 계산 오류", SCREEN_WIDTH//2, y_offset, RED, align='center')
+
     pygame.display.flip()
     wait_for_key()
 

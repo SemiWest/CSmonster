@@ -45,34 +45,26 @@ PLAYER_SKILLS = {
     "PS": [
         {"name": "논리왕", "damage": 60, "type": "PS", "description": "상대를 논리로 누른다", "level": 1},
         {"name": "Master Theorem", "damage": 80, "type": "PS", "description": "상대의 복잡도를 분석한다", "level": 2},
-        {"name": "그리디", "damage": 90, "type": "PS", "description": "나에게 항상 이익이 되는 선택을 한다", "level": 3},
-        {"name": "PNP", "damage": 90, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 4},
-        {"name": "리트코드", "damage": 110, "type": "PS", "description": "리트코드에 상대를 이기는 방법을 검색한다", "level": 5}
+        {"name": "PNP", "damage": 90, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 3},
     ],
     "CT": [
         {"name": "이산화", "damage": 60, "type": "CT", "description": "상대를 이산화해 분해해버린다", "level": 1},
-        {"name": "순수 함수", "damage": 80, "type": "CT", "description": "순수 함수를 호출해 공격한다", "level": 2},
-        {"name": "RUST", "damage": 80, "type": "CT", "description": "메모리 관리를 더 이상 하지 않아도 된다. 이제 공격에 집중해보자", "level": 3},
-        {"name": "팬파인애플애플팬", "damage": 90, "type": "CT", "description": "학부장을 호출한다", "level": 4}
+        {"name": "RUST", "damage": 80, "type": "CT", "description": "메모리 관리를 더 이상 하지 않아도 된다. 이제 공격에 집중해보자", "level": 2},
+        {"name": "팬파인애플애플팬", "damage": 90, "type": "CT", "description": "학부장을 호출한다", "level": 3}
     ],
     "SYS": [
         {"name": "스택오버플로우", "damage": 60, "type": "SYS", "description": "상대의 머리를 과부화시킨다", "level": 1},
         {"name": "CTRL^C", "damage": 65, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2},
         {"name": "DDOS", "damage": 70, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보낸다", "level": 3},
         {"name": "핀토스", "damage": 85, "type": "SYS", "description": "핀토스를 끝낸 자. 어떤 과제가 와도 이겨낼 수 있다.", "level": 4},
-        {"name": "구글 검색", "damage": 100, "type": "SYS", "description": "구글에 상대를 이기는 방법을 검색한다", "level": 5}
     ],
     "DS": [
-        {"name": "Q", "damage": 60, "type": "DS", "description": "Queue를 만들어 때린다", "level": 1},
-        {"name": "OOP", "damage": 65, "type": "DS", "description": "상대를 객채화시킨다", "level": 2},
-        {"name": "RDBMS", "damage": 65, "type": "DS", "description": "상대와 나의 관계를 정의한다", "level": 3},
-        {"name": "SQL 인젝션", "damage": 75, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 4},
-        {"name": "빅데이터 분석", "damage": 120, "type": "DS", "description": "지금까지 진행된 모든 사용자의 플레이 기록을 분석해 공격을 가한다.", "level": 5}
+        {"name": "OOP", "damage": 65, "type": "DS", "description": "상대를 객채화시킨다", "level": 1},
+        {"name": "SQL 인젝션", "damage": 75, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 2}
     ],
     "AI": [
-        {"name": "'회귀'분석", "damage": 80, "type": "AI", "description": "'과거로 회귀'해 상대를 분석하고 다시 돌아와 공격한다", "level": 4},
-        {"name": "오버피팅", "damage": 90, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 5},
-        {"name": "샘 올트먼", "damage": 100, "type": "AI", "description": "상대에게 특화된 GPT를 만든다", "level": 6}
+        {"name": "오버피팅", "damage": 90, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 1},
+        {"name": "샘 올트먼", "damage": 100, "type": "AI", "description": "상대에게 특화된 GPT를 만든다", "level": 2}
     ]
 }
 def Comp(skill, target):
@@ -233,14 +225,10 @@ class Player:
         }, "성공"
     
     def damage(self, skill, target):
-        # 데미지 계산
-        basedmg = ((2*self.level + 10)/250)*self.CATK/(target.CDEF) 
-        
-        # 상성
+        basedmg = ((2*self.level + 10)/250) * self.CATK / max(1, target.CDEF)  # ✅ max(1, ...)
         multiplier = Comp(skill, target)
-        
-        return int(multiplier * (basedmg*skill["damage"]+2) * random.uniform(0.85, 1.00)), multiplier
-    
+        return int(multiplier * (basedmg*skill["damage"] + 2) * random.uniform(0.85, 1.00)), multiplier
+
     def can_use_pnr(self):
         """PNR 사용 가능 여부"""
         return (self.pnr_available and 
@@ -249,14 +237,22 @@ class Player:
     
     def calcGPA(self, Option):
         sum1, sum2 = 0, 0
-        if Option == 1:    
-            for credit, gpa in self.thisSemesterGpas:
-                sum1 += GPASCORE[gpa]*credit
-                sum2 += credit
-        elif Option == 2:
-            for credit, gpa in self.gpas:
-                sum1 += GPASCORE[gpa]*credit
-                sum2 += credit
+        src = self.thisSemesterGpas if Option == 1 else self.gpas
+
+        onlyP = True  # 이번 학기에 P 과목만 있었는지 확인용
+
+        for credit, grade in src:
+            # P/NR은 GPA에서 제외
+            if grade in ("P", "NR"):
+                continue
+            onlyP = False
+            sum1 += GPASCORE[grade] * credit
+            sum2 += credit
+
+        # 이번 학기 전부 P인 경우 → GPA를 "P"로 반환
+        if Option == 1 and onlyP and src:
+            return "P"
+
         if sum2 == 0:
             return "0.00"
         return f"{(sum1 / sum2):.2f}"
