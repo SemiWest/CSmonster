@@ -501,16 +501,17 @@ def item_phase(screen):
     playerCurrentHP = player.nowhp
     enemyCurrentHP = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
     
-    item_num = select_item(screen)
-    if item_num == -1:
+    chosen_idx = select_item(screen)
+    if chosen_idx == -1:
         return -1
     
-    selected_item = player.items[item_num]
+    selected_item = player.items[chosen_idx]
     
     display_status(screen)
     draw_text(screen, f"  {selected_item.name}을/를 사용했다!", stX, stY, WHITE)
     pygame.display.flip()
-    #item_num += 1
+    # 아이템 사용 횟수 카운트만 올리기 (전역 카운터)
+    item_num += 1
     wait_for_key()
 
     # 아이템 효과 적용
@@ -524,50 +525,51 @@ def item_phase(screen):
             display_status(screen)
             draw_text(screen, f"  {enemyCSmon.name}의 체력이 1이 되었다!", stX, stY, WHITE)
     
-    elif selected_item.effect == "heal":
-        heal_amount = max(selected_item.fixed, int(player.HP * selected_item.varied))
-        player.heal(heal_amount)
-        
-        animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player.nowhp, player.HP)
+    if selected_item.effect == "heal":
+        heal_base = selected_item.fixed if selected_item.fixed else 0
+        heal_pct  = int(player.HP * selected_item.varied) if selected_item.varied else 0
+        heal_amount_req = max(heal_base, heal_pct)
+        healed = player.heal(heal_amount_req, allow_revive=getattr(selected_item, "canuse_on_fainted", False))
 
-        real_heal_amount = player.nowhp - playerCurrentHP
-        
+        animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player.nowhp, player.HP)
         display_status(screen)
-        draw_text(screen, f"  {player.name}의 체력이 {real_heal_amount} 회복되었다!", stX, stY, WHITE)
+        draw_text(screen, f"  {player.name}의 체력이 {healed} 회복되었다!", stX, stY, WHITE)
 
     elif selected_item.effect == "damage":
-        damage_amount = max(selected_item.fixed, int(enemyCSmon.HP * selected_item.varied))
-        enemyCSmon.take_damage(damage_amount)
+        # GPT(고정 -1) 특별 처리: 상대 체력을 '1'로 만든다
+        if getattr(selected_item, "fixed", None) == -1 or selected_item.name == "GPT":
+            target_after = 1 if enemyCurrentHP > 1 else enemyCurrentHP
+            damage_amount = enemyCurrentHP - target_after
+            enemyCSmon.nowhp = target_after
+        else:
+            base = selected_item.fixed if selected_item.fixed else 0
+            pct  = int(getattr(enemyCSmon, "HP", enemyCurrentHP) * selected_item.varied) if selected_item.varied else 0
+            damage_amount = max(base, pct)
+            enemyCSmon.take_damage(damage_amount)
 
         enemy_hp_after = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
         animate_health_bar(screen, esY+104, esX+135, enemyCurrentHP, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
 
-        real_damage_amount = enemyCurrentHP - enemy_hp_after
-
         display_status(screen)
-        draw_text(screen, f"  {enemyCSmon.name}에게 {real_damage_amount}의 데미지를 입혔다!", stX, stY, WHITE)
+        draw_text(screen, f"  {enemyCSmon.name}에게 {damage_amount}의 데미지를 입혔다!", stX, stY, WHITE)
 
     elif selected_item.effect == "buff":
-        # 버프 대상: speed, defense
         if selected_item.buffto == "speed":
-            player.SPD += int(player.SPD * selected_item.varied)
+            player.CSPD += int(player.CSPD * selected_item.varied)
             display_status(screen)
             draw_text(screen, f"  {player.name}의 속도가 {int(selected_item.varied * 100)}% 증가했다!", stX, stY, WHITE)
-        
         elif selected_item.buffto == "defense":
-            player.DEF += int(player.DEF * selected_item.varied)
+            player.CDEF += int(player.CDEF * selected_item.varied)
             display_status(screen)
             draw_text(screen, f"  {player.name}의 방어력이 {int(selected_item.varied * 100)}% 증가했다!", stX, stY, WHITE)
-        
+
     elif selected_item.effect == "debuff":
-        # 디버프 대상: speed, defense
         if selected_item.buffto == "speed":
-            enemyCSmon.SPD -= int(enemyCSmon.SPD * selected_item.varied)
+            enemyCSmon.CSPD -= int(enemyCSmon.CSPD * selected_item.varied)
             display_status(screen)
             draw_text(screen, f"  {enemyCSmon.name}의 속도가 {int(selected_item.varied * 100)}% 감소했다!", stX, stY, WHITE)
-        
         elif selected_item.buffto == "defense":
-            enemyCSmon.DEF -= int(enemyCSmon.DEF * selected_item.varied)
+            enemyCSmon.CDEF -= int(enemyCSmon.CDEF * selected_item.varied)
             display_status(screen)
             draw_text(screen, f"  {enemyCSmon.name}의 방어력이 {int(selected_item.varied * 100)}% 감소했다!", stX, stY, WHITE)
 
@@ -577,7 +579,7 @@ def item_phase(screen):
     
     # 아이템 제거
     from ForGrd.itemForGrd import Noneitem
-    player.items[item_num] = copy.deepcopy(Noneitem)
+    player.items[chosen_idx] = copy.deepcopy(Noneitem)
     
     # 적 공격
     enemy_attack_phase(screen)
