@@ -106,7 +106,7 @@ def display_status(screen, detail=False):
     screen.blit(STAT, (esX, esY))
     if hasattr(enemyCSmon, 'image'):
         image = pygame.image.load(enemyCSmon.image)
-        image = pygame.transform.scale_by(image, 8)
+        image = pygame.transform.scale_by(image, 0.5)
         screen.blit(image, (esX+860-image.get_width()//2, esY+310-image.get_height()))
     
     draw_text(screen, f"{enemyCSmon.name}", esX+64, esY+52, WHITE)
