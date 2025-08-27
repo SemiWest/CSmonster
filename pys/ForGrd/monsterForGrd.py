@@ -211,6 +211,10 @@ class Monster:
         elif skill.effect_type == "halve_hp":
             if hasattr(player, 'nowhp'):
                 lost = player.nowhp // 2
+
+                if player.cheatmode:
+                    lost = 0
+
                 player.nowhp -= lost
             else:
                 lost = 0

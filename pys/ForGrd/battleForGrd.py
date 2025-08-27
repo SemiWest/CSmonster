@@ -738,7 +738,7 @@ def select_reward_item(screen, items):
     current_index = 0
     while True:
         display_status(screen)
-        draw_text(screen, "승리 보상! 아이템을 선택하세요.", stX, stY, YELLOW)
+        draw_text(screen, "  승리 보상! 아이템을 선택하세요.", stX, stY, YELLOW)
 
         dark_overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
         dark_overlay.fill((0, 0, 0, 180))  # 마지막 값(120)은 투명도, 0~255
@@ -769,6 +769,10 @@ def select_reward_item(screen, items):
         elif key == 'down' and current_index < len(items)-1:
             current_index += 1
             option_change_sound()
+
+        # Esc 누르면 아이템 획득 안함
+        elif key == 'escape':
+            return None
 
 # 메인 전투 함수 수정
 def battle(getplayer, getenemy, screen=None):
@@ -875,7 +879,7 @@ def battle(getplayer, getenemy, screen=None):
         player.heal(heal_amount)
         display_status(screen)
         animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player.nowhp, player.HP)
-        draw_text(screen, f"{player.name}의 체력이 회복되었다!", stX, stY, GREEN)
+        draw_text(screen, f"  {player.name}의 체력이 회복되었다!", stX, stY, GREEN)
         pygame.display.flip()
         wait_for_key()
 
@@ -883,25 +887,49 @@ def battle(getplayer, getenemy, screen=None):
         reward_items = random.sample([i for i in item_list if i.name != "빈 슬롯"], 3)
         selected_item = select_reward_item(screen, reward_items)
         
-        # 빈 슬롯에 아이템 추가 또는 버리기
-        for idx, item in enumerate(player.items):
-            if item.name == "빈 슬롯":
-                player.items[idx] = copy.deepcopy(selected_item)
-                break
-        else:
-            # 빈 슬롯이 없으면 버릴 아이템 선택
+        # Esc 누르면 아이템 획득 안함
+        if selected_item is None: 
+            option_escape_sound()
             display_status(screen)
-            draw_text(screen, "인벤토리가 가득 찼습니다! 버릴 아이템을 선택하세요.", stX, stY, YELLOW)
-            pygame.display.flip()
-            wait_for_key()
-            option_change_sound()
-            discard_idx = select_item(screen)
-            player.items[discard_idx] = copy.deepcopy(selected_item)
+            draw_text(screen, "  아이템을 선택하지 않았습니다.", stX, stY, YELLOW)
 
-        display_status(screen)
-        draw_text(screen, f"{selected_item.name}을/를 획득했다!", stX, stY, GREEN)
+        else:
+            # 빈 슬롯에 아이템 추가 또는 버리기
+            for idx, item in enumerate(player.items):
+                if item.name == "빈 슬롯":
+                    player.items[idx] = copy.deepcopy(selected_item)
+                    break
+
+            else:
+                # 빈 슬롯이 없으면 버릴 아이템 선택
+                while True:
+                    display_status(screen)
+                    draw_text(screen, "  인벤토리가 가득 찼습니다! 버릴 아이템을 선택하세요.", stX, stY, YELLOW)
+                    pygame.display.flip()
+                    wait_for_key()
+                    option_change_sound()
+                    discard_idx = select_item(screen)
+                    if discard_idx == -1:
+                        # esc를 누르면 아이템 선택 화면으로 다시 돌아감
+                        selected_item = select_reward_item(screen, reward_items)
+                        if selected_item is None:
+                            option_escape_sound()
+                            display_status(screen)
+                            draw_text(screen, "  아이템을 선택하지 않았습니다.", stX, stY, YELLOW)
+                            break
+                        continue
+                    player.items[discard_idx] = copy.deepcopy(selected_item)
+                    break
+            
+
+            if selected_item is not None:    
+                display_status(screen)
+                draw_text(screen, f"  {selected_item.name}을/를 획득했다!", stX, stY, GREEN)
+
         pygame.display.flip()
         wait_for_key()
+
+        
         if enemy.name in player.clearedMonsters:
             return 1, gpaCalculator(enemyCSmon, hap_num, item_num, False)
         return 1, gpaCalculator(enemyCSmon, hap_num, item_num)
