@@ -317,6 +317,11 @@ def game_start(screen, Me_name="넙죽이"):
     
     # 이름 입력
     newname = get_text_input(screen, "이름을 입력하세요:")
+
+    # cheatmode 여부: cheat 입력
+    if "cheat" in newname.lower():
+        player.cheatmode = True
+
     player.name = newname
     
     # 배경음악 재생 시작

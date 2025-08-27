@@ -153,6 +153,9 @@ class Player:
             copy.deepcopy(Noneitem)
         ]
         self.update_fullreset()  # 초기화 시 스탯 업데이트
+
+        # 치트 모드 (개발자용)
+        self.cheatmode = False  # 치트모드 기본값 추가
     
     def playertype(self):
         """플레이어의 주력 스킬 타입 반환"""
@@ -173,6 +176,9 @@ class Player:
         self.CSPD = int(self.SPD * Vspd)
 
     def take_damage(self, damage):
+        if self.cheatmode:
+            damage = 0
+
         self.nowhp -= damage
         if self.nowhp < 0:
             self.nowhp = 0

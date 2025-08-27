@@ -124,6 +124,9 @@ class Monster:
         if skill.effect_type in ("Sdamage", "Pdamage"):
             damage, effectiveness = skill.damage(player, self)
             if hasattr(player, 'nowhp'):
+                if player.cheatmode:
+                    damage = 0
+
                 player.nowhp = max(0, player.nowhp - damage)
             msg = f"{self.name}의 {skill.name}! 효과 배율 {effectiveness:.2f}, {player.name}에게 {damage} 피해!"
             return {
