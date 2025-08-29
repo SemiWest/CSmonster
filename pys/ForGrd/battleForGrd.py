@@ -28,6 +28,7 @@ AI = pygame.image.load("../img/AI.png")
 PS = pygame.image.load("../img/PS.png")
 SYS = pygame.image.load("../img/SYS.png")
 EVENT = pygame.image.load("../img/EVENT.png")
+STAR = pygame.image.load("../img/STAR.png")
 ME = pygame.image.load("../img/monsters/ME.png")
 ME = pygame.transform.scale_by(ME, 10)
 ATK = pygame.image.load("../img/ATK.png")
@@ -46,9 +47,11 @@ def display_type(screen, y, x, type):
     elif type == "PS":
         screen.blit(PS, (x, y))
     elif type == "*":
-        screen.blit(EVENT, (x, y))
+        screen.blit(STAR, (x, y))
     elif type == "AI":
         screen.blit(AI, (x, y))
+    elif type == "EVENT":
+        screen.blit(EVENT, (x, y))
 
 def hpcolor(ratio):
     """체력 상태에 따른 색상 선택"""
@@ -160,7 +163,7 @@ def display_player_details(screen, player, x):
         (("현재 학기", 0, WHITE), (f"{player.current_semester}", 228, WHITE)),
         "",
         (("스킬 별 레벨", 0, WHITE), ("", 0, WHITE)),
-        (("  *   ", 0 , EVENTC), (f"Level {player.learned_skills['*']}", 228, GRAY if player.learned_skills["*"] == 0 else WHITE if player.learned_skills["*"] < 2 else YELLOW if player.learned_skills["*"] < 4 else ORANGE if player.learned_skills["*"] < 5 else RED)),
+        (("  *   ", 0 , STARC), (f"Level {player.learned_skills['*']}", 228, GRAY if player.learned_skills["*"] == 0 else WHITE if player.learned_skills["*"] < 2 else YELLOW if player.learned_skills["*"] < 4 else ORANGE if player.learned_skills["*"] < 5 else RED)),
         (("  CT  ", 0 , CTC), (f"Level {player.learned_skills['CT']}", 228, GRAY if player.learned_skills["CT"] == 0 else WHITE if player.learned_skills["CT"] < 2 else YELLOW if player.learned_skills["CT"] < 4 else ORANGE if player.learned_skills["CT"] < 5 else RED)),
         (("  DS  ", 0 , DSC), (f"Level {player.learned_skills['DS']}", 228, GRAY if player.learned_skills["DS"] == 0 else WHITE if player.learned_skills["DS"] < 2 else YELLOW if player.learned_skills["DS"] < 4 else ORANGE if player.learned_skills["DS"] < 5 else RED)),
         (("  PS  ", 0 , PSC), (f"Level {player.learned_skills['PS']}", 228, GRAY if player.learned_skills["PS"] == 0 else WHITE if player.learned_skills["PS"] < 2 else YELLOW if player.learned_skills["PS"] < 4 else ORANGE if player.learned_skills["PS"] < 5 else RED)),
@@ -219,13 +222,8 @@ def select_player_skill(screen):
                     infoY + 100,
                     WHITE,
                     font_size=18,
-                    max_width= psX - sX + 300 # 원하는 최대 너비 지정
+                    max_width= 452 # 원하는 최대 너비 지정
                 )
-                if effectiveness > 1.5:
-                    draw_text(screen, "효과가 굉장함",  sX+760, infoY+60, GREEN)
-                elif effectiveness < 0.8:
-                    draw_text(screen, "효과가 별로···",  sX+760, infoY+60, BLUE)
-
         pygame.display.flip()
         
         key = wait_for_key()
@@ -312,11 +310,11 @@ def show_pnr_result(screen, success):
     time.sleep(1)
     screen.fill(WHITE)
     color = GREEN if success else RED
-    message = "성공!" if success else "실패..."
+    message = "성공!" if success == "P" else "실패..."
     draw_text(screen, message, SCREEN_WIDTH//2, 300, color, align='center')
     pygame.display.flip()
     wait_for_key()    
-    if success:
+    if success == "P":
         draw_text(screen, "P를 받는데에 성공하였습니다!", SCREEN_WIDTH//2, 350, BLACK, align='center')
     else:
         draw_text(screen, "NR이 떠 버리고 말았습니다...", SCREEN_WIDTH//2, 350, BLACK, align='center')
@@ -853,7 +851,6 @@ def battle(getplayer, getenemy, screen=None):
     
     # 전투 시작
     result = battle_logic(screen)
-    
     if result == "승리":
         Battle_win()
         display_status(screen)
@@ -917,7 +914,8 @@ def battle(getplayer, getenemy, screen=None):
         pygame.display.flip()
         wait_for_key()
 
-        
+        if enemy.type[0] == "EVENT":
+            return 4, (0, "성공!")
         if enemy.name in player.clearedMonsters:
             return 1, gpaCalculator(enemyCSmon, hap_num, item_num, False)
         return 1, gpaCalculator(enemyCSmon, hap_num, item_num)
@@ -928,13 +926,18 @@ def battle(getplayer, getenemy, screen=None):
         draw_text(screen, f"  패배했다...", stX, stY, WHITE)
         pygame.display.flip()
         wait_for_key()
+        if enemy.type[0] == "EVENT":
+            return 4, (0, "실패...")
         return 0, (enemy.credit, "F")
+    
     elif result == "드랍":
         Lose()
         display_status(screen)
         draw_text(screen, f"  과목을 드랍했다!", stX, stY, WHITE)
         pygame.display.flip()
         wait_for_key()
+        if enemy.type[0] == "EVENT":
+            return 4, (0, "실패...")
         return 3, (0, "W")
     elif result == "P":
         Battle_win()
@@ -942,6 +945,63 @@ def battle(getplayer, getenemy, screen=None):
         draw_text(screen, f"  PNR로 과목을 패스했다!", stX, stY, WHITE)
         pygame.display.flip()
         wait_for_key()
+        # 5% 체력 회복
+        heal_amount = max(1, int(player.HP * 0.05))
+        playerCurrentHP = player.nowhp
+        player.heal(heal_amount)
+        display_status(screen)
+        animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player.nowhp, player.HP)
+        draw_text(screen, f"  {player.name}의 체력이 회복되었다!", stX, stY, GREEN)
+        pygame.display.flip()
+        wait_for_key()
+        
+        # 아이템 3개 랜덤 추첨
+        reward_items = random.sample([i for i in item_list if i.name != "빈 슬롯"], 3)
+        selected_item = select_reward_item(screen, reward_items)
+        
+        # Esc 누르면 아이템 획득 안함
+        if selected_item is None: 
+            option_escape_sound()
+            display_status(screen)
+            draw_text(screen, "  아이템을 선택하지 않았습니다.", stX, stY, YELLOW)
+
+        else:
+            # 빈 슬롯에 아이템 추가 또는 버리기
+            for idx, item in enumerate(player.items):
+                if item.name == "빈 슬롯":
+                    player.items[idx] = copy.deepcopy(selected_item)
+                    break
+
+            else:
+                # 빈 슬롯이 없으면 버릴 아이템 선택
+                while True:
+                    display_status(screen)
+                    draw_text(screen, "  인벤토리가 가득 찼습니다! 버릴 아이템을 선택하세요.", stX, stY, YELLOW)
+                    pygame.display.flip()
+                    wait_for_key()
+                    option_change_sound()
+                    discard_idx = select_item(screen)
+                    if discard_idx == -1:
+                        # esc를 누르면 아이템 선택 화면으로 다시 돌아감
+                        selected_item = select_reward_item(screen, reward_items)
+                        if selected_item is None:
+                            option_escape_sound()
+                            display_status(screen)
+                            draw_text(screen, "  아이템을 선택하지 않았습니다.", stX, stY, YELLOW)
+                            break
+                        continue
+                    player.items[discard_idx] = copy.deepcopy(selected_item)
+                    break
+            
+
+            if selected_item is not None:    
+                display_status(screen)
+                draw_text(screen, f"  {selected_item.name}을/를 획득했다!", stX, stY, GREEN)
+
+        pygame.display.flip()
+        wait_for_key()
+        if enemy.name in player.clearedMonsters:
+            return 1, gpaCalculator(enemyCSmon, hap_num, item_num, False)
         return 2, (0, "P")
     elif result == "NR":
         Lose()
@@ -949,5 +1009,5 @@ def battle(getplayer, getenemy, screen=None):
         draw_text(screen, f"  NR이 떠 버리고 말았다...", stX, stY, WHITE)
         pygame.display.flip()
         wait_for_key()
-        return 0, (0, "NR")
+        return 5, (0, "NR")
     else: return 0, (enemy.credit, "F")

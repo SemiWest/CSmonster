@@ -101,20 +101,20 @@ def semester_intro_screen(player, screen):
 
     if semester_name == "1-1":
         # 이산구조, 데이타구조, 시스템 프로그래밍 중 한 과목을 직접 선택
-        options = ["이산구조", "데이터구조", "시스템프로그래밍"]
+        options = ["이산구조", "데이타구조", "시프"]
         selected = 0
         while True:
             screen.fill(BLACK)
             draw_text(screen, "수강할 과목을 선택하세요", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-200, WHITE, align='center')
             for i, option in enumerate(options):
-                color = BLUE if i == selected else WHITE
+                color = typecolor_dict[monsters[option].type[0]] if i == selected else WHITE
                 draw_text(screen, option, SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*40, color, align='center')
-            draw_text(screen, "↑↓로 선택, 엔터로 확정", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, GRAY, align='center')
             pygame.display.flip()
             key = wait_for_key()
             if key == 'enter':
                 player.thisSemesterMonsters =  [options[selected]]
                 player.canBeMetMonsters.remove(options[selected])
+                player.starting = monsters[options[selected]].type[0]
                 return
             elif key == 'up' and selected > 0:
                 selected -= 1
@@ -166,7 +166,12 @@ def semester_intro_screen(player, screen):
 def semester_result_screen(player, screen):
     """학기 결과 화면"""
     screen.fill(WHITE)
-    
+    if monsters[player.thisSemesterMonsters[0]].type[0] == "EVENT":
+        if player.thisSemesterGpas[0][1] == "성공!":
+            draw_text(screen, f"{player.thisSemesterMonsters[0]} 이벤트에 성공하였습니다!", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
+            draw_text(screen, f"{monsters[player.thisSemesterMonsters[0]].reward}", SCREEN_WIDTH//2, 200, BLUE, align='center')
+        else:
+            draw_text(screen, f"{player.thisSemesterMonsters[0].name} 이벤트에 실패하였습니다...", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
     # 학기 결과 제목
     draw_text(screen, f"성적표", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
     
@@ -209,25 +214,43 @@ def semester_result_screen(player, screen):
     sem_gpa_num = _to_float_or_none(sem_gpa)
 
     # 비고 로직
-    if sem_gpa == "P":
-        draw_text(screen, "이번 학기 전과목 P — GPA 산정에서 제외됩니다.", SCREEN_WIDTH//2, y_offset, BLUE, align='center')
-    elif sem_gpa == "NR":
-        draw_text(screen, "이번 학기 전과목 NR — GPA 산정에서 제외됩니다.", SCREEN_WIDTH//2, y_offset, GRAY, align='center')
+    y_offset_before = y_offset
+    if player.mylevelup != None:
+        draw_text(screen, f"레벨 {player.mylevelup}로 레벨업했습니다!", SCREEN_WIDTH//2, y_offset, GREEN, align='center')
+        y_offset += 40
+    if any(player.skilllevelup):
+        subjects = ["*", "CT", "DS", "SYS", "PS", "AI"]
+        for i, improved in enumerate(player.skilllevelup):
+            if improved:
+                nowSkillLevel = player.learned_skills[subjects[i]]
+                draw_text(screen, f"{type_dict[subjects[i]]} 스킬이 레벨업했습니다!", SCREEN_WIDTH//2, y_offset, BLUE, align='center')
+                if nowSkillLevel == 1:
+                    draw_text(screen, f"- -> {PLAYER_SKILLS[subjects[i]][nowSkillLevel-1]['name']}", SCREEN_WIDTH//2, y_offset + 40, typecolor_dict[subjects[i]], align='center')
+                else:
+                    draw_text(screen, f"{PLAYER_SKILLS[subjects[i]][nowSkillLevel-2]['name']} -> {PLAYER_SKILLS[subjects[i]][nowSkillLevel-1]['name']}", SCREEN_WIDTH//2, y_offset + 40, typecolor_dict[subjects[i]], align='center')
+                y_offset += 80
+    if sem_gpa_num is None:
+        if "P" not in player.thisSemesterGpas[1]:
+            draw_text(screen, "이수 학점 미달로 장짤을 당했습니다...", SCREEN_WIDTH//2, y_offset, RED, align='center')
+            draw_text(screen, "학사 경고까지 받았습니다...", SCREEN_WIDTH//2, y_offset + 40, RED, align='center')
+            player.jangzal_count += 1
+            player.warning_count += 1
+            y_offset += 80
     elif sem_gpa_num is not None:
         if sem_gpa_num > 4.3:
             draw_text(screen, "축하합니다! 이번 학기 딘즈를 받았습니다!", SCREEN_WIDTH//2, y_offset, GREEN, align='center')
             player.deans_count += 1
+            y_offset += 40
         elif sem_gpa_num < 2.7:
             draw_text(screen, "장짤을 당했습니다...", SCREEN_WIDTH//2, y_offset, RED, align='center')
             player.jangzal_count += 1
+            y_offset += 40
             if sem_gpa_num < 2.0:
                 player.warning_count += 1
-                draw_text(screen, "학사 경고까지 받았습니다...", SCREEN_WIDTH//2, y_offset + 40, RED, align='center')
-        else:
-            draw_text(screen, "없음", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
-    else:
-        # 예외 방어 (혹시 모를 이상값)
-        draw_text(screen, "GPA 계산 오류", SCREEN_WIDTH//2, y_offset, RED, align='center')
+                draw_text(screen, "학사 경고까지 받았습니다...", SCREEN_WIDTH//2, y_offset, RED, align='center')
+                y_offset += 40
+    if y_offset == y_offset_before:
+        draw_text(screen, "없음", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
 
     pygame.display.flip()
     wait_for_key()
@@ -385,10 +408,17 @@ def game_start(screen, Me_name="넙죽이"):
                 player.complete_monster(monster_name)
                 player.gpas.append(gpa)
                 addSeonSus(player, enemy_monster)  # 과목들 추가
-            elif battle_result == 3 or battle_result == 4:      # 3: 드랍
+            elif battle_result == 3:      # 3: 드랍
                 player.canBeMetMonsters.append(monster_name)  # 드랍
                 player.thisSemesterGpas.append(gpa)
-            elif battle_result == 0:            # NR, 패배
+            elif battle_result == 4:      # 이벤트
+                player.thisSemesterGpas.append(gpa)
+                if gpa[1] == "성공!":
+                    player.complete_monster(monster_name)
+            elif battle_result == 5:
+                player.canBeMetMonsters.append(monster_name)  # NR
+                player.thisSemesterGpas.append(gpa)
+            elif battle_result == 0:            # 패배
                 player.thisSemesterGpas.append(gpa)
                 player.canBeMetMonsters.append(monster_name)
                 player.clearedMonsters.append(monster_name)

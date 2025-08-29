@@ -9,12 +9,13 @@ def set_difficulty(difficulty_level):
 # 타입별 상성표 (공격타입 -> 방어타입 -> 배율)
 # CT: 격투 (체급이 높음) / DS: 불꽃 (무상성) / PS: 노말 / SN: 강철 (방어) / AI: 드래곤에서 모티브
 TYPE_EFFECTIVENESS = {
-    "*" : {"CT": 1.0, "DS": 1.0, "PS": 1.0, "SYS": 1.0, "AI": 1.0, "*": 1.0},
-    "CT": {"CT": 1.0, "DS": 0.0, "PS": 2.0, "SYS": 0.5, "AI": 1.0, "*": 1.0},
-    "DS": {"CT": 1.0, "DS": 1.0, "PS": 1.0, "SYS": 2.0, "AI": 0.5, "*": 1.0},
-    "PS": {"CT": 1.0, "DS": 0.5, "PS": 2.0, "SYS": 1.0, "AI": 0.0, "*": 1.0},
-    "SYS": {"CT": 1.0, "DS": 1.0, "PS": 0.0, "SYS": 1.0, "AI": 1.0, "*": 1.0},
-    "AI": {"CT": 2.0, "DS": 0.5, "PS": 1.0, "SYS": 0.5, "AI": 1.0, "*": 1.0},
+    "*"     : {"CT": 1.0, "DS": 1.0, "PS": 1.0, "SYS": 1.0, "AI": 1.0, "*": 1.0, "EVENT": 1.0},
+    "EVENT" : {"CT": 1.0, "DS": 1.0, "PS": 1.0, "SYS": 1.0, "AI": 1.0, "*": 1.0, "EVENT": 1.0},
+    "CT"    : {"CT": 1.0, "DS": 0.0, "PS": 2.0, "SYS": 0.5, "AI": 1.0, "*": 1.0, "EVENT": 1.0},
+    "DS"    : {"CT": 1.0, "DS": 1.0, "PS": 1.0, "SYS": 2.0, "AI": 0.5, "*": 1.0, "EVENT": 1.0},
+    "PS"    : {"CT": 1.0, "DS": 0.5, "PS": 2.0, "SYS": 1.0, "AI": 0.0, "*": 1.0, "EVENT": 1.0},
+    "SYS"   : {"CT": 1.0, "DS": 1.0, "PS": 0.0, "SYS": 1.0, "AI": 1.0, "*": 1.0, "EVENT": 1.0},
+    "AI"    : {"CT": 2.0, "DS": 0.5, "PS": 1.0, "SYS": 0.5, "AI": 1.0, "*": 1.0, "EVENT": 1.0},
 }
 
 typecolor_dict = {
@@ -23,12 +24,14 @@ typecolor_dict = {
     "PS" : (152, 235, 96),
     "DS" : (252, 98, 4),
     "CT" : (165, 165, 165),
-    "*" : (255, 255, 15),
+    "EVENT" : (255, 255, 15),
+    "*" : (100, 100, 100),
 }
 
 # 타입 코드
 type_dict = {
-    "*": "기타",
+    "*": "*",
+    "EVENT": "이벤트",
     "CT": "전산이론",
     "DS": "데이터과학",
     "PS": "문제해결",
@@ -58,7 +61,8 @@ def NumToName(mon_num):
         return "error"
 
 class Monster:
-    def __init__(self, Num, name, credit, HP, ATK, DEF, SPD, type=["CT"], SeonSu = [], image="../img/monsters/데이타구조.png", description=""):
+    def __init__(self, Num, name, credit, HP, ATK, DEF, SPD, type=["CT"], SeonSu = [], image="../img/monsters/데이타구조.png", description="", reward=""):
+        self.reward = reward
         self.Num = Num  # 몬스터 번호
         self.name = name
         self.credit = credit
@@ -112,7 +116,7 @@ class Monster:
         self.DEF = int((self.D * 2 + self.IV[2]) * (self.level / 100)) + 5
         self.SPD = int((self.SP * 2 + self.IV[3]) * (self.level / 100)) + 5
         
-        self.drop_exp = int(self.level * (30-10*difficulty))  # 드랍 경험치
+        self.drop_exp = int((self.level ** 2) * (30-10*difficulty))  # 드랍 경험치
 
         # 교체: update 마지막 줄 근처
         self.update_battle(self.Vatk, self.Vdef, self.Vspd)
@@ -260,7 +264,8 @@ class Monster:
         def damage(self, target, attacker):
             basedmg = ((2*attacker.level + 10)/250) * attacker.CATK / max(1, target.CDEF)  # ✅ max(1, ...)
             multiplier = self.Comp(target)
-            return int(multiplier * (basedmg*self.skW + 2) * random.uniform(0.85, 1.00)), multiplier
+            Jasok = 1.5 if attacker.type[0] == self.skill_type else 1.0
+            return int(multiplier * (basedmg*self.skW + 2) * Jasok * random.uniform(0.85, 1.00)), multiplier
 
                 # 교체: Skill.Comp
         def Comp(self, target):
@@ -624,9 +629,10 @@ cs220.skills = {
 coop = Monster(
     Num = 888, name="코옵", credit = 123123,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
-    type=["*"], SeonSu=[],
+    type=["EVENT"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
-    description="코옵설명"
+    description="코옵설명",
+    reward = "기업인의 길 해금"
 )
 coop.skills = {
     '코옵 공격': Monster.Skill(
@@ -641,9 +647,10 @@ coop.skills = {
 madcamp = Monster(
     Num = 777, name="몰입캠프", credit = 234234,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
-    type=["*"], SeonSu=[],
+    type=["EVENT"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
-    description="몰입캠프설명"
+    description="몰입캠프설명",
+    reward = "레벨업 +3 및 체력 완전 회복"
 )
 madcamp.skills = {
     '딥러닝 공격': Monster.Skill(
@@ -658,9 +665,10 @@ madcamp.skills = {
 study = Monster(
     Num = 999, name="개별연구", credit = 345345,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
-    type=["*"], SeonSu=[],
+    type=["EVENT"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
-    description="개별연구설명"
+    description="개별연구설명",
+    reward = "연구자의 길 해금"
 )
 study.skills = {
     '연구 공격': Monster.Skill(

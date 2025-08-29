@@ -45,6 +45,7 @@ PSC = (152, 235, 96)
 DSC = (252, 98, 4)
 CTC = (165, 165, 165)
 EVENTC = (255, 255, 15)
+STARC = (100, 100, 100)
 
 def change_options(BGM, BGMV, ES, ESV, eChannel, mChannel):
     """효과음 옵션 변경"""

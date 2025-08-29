@@ -33,6 +33,7 @@ GPACOLOR = {
     "C-": (205, 127, 50), # Bronze
     "F": (255, 0, 0),       # Red
     "W": (128, 128, 128),   # Gray
+    "-": (0, 0, 0),         # Black
     "P": (0, 255, 0),       # Green
     "NR": (0, 0, 0)          # Black
 }
@@ -111,6 +112,7 @@ class Player:
         self.SP = 90
         self.skills = {}  # 스킬 저장
         self.usedskill = None
+        self.starting = "CT"
         
         # 학기 진행 시스템
         self.current_semester = "새터"
@@ -122,6 +124,8 @@ class Player:
         self.clearedMonsters = []
         self.gpas = []
         self.completed_semesters = []
+        self.mylevelup = 0
+        self.skilllevelup = [False, False, False, False, False, False]  # CT, DS, SYS, PS, AI
         
         # PNR 시스템
         self.pnr_available = True
@@ -159,7 +163,23 @@ class Player:
     
     def playertype(self):
         """플레이어의 주력 스킬 타입 반환"""
-        return max(self.learned_skills, key=lambda k: self.learned_skills[k])
+        if self.current_semester == "새터":
+            return "*"
+        else:   
+            newdict = {k: v for k, v in self.learned_skills.items() if k != "*"}
+            max = 0
+            maxkeys = []
+            for k in newdict.keys():
+                if newdict[k] > max:
+                    max = newdict[k]
+                    maxkeys = [k]
+                if newdict[k] == max and newdict[k] != 0:
+                    maxkeys.append(k)
+            if len(maxkeys) == 0:
+                return "*"
+            if self.starting in maxkeys:
+                return self.starting
+            return random.choice(maxkeys)
 
     def get_available_skills(self):
         """사용 가능한 스킬 목록 반환"""
@@ -233,7 +253,8 @@ class Player:
     def damage(self, skill, target):
         basedmg = ((2*self.level + 10)/250) * self.CATK / max(1, target.CDEF)  # ✅ max(1, ...)
         multiplier = Comp(skill, target)
-        return int(multiplier * (basedmg*skill["damage"] + 2) * random.uniform(0.85, 1.00)), multiplier
+        Jasok = 1.5 if self.type[0] == skill["type"] else 1.0
+        return int(multiplier * (basedmg*skill["damage"] + 2) * Jasok * random.uniform(0.85, 1.00)), multiplier
 
     def can_use_pnr(self):
         """PNR 사용 가능 여부"""
@@ -245,47 +266,62 @@ class Player:
         sum1, sum2 = 0, 0
         src = self.thisSemesterGpas if Option == 1 else self.gpas
 
-        onlyP = True  # 이번 학기에 P 과목만 있었는지 확인용
-
         for credit, grade in src:
             # P/NR은 GPA에서 제외
-            if grade in ("P", "NR"):
-                continue
-            onlyP = False
             sum1 += GPASCORE[grade] * credit
             sum2 += credit
 
-        # 이번 학기 전부 P인 경우 → GPA를 "P"로 반환
-        if Option == 1 and onlyP and src:
-            return "P"
-
         if sum2 == 0:
-            return "0.00"
+            return "-"
         return f"{(sum1 / sum2):.2f}"
 
     def complete_monster(self, monster_name):
         """몬스터(과목) 처치 완료"""
         self.semester_progress += 1
+        self.mylevelup = 0
+        self.skilllevelup = [False, False, False, False, False, False]
+
+        if monster_name == "몰입캠프":
+            self.level += 3
+            self.update()
+            self.nowhp = self.HP
+            print("Debug: 몰입캠프 클리어! 레벨이 3 상승하고 체력이 완전히 회복되었습니다.")
         
         # 경험치 획득
-        self.gain_exp(monsters[monster_name].drop_exp)
+        self.mylevelup = self.gain_exp(monsters[monster_name].drop_exp)
         
         # 과목별 스킬 성장
-        self.grow_skill_from_monster(monster_name)
+        self.skilllevelup = self.grow_skill_from_monster(monster_name)
     
     def grow_skill_from_monster(self, monster_name):
         """몬스터 처치에 따른 스킬 성장"""
-        skill_type = monsters[monster_name].type[0]
+        typearray = [False, False, False, False, False, False]
 
+        if monsters[monster_name].type[0] == "EVENT":
+            return typearray
+
+        skill_type = monsters[monster_name].type[0]
+        
         if monster_name in ["프밍기"]:
             self.learned_skills['*'] += 1
             print(f"Debug: {'*'} 스킬이 {self.learned_skills['*']} 레벨로 상승!")
-
+            typearray[0] = True
 
         if self.learned_skills[skill_type] < 5:
             self.learned_skills[skill_type] += 1
             print(f"Debug: {skill_type} 스킬이 {self.learned_skills[skill_type]} 레벨로 상승!")
+            if skill_type == "CT":
+                typearray[1] = True
+            elif skill_type == "DS":
+                typearray[2] = True
+            elif skill_type == "SYS":
+                typearray[3] = True
+            elif skill_type == "PS":
+                typearray[4] = True
+            elif skill_type == "AI":
+                typearray[5] = True
 
+        return typearray
     
     def advance_semester(self):
         """다음 학기로 진행"""        
@@ -309,17 +345,21 @@ class Player:
     def gain_exp(self, amount):
         """경험치 획득 및 레벨업"""
         self.exp += amount
-        while self.exp >= self.max_exp:
-            self.level_up()
+        return self.level if self.level_up() == True else None
+        
     
     def level_up(self):
+        levelHasUpped = False
         while self.exp >= self.max_exp:
+            levelHasUpped = True
             current_hp = self.HP
             self.level += 1
             self.update()
             if self.is_alive():
                 self.nowhp += (self.HP-current_hp)
             self.exp -= self.max_exp  # 레벨업 시 경험치 차감
+            print(f"Debug: 레벨업! 현재 레벨: {self.level}")
+        return levelHasUpped
     
     def is_alive(self):
         """생존 여부"""
