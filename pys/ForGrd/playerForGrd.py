@@ -276,9 +276,16 @@ class Player:
     def grow_skill_from_monster(self, monster_name):
         """몬스터 처치에 따른 스킬 성장"""
         skill_type = monsters[monster_name].type[0]
+
+        if monster_name in ["프밍기"]:
+            self.learned_skills['*'] += 1
+            print(f"Debug: {'*'} 스킬이 {self.learned_skills['*']} 레벨로 상승!")
+
+
         if self.learned_skills[skill_type] < 5:
             self.learned_skills[skill_type] += 1
             print(f"Debug: {skill_type} 스킬이 {self.learned_skills[skill_type]} 레벨로 상승!")
+
     
     def advance_semester(self):
         """다음 학기로 진행"""        
