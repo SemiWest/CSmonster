@@ -4,7 +4,6 @@ import os
 import time
 import threading
 import unicodedata
-import pygame
 
 # 전역 변수
 musicOnOff = True
@@ -14,6 +13,38 @@ ESVolume = 90  # 효과음 볼륨 기본값 (0 ~ 100)
 music_channel = None  # 음악 채널
 effect_channel = None  # 효과음 채널
 music_thread_running = False  # 음악 스레드 상태
+
+# 색상 정의
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+CYAN = (0, 255, 255)
+GRAY = (128, 128, 128)
+LIGHTGRAY = (178, 178, 178)
+ORANGE = (255, 165, 0)
+LIGHTBLUE = (173, 216, 230)
+VIOLET = (238, 130, 238)
+PURPLE = (128, 0, 128)
+MYMINT = (33, 221, 159)
+EWERED = (150, 40, 35)
+SOCBLUE = (54, 176, 230)
+WONJUN = (230, 214, 41)
+JIMIN = (235, 131, 21)
+YUNJEONG = (146, 68, 230)
+MINBEOM = (86, 173, 41)
+SEUNGMIN = (209, 12, 12)
+MINHO = (0, 5, 153)
+TAK = (204, 86, 204)
+KMC = (156, 186, 186)
+AIC = (189, 215, 238)
+SYSC = (57, 36, 214)
+PSC = (152, 235, 96)
+DSC = (252, 98, 4)
+CTC = (165, 165, 165)
+EVENTC = (255, 255, 15)
 
 def change_options(BGM, BGMV, ES, ESV, eChannel, mChannel):
     """효과음 옵션 변경"""

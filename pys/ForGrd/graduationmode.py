@@ -1,22 +1,6 @@
-import random
 import csv
 from ForGrd.battleForGrd import *
 import copy
-
-def wait_for_key():
-    """키 입력 대기 - 스페이스바나 엔터키만 인식"""
-    pygame.event.clear()
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return pygame.K_ESCAPE
-            elif event.type == pygame.KEYDOWN:
-                # 스페이스바나 엔터키만 허용
-                if (event.key == pygame.K_SPACE or 
-                    event.key == pygame.K_RETURN or 
-                    event.key == pygame.K_KP_ENTER):
-                    return event.key
-        pygame.time.wait(50)
 
 def addSeonSus(player, monster):
     for mon_num in monster.SeonSu:
@@ -88,7 +72,13 @@ def semester_intro_screen(player, screen):
     # 학기별 제목 설정
     if semester_name == "새터":
         title = "새터"
-        description = ("당신은 카이스트에 갓 입학한 새내기입니다.", "전산학부에 걸맞는 인재인지 확인하기 위해 프밍기 학점인정시험을 신청했습니다.")
+        description = ("당신은 카이스트에 갓 입학한 새내기입니다.", "당신은 자신이 전산학부에 걸맞는 인재인지 확인하기 위해 프밍기 학점인정시험을 신청했습니다.")
+    elif semester_name == "1-1":
+        title = "1-1"
+        description = ("프밍기 학점인정시험을 통과한 당신은 전산학도의 길을 걷기로 결심하였습니다.", "당신은 전산학부의 필수 과목 중 하나를 선택하여 미리 듣기로 하였습니다.")
+    elif semester_name == "2-1":
+        title = "2-1"
+        description = ("당신은 드디어 2학년이 되어 전산학부를 주전공으로 선택했습니다.", "이제부터 진짜 대학 생활의 시작입니다. 행운을 빕니다.")
     elif semester_name == "3-여름방학":
         title = "몰입캠프"
         description = "당신은 몰입캠프 참가에 성공했습니다. 한달 간 코딩 실력을 키워봅시다."
@@ -109,16 +99,40 @@ def semester_intro_screen(player, screen):
     pygame.display.flip()
     wait_for_key()
 
+    if semester_name == "1-1":
+        # 이산구조, 데이타구조, 시스템 프로그래밍 중 한 과목을 직접 선택
+        options = ["이산구조", "데이터구조", "시스템프로그래밍"]
+        selected = 0
+        while True:
+            screen.fill(BLACK)
+            draw_text(screen, "수강할 과목을 선택하세요", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-200, WHITE, align='center')
+            for i, option in enumerate(options):
+                color = BLUE if i == selected else WHITE
+                draw_text(screen, option, SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*40, color, align='center')
+            draw_text(screen, "↑↓로 선택, 엔터로 확정", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, GRAY, align='center')
+            pygame.display.flip()
+            key = wait_for_key()
+            if key == 'enter':
+                player.thisSemesterMonsters =  [options[selected]]
+                player.canBeMetMonsters.remove(options[selected])
+                return
+            elif key == 'up' and selected > 0:
+                selected -= 1
+                option_change_sound()
+            elif key == 'down' and selected < len(options)-1:
+                selected += 1
+                option_change_sound()
+
     if semester_name == "3-여름방학":
         player.thisSemesterMonsters = ["몰입캠프"]
         return
     elif semester_name == "4-여름방학":
         player.thisSemesterMonsters = random.choice([["코옵"],["개별연구"]])
         return
- 
 
     if "데이터베이스개론" in player.clearedMonsters and "2-2" in player.completed_semesters and "기계학습" not in player.clearedMonsters:
         player.canBeMetMonsters.append("기계학습")
+    
     # 등장 과목 표시
     screen.fill(WHITE)
     draw_text(screen, f"현재 수강할 수 있는 과목들", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-200, BLACK, size=32, align='center')
@@ -127,7 +141,7 @@ def semester_intro_screen(player, screen):
             draw_text(screen, f"{monster_name} (재수강)", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*40, GRAY, size=32, align='center')
         else:
             draw_text(screen, f"{monster_name}", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*40, BLACK, size=32, align='center')
-    if player.name == "ForDebug":
+    if player.cheatmode :
         draw_text(screen, "현재 이미 클리어한 과목들", SCREEN_WIDTH//2 + 500, SCREEN_HEIGHT//2-200, BLACK, size=32, align='center')
         for i, monster_name in enumerate(player.clearedMonsters):
             draw_text(screen, f"{monster_name}", SCREEN_WIDTH//2 + 500, SCREEN_HEIGHT//2 - 100 + i*40, BLUE, size=32, align='center')
@@ -347,6 +361,7 @@ def game_start(screen, Me_name="넙죽이"):
             # 몬스터 생성
             if monster_name in monsters:
                 enemy_monster = copy.deepcopy(monsters[monster_name])
+                enemy_monster.level = random.randint(player.level-1+player.level//10, player.level+1+(player.level//10)*2)
             else:
                 # 기본 몬스터 생성
                 enemy_monster = copy.deepcopy(monsters["프밍기"])
@@ -364,7 +379,7 @@ def game_start(screen, Me_name="넙죽이"):
                 player.thisSemesterGpas.append(gpa)
                 player.complete_monster(monster_name)
                 addSeonSus(player, enemy_monster)  # 과목들 추가
-            elif battle_result == 2:    # PNR
+            elif battle_result == 2:    # P
                 player.clearedMonsters.append(monster_name)
                 player.thisSemesterGpas.append(gpa)
                 player.complete_monster(monster_name)

@@ -1,4 +1,3 @@
-import time
 from game_menu import *
 from ForGrd.playerForGrd import *
 from ForGrd.itemForGrd import get_item_color_by_grade
@@ -50,24 +49,6 @@ def display_type(screen, y, x, type):
         screen.blit(EVENT, (x, y))
     elif type == "AI":
         screen.blit(AI, (x, y))
-
-def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=36, line_spacing=10):
-    """설명 텍스트가 max_width를 넘지 않게 자동 줄바꿈해서 출력"""
-    font = pygame.font.Font("../neodgm.ttf", font_size)
-    words = text.split(' ')
-    lines = []
-    current_line = ""
-    for word in words:
-        test_line = current_line + word + " "
-        if font.size(test_line)[0] <= max_width:
-            current_line = test_line
-        else:
-            lines.append(current_line)
-            current_line = word + " "
-    lines.append(current_line)
-    for i, line in enumerate(lines):
-        surface.blit(font.render(line.strip(), True, color), (x, y + i * (font_size + line_spacing)))
-
 
 def hpcolor(ratio):
     """체력 상태에 따른 색상 선택"""

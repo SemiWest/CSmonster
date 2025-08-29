@@ -40,7 +40,7 @@ GPACOLOR = {
 PLAYER_SKILLS = {
     "*": [
         {"name": "타자치기", "damage": 30, "type": "*", "description": "한글은 100타, 영어는 독수리타법", "level": 1},
-        {"name": "Python", "damage": 50, "type": "*", "description": "파이썬을 다룰 줄 안다", "level": 2}
+        {"name": "Python", "damage": 40, "type": "*", "description": "파이썬을 다룰 줄 안다", "level": 2}
     ],
     "PS": [
         {"name": "논리왕", "damage": 60, "type": "PS", "description": "상대를 논리로 누른다", "level": 1},

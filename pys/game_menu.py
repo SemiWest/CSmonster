@@ -1,43 +1,8 @@
 from playsound import *
-
-# 색상 정의
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
-CYAN = (0, 255, 255)
-GRAY = (128, 128, 128)
-LIGHTGRAY = (178, 178, 178)
-ORANGE = (255, 165, 0)
-LIGHTBLUE = (173, 216, 230)
-VIOLET = (238, 130, 238)
-PURPLE = (128, 0, 128)
-MYMINT = (33, 221, 159)
-EWERED = (150, 40, 35)
-SOCBLUE = (54, 176, 230)
-WONJUN = (230, 214, 41)
-JIMIN = (235, 131, 21)
-YUNJEONG = (146, 68, 230)
-MINBEOM = (86, 173, 41)
-SEUNGMIN = (209, 12, 12)
-MINHO = (0, 5, 153)
-TAK = (204, 86, 204)
-KMC = (156, 186, 186)
-AIC = (189, 215, 238)
-SYSC = (57, 36, 214)
-PSC = (152, 235, 96)
-DSC = (252, 98, 4)
-CTC = (165, 165, 165)
-EVENTC = (255, 255, 15)
-
-
-
-# 전역 변수로 screen을 선언하되 초기화는 하지 않음
-screen = None
+font = None
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
+screen = None
 font = None
 
 def init_pygame_screen():
@@ -52,23 +17,6 @@ def init_pygame_screen():
         
         # 폰트 설정
         font = pygame.font.Font("../neodgm.ttf", 32)
-
-def load_title_image():
-    """타이틀 이미지를 로드하는 함수"""
-    # 상대경로로 이미지 로드
-    image = pygame.image.load("../img/전산몬스터.PNG")
-    # 이미지 크기 조정 (화면 크기에 맞게)
-    image_width = SCREEN_WIDTH # 화면 너비의 절반 또는 600px 중 작은 값
-    image_height = int(image.get_height() * (image_width / image.get_width()))
-    image = pygame.transform.scale(image, (image_width, image_height))
-    return image
-
-def create_flash_effect(surface, intensity):
-    """화면 플래시 효과를 만드는 함수"""
-    flash_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-    flash_surface.fill(WHITE)  # 흰색 플래시
-    flash_surface.set_alpha(intensity)
-    surface.blit(flash_surface, (0, 0))
 
 def draw_text(surface, text, x, y, color=BLACK, highlight=False, size=32, align='left'):
     """pygame 화면에 텍스트를 그리는 함수""" 
@@ -90,6 +38,42 @@ def draw_text(surface, text, x, y, color=BLACK, highlight=False, size=32, align=
     
     surface.blit(text_surface, text_rect.topleft)
     return text_rect
+
+
+def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=36, line_spacing=10):
+    """설명 텍스트가 max_width를 넘지 않게 자동 줄바꿈해서 출력"""
+    font = pygame.font.Font("../neodgm.ttf", font_size)
+    words = text.split(' ')
+    lines = []
+    current_line = ""
+    for word in words:
+        test_line = current_line + word + " "
+        if font.size(test_line)[0] <= max_width:
+            current_line = test_line
+        else:
+            lines.append(current_line)
+            current_line = word + " "
+    lines.append(current_line)
+    for i, line in enumerate(lines):
+        surface.blit(font.render(line.strip(), True, color), (x, y + i * (font_size + line_spacing)))
+
+
+def load_title_image():
+    """타이틀 이미지를 로드하는 함수"""
+    # 상대경로로 이미지 로드
+    image = pygame.image.load("../img/전산몬스터.PNG")
+    # 이미지 크기 조정 (화면 크기에 맞게)
+    image_width = SCREEN_WIDTH # 화면 너비의 절반 또는 600px 중 작은 값
+    image_height = int(image.get_height() * (image_width / image.get_width()))
+    image = pygame.transform.scale(image, (image_width, image_height))
+    return image
+
+def create_flash_effect(surface, intensity):
+    """화면 플래시 효과를 만드는 함수"""
+    flash_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    flash_surface.fill(WHITE)  # 흰색 플래시
+    flash_surface.set_alpha(intensity)
+    surface.blit(flash_surface, (0, 0))
 
 def main_menu():
     def menu_logic():
