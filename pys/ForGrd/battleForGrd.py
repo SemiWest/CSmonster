@@ -566,6 +566,7 @@ def select_item(screen, temp=None):
 
     # 빈 슬롯을 맨 뒤로 보내기 위해 정렬
     sorted_items = sorted(player.items, key=lambda x: x.name == "빈 슬롯")
+    player.items = sorted_items  # 플레이어 아이템 순서도 변경
     descriptions = [i.description for i in sorted_items]
     coloring = [False]*len(sorted_items)
 
