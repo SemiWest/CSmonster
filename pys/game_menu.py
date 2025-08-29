@@ -27,8 +27,8 @@ TAK = (204, 86, 204)
 KMC = (156, 186, 186)
 AIC = (189, 215, 238)
 SYSC = (57, 36, 214)
-PSC = (84, 130, 53)
-DSC = (237, 125, 49)
+PSC = (152, 235, 96)
+DSC = (252, 98, 4)
 CTC = (165, 165, 165)
 EVENTC = (255, 255, 15)
 
@@ -168,7 +168,9 @@ def main_menu():
         # Main menu loop
         current_index = 0
         running = True
-        
+        pygame.event.clear()
+
+
         while running:
             if main_menu_reload:
                 main_menu_animation()
@@ -208,6 +210,7 @@ def main_menu():
                     draw_text(screen, f"  {option}", x, y, BLACK)  # 일반 텍스트는 검은색
             
             pygame.display.flip()
+
             
             # 이벤트 처리
             for event in pygame.event.get():

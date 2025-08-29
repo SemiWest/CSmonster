@@ -110,7 +110,7 @@ def display_status(screen, detail=False):
     for i, j in enumerate(enemyCSmon.type):
         display_type(screen, esY, esX+470+i*124, j)
             
-        
+    
     # 플레이어 상태 출력
     screen.blit(STAT, (psX, psY))
     screen.blit(ME, (sX+320-ME.get_width()//2, sY+536-ME.get_height()))
