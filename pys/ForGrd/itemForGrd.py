@@ -9,6 +9,13 @@ class Items:
         self.buffto = buffto        # 버프 대상 (예: speed, defense 등)
         self.canuse_on_fainted = canuse_on_fainted 
         self.special = special  # 특수 아이템 여부 (예: GPT)
+        self.gradeSymbol = {
+            "레전더리": "◈",
+            "에픽": "◆",
+            "레어": "▼",
+            "노말": "●",
+            "아이템아님": ""
+        }.get(grade, "")
 
 def get_item_color_by_grade(grade):
     """아이템 등급에 따라 색상 반환"""

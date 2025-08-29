@@ -51,7 +51,7 @@ def display_type(screen, y, x, type):
     elif type == "AI":
         screen.blit(AI, (x, y))
 
-def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=32, line_spacing=10):
+def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=36, line_spacing=10):
     """설명 텍스트가 max_width를 넘지 않게 자동 줄바꿈해서 출력"""
     font = pygame.font.Font("../neodgm.ttf", font_size)
     words = text.split(' ')
@@ -226,19 +226,24 @@ def select_player_skill(screen):
                 # 선택된 스킬의 상세정보 표시
                 infoY = sY+536
                 display_type(screen, infoY, sX+600, skill['type'])
-                if len(skill['description']) > 17:
-                    draw_text(screen, f"{skill['description'][:17]}", sX+760, infoY+60, WHITE)
-                    draw_text(screen, f"{skill['description'][17:]}", sX+760, infoY+100, WHITE)
-                else:
-                    draw_text(screen, f"{skill['description']}", sX+760, infoY+60, WHITE)
-                draw_text(screen, f"위력: {skill['damage']}", sX+760, infoY+20, WHITE)
+                draw_text(screen, "타입", sX+760, infoY+20, WHITE)
+                draw_text(screen, f"{type_dict[skill['type']]}", sX+1212, infoY+20, typecolor_dict[skill['type']], align='right')
                 
+                draw_text(screen, "위력", sX+760, infoY+60, WHITE)
+                draw_text(screen,f"{skill['damage']}", sX+1212, infoY+60, WHITE, align='right')
+                draw_wrapped_text(
+                    screen,
+                    skill['description'],
+                    sX+760,
+                    infoY + 100,
+                    WHITE,
+                    font_size=18,
+                    max_width= psX - sX + 300 # 원하는 최대 너비 지정
+                )
                 if effectiveness > 1.5:
-                    draw_text(screen, "효과: 뛰어남!",  sX+960, infoY+20, GREEN)
+                    draw_text(screen, "효과가 굉장함",  sX+760, infoY+60, GREEN)
                 elif effectiveness < 0.8:
-                    draw_text(screen, "효과: 별로...",  sX+960, infoY+20, BLUE)
-                else:
-                    draw_text(screen, "효과: 보통",  sX+960, infoY+20, WHITE)
+                    draw_text(screen, "효과가 별로···",  sX+760, infoY+60, BLUE)
 
         pygame.display.flip()
         
@@ -670,7 +675,7 @@ def item_phase(screen):
             display_status(screen)
             draw_text(screen, f"  {enemyCSmon.name}의 체력이 1이 되었다!", stX, stY, WHITE)
     
-    if selected_item.effect == "heal":
+    elif selected_item.effect == "heal":
         heal_base = selected_item.fixed if selected_item.fixed else 0
         heal_pct  = int(player.HP * selected_item.varied) if selected_item.varied else 0
         heal_amount_req = max(heal_base, heal_pct)
@@ -752,6 +757,7 @@ def select_reward_item(screen, items):
             # 이름만 색상 적용, 설명은 그대로 WHITE
             draw_text(screen, f"{prefix}", stX, stY-350+i*100, WHITE)
             draw_text(screen, f"{item.name}", stX+30, stY-350+i*100, name_color)
+            draw_text(screen, f"{item.gradeSymbol}{item.grade}", stX+30, stY-350+i*100+40, name_color, size=18)
             draw_wrapped_text(
                 screen,
                 item.description,
