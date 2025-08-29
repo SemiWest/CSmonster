@@ -60,7 +60,7 @@ PLAYER_SKILLS = {
         {"name": "핀토스", "damage": 85, "type": "SYS", "description": "핀토스를 끝낸 자. 어떤 과제가 와도 이겨낼 수 있다.", "level": 4},
     ],
     "DS": [
-        {"name": "OOP", "damage": 65, "type": "DS", "description": "상대를 객채화시킨다", "level": 1},
+        {"name": "OOP", "damage": 65, "type": "DS", "description": "상대를 객체화시킨다", "level": 1},
         {"name": "SQL 인젝션", "damage": 75, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 2}
     ],
     "AI": [

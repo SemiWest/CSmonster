@@ -196,3 +196,6 @@ def game_started():
 
 def Lose():
     play_effect("../sound/Lose.mp3")
+
+def Report():
+    play_effect("../sound/report.mp3")

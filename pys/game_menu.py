@@ -39,7 +39,7 @@ def draw_text(surface, text, x, y, color=BLACK, highlight=False, size=32, align=
     surface.blit(text_surface, text_rect.topleft)
     return text_rect
 
-def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=36, line_spacing=10):
+def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=32, line_spacing=10):
     """설명 텍스트가 max_width를 넘지 않게 자동 줄바꿈해서 출력"""
     font = pygame.font.Font("../neodgm.ttf", font_size)
     words = text.split(' ')

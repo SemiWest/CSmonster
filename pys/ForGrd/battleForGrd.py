@@ -110,7 +110,7 @@ def display_status(screen, detail=False):
     screen.blit(STAT, (esX, esY))
     if hasattr(enemyCSmon, 'image'):
         image = pygame.image.load(enemyCSmon.image)
-        image = pygame.transform.scale_by(image, 8)
+        image = pygame.transform.scale_by(image, 10)
         screen.blit(image, (esX+860-image.get_width()//2, esY+310-image.get_height()))
     
     draw_text(screen, f"{enemyCSmon.name}", esX+64, esY+52, WHITE)
@@ -221,7 +221,7 @@ def select_player_skill(screen):
                     sX+760,
                     infoY + 100,
                     WHITE,
-                    font_size=18,
+                    font_size=16,
                     max_width= 452 # 원하는 최대 너비 지정
                 )
         pygame.display.flip()
@@ -309,9 +309,10 @@ def show_pnr_result(screen, success):
     pygame.display.flip()
     time.sleep(1)
     screen.fill(WHITE)
-    color = GREEN if success else RED
+    color = GREEN if success=="P" else RED
     message = "성공!" if success == "P" else "실패..."
     draw_text(screen, message, SCREEN_WIDTH//2, 300, color, align='center')
+    Battle_win() if success == "P" else Lose()
     pygame.display.flip()
     wait_for_key()    
     if success == "P":
@@ -736,7 +737,7 @@ def select_reward_item(screen, items):
             # 이름만 색상 적용, 설명은 그대로 WHITE
             draw_text(screen, f"{prefix}", stX, stY-350+i*100, WHITE)
             draw_text(screen, f"{item.name}", stX+30, stY-350+i*100, name_color)
-            draw_text(screen, f"{item.gradeSymbol}{item.grade}", stX+30, stY-350+i*100+40, name_color, size=18)
+            draw_text(screen, f"{item.gradeSymbol}{item.grade}", stX+30, stY-350+i*100+40, name_color, size=16)
             draw_wrapped_text(
                 screen,
                 item.description,
