@@ -145,7 +145,7 @@ cs101.skills = {
         name='휴보는 내 친구', 
         effect_type="buff",
         type="CT",
-        skW=30, 
+        skW=2, 
         priority=0, 
         description="휴보에게서 에너지가 가득 담긴 비퍼를 받는다. 공격력을 크게 올린다."),
     'CSV 접근': Monster.Skill(
@@ -417,7 +417,7 @@ cs320.skills = {
         name='Functional Programming',
         effect_type="reflect",
         type="CT",
-        skW=20,
+        skW=1,
         priority=4,
         description="함수형 프로그래밍이 나를 거부한다. "),
     'Type Error': Monster.Skill(
