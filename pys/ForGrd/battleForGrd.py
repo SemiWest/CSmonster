@@ -155,6 +155,7 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
                 user.Rank[B % 3] = max(-6,min(6, user.Rank[B % 3] + B//3 + 1))
         else:
             user.Rank[skill["skW"] % 3] = max(-6,min(6, user.Rank[skill["skW"] % 3] + skill["skW"]//3 + 1))
+        user.update()
         return False, 0, False
 
     return False, 0, False

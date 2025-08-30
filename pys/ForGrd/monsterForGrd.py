@@ -466,7 +466,7 @@ cs360.skills = {
         name='트랜잭션 복구',
         effect_type="heal",
         type="DS",
-        skW=50,
+        skW=0.5,
         description="데이터 손상을 복구하여 체력을 회복한다."
     ),
     '인덱스 재구성': Monster.Skill(
@@ -524,7 +524,7 @@ cs371.skills = {
 cs376 = Monster(
     Num = 376, name="기계학습", credit = 3,
     HP = 80, ATK = 110, DEF = 95, SPD = 110, 
-    type=["AI"], SeonSu=[],
+    type=["AI"], SeonSu=[371],
     image="../img/monsters/기계학습.png",
     description="기계학습설명"
 )
