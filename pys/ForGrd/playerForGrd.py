@@ -213,12 +213,12 @@ class Player:
     def update(self):
         self.type = self.playertype()  # 플레이어 타입 설정
         # HP = [ { (종족값 x 2) + 개체값 + 100 } x 레벨/100 ] + 10
-        self.HP = int((self.H * 2 + 31 + 100) * (self.level / 100)) + 10
+        self.HP = int((self.H * 2 + 16 + 100) * (self.level / 100)) + 10
 
         # E = [ { (종족값 x 2) + 개체값} x 레벨/100 + 5 ]
-        self.ATK = int((self.A * 2 + 31) * (self.level / 100)) + 5
-        self.DEF = int((self.D * 2 + 31) * (self.level / 100)) + 5
-        self.SPD = int((self.SP * 2 + 31) * (self.level / 100)) + 5
+        self.ATK = int((self.A * 2 + 16) * (self.level / 100)) + 5
+        self.DEF = int((self.D * 2 + 16) * (self.level / 100)) + 5
+        self.SPD = int((self.SP * 2 + 16) * (self.level / 100)) + 5
         
         self.max_exp = int((self.level ** 3))  # 경험치 필요량
 
