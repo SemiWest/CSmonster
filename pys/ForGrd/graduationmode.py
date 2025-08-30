@@ -471,7 +471,7 @@ def game_start(screen, Me_name="넙죽이"):
                 player.thisSemesterGpas.append(gpa)
                 player.complete_monster(monster_name)
                 addSeonSus(player, enemy_monster)  # 과목들 추가
-            elif battle_result == 2:    # P
+            elif battle_result == 2:    # P TODO: P/NR일때는 GPA에 산정 안하도록 수정해야 할듯. 
                 player.clearedMonsters.append(monster_name)
                 player.thisSemesterGpas.append(gpa)
                 player.clearedSemesters.append(player.current_semester)
