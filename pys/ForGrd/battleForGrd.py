@@ -664,9 +664,22 @@ def item_phase(screen):
             draw_text(screen, f"  {enemyCSmon.name}의 체력이 1이 되었다!", stX, stY, WHITE)
     
     elif selected_item.effect == "heal":
-        heal_base = selected_item.fixed if selected_item.fixed else 0
-        heal_pct  = int(player.HP * selected_item.varied) if selected_item.varied else 0
-        heal_amount_req = max(heal_base, heal_pct)
+        heal_amount_req = 0
+        
+        # 'fixed' 속성만 있는 경우
+        if hasattr(selected_item, 'fixed') and selected_item.fixed and not hasattr(selected_item, 'varied'):
+            heal_amount_req = selected_item.fixed
+        
+        # 'varied' 속성만 있는 경우
+        elif hasattr(selected_item, 'varied') and selected_item.varied and not hasattr(selected_item, 'fixed'):
+            heal_amount_req = int(player.HP * selected_item.varied)
+        
+        # 'fixed'와 'varied'가 모두 있는 경우
+        elif hasattr(selected_item, 'fixed') and selected_item.fixed and hasattr(selected_item, 'varied') and selected_item.varied:
+            heal_base = selected_item.fixed
+            heal_pct = int(player.HP * selected_item.varied)
+            heal_amount_req = max(heal_base, heal_pct)
+        
         healed = player.heal(heal_amount_req, allow_revive=getattr(selected_item, "canuse_on_fainted", False))
 
         animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player.nowhp, player.HP)
@@ -733,9 +746,11 @@ def item_phase(screen):
     # 적 공격
     enemy_attack_phase(screen)
     
+# 기존의 get_random_reward_items 함수를 아래 코드로 교체하세요.
+
 def get_random_reward_items(num_items):
     """
-    등급별 확률에 따라 보상 아이템을 선택하는 함수
+    등급별 확률에 따라 비복원추출 방식으로 보상 아이템을 선택하는 함수
     """
     reward_pool = []
     # 모든 아이템을 등급별로 분류
@@ -746,11 +761,16 @@ def get_random_reward_items(num_items):
         "노말": [item for item in item_list if item.grade == "노말"],
     }
     
-    # 설정된 확률에 따라 아이템을 num_items만큼 뽑음
+    # 각 등급별 아이템 목록을 섞어둡니다.
+    for grade in items_by_grade.keys():
+        random.shuffle(items_by_grade[grade])
+    
+    # 설정된 확률에 따라 아이템을 num_items만큼 뽑습니다.
+    # 중복을 방지하기 위해 뽑은 아이템은 해당 목록에서 제거합니다.
     for _ in range(num_items):
         rand_num = random.random()
         cumulative_prob = 0
-        selected_grade = "노말"  # Default to Normal if something goes wrong
+        selected_grade = "노말"  # 기본값 설정
         
         # 누적 확률에 따라 아이템 등급 선택
         for grade, prob in ITEM_DROP_RATES.items():
@@ -758,13 +778,29 @@ def get_random_reward_items(num_items):
             if rand_num < cumulative_prob:
                 selected_grade = grade
                 break
-            
-        # 선택된 등급의 아이템 목록에서 무작위로 하나 선택
+        
+        # 선택된 등급의 아이템 목록에서 하나를 뽑고, 리스트에서 제거합니다.
         if items_by_grade[selected_grade]:
-            selected_item = random.choice(items_by_grade[selected_grade])
+            selected_item = items_by_grade[selected_grade].pop()
             reward_pool.append(selected_item)
+        else:
+            # 해당 등급의 아이템이 모두 소진된 경우, 다른 등급에서 뽑습니다.
+            all_grades = ["레전더리", "에픽", "레어", "노말"]
+            random.shuffle(all_grades) # 다른 등급을 무작위로 순회
+            found_item = False
+            for g in all_grades:
+                if items_by_grade[g]:
+                    selected_item = items_by_grade[g].pop()
+                    reward_pool.append(selected_item)
+                    found_item = True
+                    break
+            if not found_item:
+                # 모든 아이템이 소진된 경우
+                print("Warning: All reward items have been exhausted.")
+                break # 루프 종료
             
     return reward_pool
+
 
 def select_reward_item(screen, items):
     """승리 후 아이템 선택 UI"""
