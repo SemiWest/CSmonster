@@ -180,7 +180,7 @@ class Player:
         if self.current_semester == "새터":
             return "*"
         else:
-            newdict = {k: v for k, v in self.learned_skills.items() if k != "*"}
+            newdict = {k: v for k, v in self.current_skills.items() if k != "*"}
             max = 0
             maxkeys = []
             for k in newdict.keys():

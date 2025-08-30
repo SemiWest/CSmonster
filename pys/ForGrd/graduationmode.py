@@ -499,15 +499,19 @@ def game_start(screen, Me_name="넙죽이"):
         
 
             if battle_result == 1:  # 승리
-                _remove_cleared_entry(player, monster_name)          # 먼저 기존 기록 깨끗이 제거
-                _add_cleared_entry(player, monster_name, player.current_semester, gpa)
+                if monster_name in player.clearedMonsters:
+                    _remove_cleared_entry(player, monster_name)
+                    if gpa[1] == "A+" or gpa[1] == "A0":
+                        gpa[1] = "A-"
+                    _add_cleared_entry(player, monster_name, player.current_semester, gpa)
                 player.thisSemesterGpas.append(gpa)
                 need_skill_change = player.complete_monster(monster_name)
                 addSeonSus(player, enemy_monster)
 
             elif battle_result == 2:  # P (패스)
-                _remove_cleared_entry(player, monster_name)          # 동일 패턴
-                _add_cleared_entry(player, monster_name, player.current_semester, gpa)
+                if monster_name in player.clearedMonsters:
+                    _remove_cleared_entry(player, monster_name)
+                    _add_cleared_entry(player, monster_name, player.current_semester, gpa)
                 player.thisSemesterGpas.append(gpa)
                 need_skill_change = player.complete_monster(monster_name)
                 addSeonSus(player, enemy_monster)
@@ -528,16 +532,17 @@ def game_start(screen, Me_name="넙죽이"):
             elif battle_result == 0:  # 패배
                 player.thisSemesterGpas.append(gpa)
                 player.canBeMetMonsters.append(monster_name)
+                player.clearedMonsters.append(monster_name)
+                player.clearedSemesters.append(player.current_semester)
+                player.gpas.append(gpa)
                 player.update_fullreset()
 
             player.update()
-
+            if need_skill_change:
+                show_skill_change(screen, player)
+        
         if not game_running:
             break
-
-        if need_skill_change:
-            show_skill_change(screen, player)
-
 
         # 학기 결과 화면
         semester_result_screen(player, screen)
