@@ -268,7 +268,10 @@ class Player:
         src = self.thisSemesterGpas if Option == 1 else self.gpas
 
         for credit, grade in src:
-            # P/NR은 GPA에서 제외
+            # P나 NR 학점은 GPA 산정에서 제외
+            if grade in ["P", "NR", "-"]:
+                continue
+            
             sum1 += GPASCORE[grade] * credit
             sum2 += credit
 

@@ -13,10 +13,10 @@ startBattleHp = 0
 
 # 아이템 보상 확률 차등 설정
 ITEM_DROP_RATES = {
-    "레전더리": 0.10,  # 10%
-    "에픽": 0.20,     # 20%
+    "레전더리": 0.05,  # 05%
+    "에픽": 0.15,     # 15%
     "레어": 0.30,     # 30%
-    "노말": 0.40,     # 40%
+    "노말": 0.50,     # 50%
 }
 
 # 기존 좌표 및 이미지 로드는 그대로 유지
@@ -809,6 +809,8 @@ def select_reward_item(screen, items):
             return None
 
 # 메인 전투 함수 수정
+# 기존의 battle 함수를 아래 코드로 교체하세요.
+
 def battle(getplayer, getenemy, screen=None):
     global player, enemy, enemyCSmon, battle_end, startBattleHp
     player = getplayer
@@ -870,8 +872,11 @@ def battle(getplayer, getenemy, screen=None):
                 player.pnr_used = True
                 success = "P" if random.random() < 0.80 else "NR"
                 show_pnr_result(screen, success)
-                battle_end = True
-                return success
+                # PNR 사용 시에도 전투 루프를 계속 진행
+                if success == "P":
+                    return "PNR_P" # 새로운 반환값
+                else:
+                    return "PNR_NR" # 새로운 반환값
             
             # 적 체력 확인
             enemy_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
@@ -901,6 +906,8 @@ def battle(getplayer, getenemy, screen=None):
     
     # 전투 시작
     result = battle_logic(screen)
+    
+    # 여기는 변경 없음
     if result == "승리":
         Battle_win()
         display_status(screen)
@@ -908,8 +915,7 @@ def battle(getplayer, getenemy, screen=None):
         pygame.display.flip()
         wait_for_key()
 
-        # 5% 체력 회복
-        heal_amount = max(1, int(player.HP * 0.05))
+        heal_amount = max(1, int(player.HP * 0.10))
         playerCurrentHP = player.nowhp
         player.heal(heal_amount)
         display_status(screen)
@@ -918,26 +924,19 @@ def battle(getplayer, getenemy, screen=None):
         pygame.display.flip()
         wait_for_key()
 
-        # 아이템 3개 랜덤 추첨
-        # reward_items = random.sample([i for i in item_list if i.name != "빈 슬롯"], 3)
         reward_items = get_random_reward_items(3)
         selected_item = select_reward_item(screen, reward_items)
         
-        # Esc 누르면 아이템 획득 안함
         if selected_item is None: 
             option_escape_sound()
             display_status(screen)
             draw_text(screen, "  아이템을 선택하지 않았습니다.", stX, stY, YELLOW)
-
         else:
-            # 빈 슬롯에 아이템 추가 또는 버리기
             for idx, item in enumerate(player.items):
                 if item.name == "빈 슬롯":
                     player.items[idx] = copy.deepcopy(selected_item)
                     break
-
             else:
-                # 빈 슬롯이 없으면 버릴 아이템 선택
                 while True:
                     display_status(screen)
                     draw_text(screen, "  인벤토리가 가득 찼습니다! 버릴 아이템을 선택하세요.", stX, stY, YELLOW)
@@ -946,7 +945,6 @@ def battle(getplayer, getenemy, screen=None):
                     option_change_sound()
                     discard_idx = select_item(screen)
                     if discard_idx == -1:
-                        # esc를 누르면 아이템 선택 화면으로 다시 돌아감
                         selected_item = select_reward_item(screen, reward_items)
                         if selected_item is None:
                             option_escape_sound()
@@ -957,7 +955,6 @@ def battle(getplayer, getenemy, screen=None):
                     player.items[discard_idx] = copy.deepcopy(selected_item)
                     break
             
-
             if selected_item is not None:    
                 display_status(screen)
                 draw_text(screen, f"  {selected_item.name}을/를 획득했다!", stX, stY, GREEN)
@@ -990,13 +987,16 @@ def battle(getplayer, getenemy, screen=None):
         if enemy.type[0] == "EVENT":
             return 4, (0, "실패...")
         return 3, (0, "W")
-    elif result == "P":
+
+    # PNR 결과 처리
+    elif result == "PNR_P":
         Battle_win()
         display_status(screen)
         draw_text(screen, f"  PNR로 과목을 패스했다!", stX, stY, WHITE)
         pygame.display.flip()
         wait_for_key()
-        # 5% 체력 회복
+        
+        # 아이템 보상 로직은 그대로 유지
         heal_amount = max(1, int(player.HP * 0.05))
         playerCurrentHP = player.nowhp
         player.heal(heal_amount)
@@ -1006,25 +1006,23 @@ def battle(getplayer, getenemy, screen=None):
         pygame.display.flip()
         wait_for_key()
         
-        # 아이템 3개 랜덤 추첨
-        reward_items = random.sample([i for i in item_list if i.name != "빈 슬롯"], 3)
-        selected_item = select_reward_item(screen, reward_items)
+        pnr_reward_items_pool = [i for i in item_list if i.grade == "노말"]
+        if pnr_reward_items_pool:
+            reward_items = random.sample(pnr_reward_items_pool, min(3, len(pnr_reward_items_pool)))
+            selected_item = select_reward_item(screen, reward_items)
+        else:
+            selected_item = None
         
-        # Esc 누르면 아이템 획득 안함
         if selected_item is None: 
             option_escape_sound()
             display_status(screen)
             draw_text(screen, "  아이템을 선택하지 않았습니다.", stX, stY, YELLOW)
-
         else:
-            # 빈 슬롯에 아이템 추가 또는 버리기
             for idx, item in enumerate(player.items):
                 if item.name == "빈 슬롯":
                     player.items[idx] = copy.deepcopy(selected_item)
                     break
-
             else:
-                # 빈 슬롯이 없으면 버릴 아이템 선택
                 while True:
                     display_status(screen)
                     draw_text(screen, "  인벤토리가 가득 찼습니다! 버릴 아이템을 선택하세요.", stX, stY, YELLOW)
@@ -1033,7 +1031,6 @@ def battle(getplayer, getenemy, screen=None):
                     option_change_sound()
                     discard_idx = select_item(screen)
                     if discard_idx == -1:
-                        # esc를 누르면 아이템 선택 화면으로 다시 돌아감
                         selected_item = select_reward_item(screen, reward_items)
                         if selected_item is None:
                             option_escape_sound()
@@ -1043,22 +1040,22 @@ def battle(getplayer, getenemy, screen=None):
                         continue
                     player.items[discard_idx] = copy.deepcopy(selected_item)
                     break
-            
-
             if selected_item is not None:    
                 display_status(screen)
                 draw_text(screen, f"  {selected_item.name}을/를 획득했다!", stX, stY, GREEN)
 
         pygame.display.flip()
         wait_for_key()
-        if enemy.name in player.clearedMonsters:
-            return 1, gpaCalculator(enemyCSmon, hap_num, item_num, False)
-        return 2, (0, "P")
-    elif result == "NR":
+        
+        return 2, (0, "P") # PNR 성공은 2를 반환
+        
+    elif result == "PNR_NR":
         Lose()
         display_status(screen)
         draw_text(screen, f"  NR이 떠 버리고 말았다...", stX, stY, WHITE)
         pygame.display.flip()
         wait_for_key()
-        return 5, (0, "NR")
+        
+        return 5, (0, "NR") # PNR 실패는 5를 반환
+    
     else: return 0, (enemy.credit, "F")
