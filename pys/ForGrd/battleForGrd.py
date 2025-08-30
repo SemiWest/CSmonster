@@ -59,16 +59,22 @@ def Damage(target, attacker, skilldict):
     return int(multiplier * (basedmg*skilldict["skW"] + 2) * Jasok * random.uniform(0.85, 1.00)), multiplier
 
 def use_skill(attackerType, player, monster, playerskill, monsterskill):
-    playerskill_dict = {
-        "type": playerskill["type"],
-        "effect_type": "Sdamage", 
-        "skW": playerskill["damage"]
-    }
-    monsterskill_dict = {
-        "type": monsterskill.skill_type, 
-        "effect_type": monsterskill.effect_type, 
-        "skW": monsterskill.skW
-    }
+    if playerskill is None:
+        playerskill_dict = None
+    else:
+        playerskill_dict = {
+            "type": playerskill["type"],
+            "effect_type": "Sdamage", 
+            "skW": playerskill["damage"]
+        }
+    if monsterskill is None:
+        monsterskill_dict = None
+    else:
+        monsterskill_dict = {
+            "type": monsterskill.skill_type, 
+            "effect_type": monsterskill.effect_type, 
+            "skW": monsterskill.skW
+        }
 
     """
     self: 스킬을 쓰는 몬스터(공격자)
@@ -109,15 +115,10 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
 
     # halve_hp 스킬 처리
     if skill["effect_type"] == "halve_hp":
-        if skill.is_hit(target, user) == False:
-            return False, False, False
         current_hp = target.nowhp
         target.nowhp = max(0, target.nowhp // 2)
         if target.nowhp > 10: Damage_strong()
         elif target.nowhp > 0: Damage_weak()
-        if target.hpShield and target.nowhp<=target.HP//2:
-            target.nowhp = target.HP//2
-            target.hpShield = False
         damage = current_hp - target.nowhp
         return False, damage, False
 
@@ -491,18 +492,22 @@ def skill_phase(screen):
             player_skill_phase(screen, selected_skill, enemy_skill)
 
 def skill_message(screen, AttackerType, player, enemyCSmon, Pskill, Mskill, damage = None, Mul=1):
-    playerskill_dict = {
-        "name": Pskill["name"],
-        "type": Pskill["type"],
-        "effect_type": "Sdamage", 
-        "skW": Pskill["damage"]
-    }
-    monsterskill_dict = {
-        "name": Mskill.name,
-        "type": Mskill.skill_type, 
-        "effect_type": Mskill.effect_type, 
-        "skW": Mskill.skW
-    }
+    if Pskill is None:
+        playerskill_dict = None
+    else:
+        playerskill_dict = {
+            "type": Pskill["type"],
+            "effect_type": "Sdamage", 
+            "skW": Pskill["damage"]
+        }
+    if Mskill is None:
+        monsterskill_dict = None
+    else:
+        monsterskill_dict = {
+            "type": Mskill.skill_type, 
+            "effect_type": Mskill.effect_type, 
+            "skW": Mskill.skW
+        }
 
     """스킬 메시지를 출력하기 전에 상태를 먼저 출력 (pygame)"""
     if damage != None:
