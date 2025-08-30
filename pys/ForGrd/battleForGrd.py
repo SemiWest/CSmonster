@@ -135,6 +135,14 @@ def display_status(screen, detail=False):
     for i, enemy_type in enumerate(enemy_types[:2]):  # 최대 2개만 표시
         display_type(screen, esY, esX+470+i*124, enemy_type)
     
+    if player.cheatmode:
+        # 상대 능력치 표시 (치트모드)
+        draw_text(screen, f"{getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))}/{getattr(enemyCSmon, 'HP', 100)}", esX+445, esY+100, WHITE, highlight=VIOLET)
+        draw_text(screen, f"ATK {getattr(enemyCSmon, 'CATK', 10)}/{getattr(enemyCSmon, 'ATK', 10)}", esX+610, esY+16, WHITE, highlight=RED)
+        draw_text(screen, f"DEF {getattr(enemyCSmon, 'CDEF', 10)}/{getattr(enemyCSmon, 'DEF', 10)}", esX+610, esY+56, WHITE, highlight=RED)
+        draw_text(screen, f"SPD {getattr(enemyCSmon, 'CSPD', 10)}/{getattr(enemyCSmon, 'SPD', 10)}", esX+610, esY+96, WHITE, highlight=RED)
+       
+    
     # 플레이어 상태 (하단) - 직접 전투
     screen.blit(STAT, (psX, psY))
     screen.blit(ME, (sX+320-ME.get_width()//2, sY+536-ME.get_height()))
@@ -187,6 +195,52 @@ def display_player_details(screen, player, x):
                     continue
                 if isinstance(detail, tuple) and len(detail) >= 3:
                     draw_text(screen, detail[0], x + detail[1], y_pos, detail[2])
+
+def select_action(screen):
+    """행동 선택 메뉴 - PNR 버튼 포함"""
+    display_status(screen, detail=True)
+    
+    # 기본 옵션들
+    options = ["스킬 사용", "아이템 사용", "도망가기"]
+    
+    # PNR 버튼 추가 (조건부)
+    if player.can_use_pnr():
+        options.append("PNR 사용")
+    
+    current_index = 0
+    
+    while True:
+        display_status(screen, detail=True)
+        
+        for i, option in enumerate(options):
+            x_pos = stX + (300 * (i % 2))
+            y_pos = stY + int(i / 2) * 56
+            
+            # PNR 버튼은 파란색으로 표시
+            color = BLUE if option == "PNR 사용" else WHITE
+            
+            prefix = "> " if i == current_index else "  "
+            draw_text(screen, f"{prefix}{option}", x_pos, y_pos, color)
+        
+        pygame.display.flip()
+        
+        key = wait_for_key()
+        if key == 'enter':
+            return current_index
+        elif len(options) == 1:
+            current_index = 0
+        elif key == 'up' and (current_index > 1 and current_index < len(options)):
+            current_index -= 2
+            option_change_sound()
+        elif key == 'down' and (current_index >= 0 and current_index < len(options)-2):
+            current_index += 2
+            option_change_sound()
+        elif key == 'left' and (current_index % 2 == 1 and current_index < len(options) and current_index >= 0):
+            current_index -= 1
+            option_change_sound()
+        elif key == 'right' and (current_index % 2 == 0 and current_index < len(options) and current_index >= 0 and current_index != len(options)-1):
+            current_index += 1
+            option_change_sound()
 
 def select_player_skill(screen):
     """플레이어 스킬 선택"""
@@ -256,52 +310,6 @@ def select_player_skill(screen):
             current_index += 1
             option_change_sound()
 
-def select_action(screen):
-    """행동 선택 메뉴 - PNR 버튼 포함"""
-    display_status(screen, detail=True)
-    
-    # 기본 옵션들
-    options = ["스킬 사용", "아이템 사용", "도망가기"]
-    
-    # PNR 버튼 추가 (조건부)
-    if player.can_use_pnr():
-        options.append("PNR 사용")
-    
-    current_index = 0
-    
-    while True:
-        display_status(screen, detail=True)
-        
-        for i, option in enumerate(options):
-            x_pos = stX + (300 * (i % 2))
-            y_pos = stY + int(i / 2) * 56
-            
-            # PNR 버튼은 파란색으로 표시
-            color = BLUE if option == "PNR 사용" else WHITE
-            
-            prefix = "> " if i == current_index else "  "
-            draw_text(screen, f"{prefix}{option}", x_pos, y_pos, color)
-        
-        pygame.display.flip()
-        
-        key = wait_for_key()
-        if key == 'enter':
-            return current_index
-        elif len(options) == 1:
-            current_index = 0
-        elif key == 'up' and (current_index > 1 and current_index < len(options)):
-            current_index -= 2
-            option_change_sound()
-        elif key == 'down' and (current_index >= 0 and current_index < len(options)-2):
-            current_index += 2
-            option_change_sound()
-        elif key == 'left' and (current_index % 2 == 1 and current_index < len(options) and current_index >= 0):
-            current_index -= 1
-            option_change_sound()
-        elif key == 'right' and (current_index % 2 == 0 and current_index < len(options) and current_index >= 0 and current_index != len(options)-1):
-            current_index += 1
-            option_change_sound()
-
 def show_pnr_result(screen, success):
     """PNR 사용 결과 표시"""
     screen.fill(WHITE)
@@ -346,16 +354,25 @@ def gpaCalculator(enemy, hap_num, item_num, first_time=True):
     else: gpa = "C-"
     return (enemy.credit, gpa)
 
-
-# 플레이어 스킬 사용 단계
-def player_skill_phase(screen):
-    """플레이어 스킬 사용 단계"""
+def skill_phase(screen):
     selected_skill = select_player_skill(screen)
     if selected_skill == -1:
         return -1
-    
+    # 적 스킬 선택 (랜덤)
+    enemy_skills = getattr(enemyCSmon, 'skills', {})
+    if enemy_skills:
+        enemy_skill = random.choice(list(enemy_skills.values()))
+    if selected_skill["priority"] > enemy_skill.priority or (selected_skill["priority"] == enemy_skill.priority and player.CSPD >= enemyCSmon.CSPD):
+        stop = player_skill_phase(screen, selected_skill, enemy_skill)
+        if enemyCSmon.is_alive() and not stop:
+            enemy_attack_phase(screen, selected_skill, enemy_skill)
+    else:
+        stop = enemy_attack_phase(screen, selected_skill, enemy_skill)
+        if player.is_alive() and not stop:
+            player_skill_phase(screen, selected_skill, enemy_skill)
+
+def player_skill_phase(screen, selected_skill, enemy_skill):
     enemyCurrentHP = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
-    
     # 스킬 사용 메시지
     display_status(screen, True)
     draw_text(screen, f"  {player.name}의 {selected_skill['name']}!", stX, stY, WHITE)
@@ -383,8 +400,6 @@ def player_skill_phase(screen):
             pygame.display.flip()
             wait_for_key()
     
-    # 결과 메시지
-    # ──[ 교체: player_skill_phase()의 "결과 메시지" 부분 전체 ]────────────────
     # 결과 메시지
     display_status(screen, True)
     if result:
@@ -445,115 +460,104 @@ def player_skill_phase(screen):
         draw_text(screen, f"  {message}", stX, stY, WHITE)
         pygame.display.flip()
         wait_for_key()
-# ───────────────────────────────────────────────────────────────────────────
-    
 
-# 적 공격 단계
-def enemy_attack_phase(screen):
+def enemy_attack_phase(screen, player_skill, skill):
     """적 공격 단계"""
     playerCurrentHP = getattr(player, 'nowhp', getattr(player, 'HP', 100))
     enemyCurrentHP_snap = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
+
+    # 스킬 사용
+    display_status(screen, True)
+    draw_text(screen, f"  {enemyCSmon.name}의 {skill.name}!", stX, stY, WHITE)
+    pygame.display.flip()
+    wait_for_key()
     
-    # 적 스킬 선택 (랜덤)
-    enemy_skills = getattr(enemyCSmon, 'skills', {})
-    if enemy_skills:
-        skill = random.choice(list(enemy_skills.values()))
-        
-        # 스킬 사용
-        display_status(screen, True)
-        draw_text(screen, f"  {enemyCSmon.name}의 {skill.name}!", stX, stY, WHITE)
-        pygame.display.flip()
-        wait_for_key()
-        
-        result, message = enemyCSmon.use_skill(player, skill)
-        # kind에 따라 애니메이션 대상 분기
-        kind = (result or {}).get("kind", "damage")
-        if kind == "damage" or kind == "halve_hp":
-            player_hp_after = getattr(player, 'nowhp', getattr(player, 'HP', 100))
-            animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player_hp_after, getattr(player, 'HP', 100))
-        elif kind == "heal":
-            enemy_hp_after = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
-            animate_health_bar(screen, esY+104, esX+135, enemyCurrentHP_snap, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
-        else:
-            # buff / reflect / noop 등: HP 변화 없음 → 애니메이션 생략
-            pass
-        
-        # [추가] 반사 처리: 플레이어가 반사 준비 상태였다면 적에게 반사 피해
-        if getattr(player, "hpShield", False) and getattr(player, "reflect_ratio", 0.0) > 0.0:
-            reflect = int(result.get("damage", 0) * player.reflect_ratio)
-            if reflect > 0:
-                enemy_prev = enemyCSmon.nowhp
-                enemyCSmon.nowhp = max(0, enemyCSmon.nowhp - reflect)
-                # 1회성 해제
-                player.hpShield = False
-                # 반사 애니메이션 & 메시지
-                animate_health_bar(screen, esY+104, esX+135, enemy_prev, enemyCSmon.nowhp, getattr(enemyCSmon, 'HP', 100))
-                display_status(screen, True)
-                draw_text(screen, f"  {player.name}의 반사! {enemyCSmon.name}에게 {reflect} 피해를 돌려주었다!", stX, stY, WHITE)
-                pygame.display.flip()
-                wait_for_key()
-
-        # 결과 메시지
-        # ──[ 교체: enemy_attack_phase()의 "결과 메시지" 부분 전체 ]───────────────
-        # 결과 메시지
-        display_status(screen, True)
-        if result:
-            kind = result.get("kind", "damage")
-            damage = result.get("damage", 0)
-            effectiveness = result.get("effectiveness", 1.0)
-            msg = result.get("message")
-
-            # 1) 메시지 우선
-            if msg:
-                draw_text(screen, f"  {msg}", stX, stY, WHITE)
-                pygame.display.flip()
-                wait_for_key()
-                display_status(screen, True)
-
-            # 2) 종류별 보조 출력
-            if kind == "damage":
-                draw_text(screen, f"  {player.name}은(는) {damage}의 피해를 입었다!", stX, stY, WHITE)
-                pygame.display.flip()
-                wait_for_key()
-                display_status(screen, True)
-
-                if effectiveness > 1.5:
-                    draw_text(screen, "  효과가 뛰어났다!", stX, stY, WHITE)
-                    pygame.display.flip()
-                    wait_for_key()
-                    display_status(screen, True)
-                elif effectiveness < 0.8:
-                    draw_text(screen, "  효과가 별로인 듯 하다...", stX, stY, WHITE)
-                    pygame.display.flip()
-                    wait_for_key()
-                    display_status(screen, True)
-
-            elif kind == "heal":
-                # 힐: msg에 이미 안내 포함
-                pass
-
-            elif kind == "buff":
-                # 버프: 필요 시 수치 표시
-                pass
-
-            elif kind == "reflect":
-                # 반사 준비: msg에 포함
-                pass
-
-            elif kind == "halve_hp":
-                # 이미 플레이어 HP 반감 적용 완료
-                pass
-
-            else:
-                pass
-        else:
-            draw_text(screen, f"  {message}", stX, stY, WHITE)
+    result, message = enemyCSmon.use_skill(player, skill)
+    # kind에 따라 애니메이션 대상 분기
+    kind = (result or {}).get("kind", "damage")
+    if kind == "damage" or kind == "halve_hp":
+        player_hp_after = getattr(player, 'nowhp', getattr(player, 'HP', 100))
+        animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player_hp_after, getattr(player, 'HP', 100))
+    elif kind == "heal":
+        enemy_hp_after = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
+        animate_health_bar(screen, esY+104, esX+135, enemyCurrentHP_snap, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
+    else:
+        # buff / reflect / noop 등: HP 변화 없음 → 애니메이션 생략
+        pass
+    
+    # [추가] 반사 처리: 플레이어가 반사 준비 상태였다면 적에게 반사 피해
+    if getattr(player, "hpShield", False) and getattr(player, "reflect_ratio", 0.0) > 0.0:
+        reflect = int(result.get("damage", 0) * player.reflect_ratio)
+        if reflect > 0:
+            enemy_prev = enemyCSmon.nowhp
+            enemyCSmon.nowhp = max(0, enemyCSmon.nowhp - reflect)
+            # 1회성 해제
+            player.hpShield = False
+            # 반사 애니메이션 & 메시지
+            animate_health_bar(screen, esY+104, esX+135, enemy_prev, enemyCSmon.nowhp, getattr(enemyCSmon, 'HP', 100))
+            display_status(screen, True)
+            draw_text(screen, f"  {player.name}의 반사! {enemyCSmon.name}에게 {reflect} 피해를 돌려주었다!", stX, stY, WHITE)
             pygame.display.flip()
             wait_for_key()
-# ───────────────────────────────────────────────────────────────────────────
-            
 
-# 기존 아이템 관련 함수들 그대로 유지하되 플레이어용으로 수정
+    # 결과 메시지
+    # ──[ 교체: enemy_attack_phase()의 "결과 메시지" 부분 전체 ]───────────────
+    # 결과 메시지
+    display_status(screen, True)
+    if result:
+        kind = result.get("kind", "damage")
+        damage = result.get("damage", 0)
+        effectiveness = result.get("effectiveness", 1.0)
+        msg = result.get("message")
+
+        # 1) 메시지 우선
+        if msg:
+            draw_text(screen, f"  {msg}", stX, stY, WHITE)
+            pygame.display.flip()
+            wait_for_key()
+            display_status(screen, True)
+
+        # 2) 종류별 보조 출력
+        if kind == "damage":
+            draw_text(screen, f"  {player.name}은(는) {damage}의 피해를 입었다!", stX, stY, WHITE)
+            pygame.display.flip()
+            wait_for_key()
+            display_status(screen, True)
+
+            if effectiveness > 1.5:
+                draw_text(screen, "  효과가 뛰어났다!", stX, stY, WHITE)
+                pygame.display.flip()
+                wait_for_key()
+                display_status(screen, True)
+            elif effectiveness < 0.8:
+                draw_text(screen, "  효과가 별로인 듯 하다...", stX, stY, WHITE)
+                pygame.display.flip()
+                wait_for_key()
+                display_status(screen, True)
+
+        elif kind == "heal":
+            # 힐: msg에 이미 안내 포함
+            pass
+
+        elif kind == "buff":
+            # 버프: 필요 시 수치 표시
+            pass
+
+        elif kind == "reflect":
+            # 반사 준비: msg에 포함
+            pass
+
+        elif kind == "halve_hp":
+            # 이미 플레이어 HP 반감 적용 완료
+            pass
+
+        else:
+            pass
+    else:
+        draw_text(screen, f"  {message}", stX, stY, WHITE)
+        pygame.display.flip()
+        wait_for_key()
+
 def select_item(screen, temp=None):
     """아이템 선택 - 플레이어용"""
 
@@ -629,8 +633,6 @@ def select_item(screen, temp=None):
         elif key == 'right' and current_index < len(player.items) - 1:
             current_index += 1
             option_change_sound()
-        
-
 
 def item_phase(screen):
     """아이템 사용 단계 - 플레이어용"""
@@ -731,7 +733,7 @@ def item_phase(screen):
     player.items[chosen_idx] = copy.deepcopy(Noneitem)
     
     # 적 공격
-    enemy_attack_phase(screen)
+    enemy_attack_phase(screen, None, enemy_skill=random.choice(list(enemyCSmon.skills.values())))
     
 def get_random_reward_items(num_items):
     """
@@ -846,7 +848,7 @@ def battle(getplayer, getenemy, screen=None):
             action = select_action(screen)
             
             if action == 0:  # 스킬 사용
-                esc = player_skill_phase(screen)
+                esc = skill_phase(screen)
                 if esc == -1:
                     continue
             elif action == 1:  # 아이템 사용
@@ -883,10 +885,6 @@ def battle(getplayer, getenemy, screen=None):
                 
                 battle_end = True
                 return "승리"
-            
-            # 적 턴 (스킬 사용이 아닌 경우에만)
-            if action == 0:  # 스킬 사용했을 때만 적이 공격
-                enemy_attack_phase(screen)
             
             # 플레이어 체력 확인
             if not player.is_alive():

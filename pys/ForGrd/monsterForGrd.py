@@ -282,7 +282,7 @@ Nonemonster = Monster(
 # 프밍기	전산이론	팽도리
 cs101 = Monster(
     Num = 101, name="프밍기", credit= 3,
-    HP = 30, ATK = 56, DEF = 35, SPD = 72, 
+    HP = 53, ATK = 55, DEF = 54, SPD = 40, 
     type=["CT"], SeonSu=[206, 204, 230], 
     image="../img/monsters/프밍기.png", 
     description="카이스트 입학 후 가장 먼저 듣게 되는 전산과 기필 과목이다. 시간표 브레이커로 유명하다."
@@ -313,7 +313,7 @@ cs101.skills = {
 # 이산	전산이론	이상해씨
 cs204 = Monster(
     Num = 204, name="이산구조", credit = 3,
-    HP = 57, ATK = 24, DEF = 86, SPD = 23, 
+    HP = 45, ATK = 57, DEF = 57, SPD = 45, 
     type=["CT"], SeonSu=[300, 320],
     image="../img/monsters/이산구조.png",
     description="이산구조설명"
@@ -350,7 +350,7 @@ cs204.skills = {
 # 데구	데이터 과학	파이리
 cs206 = Monster(
     Num = 206, name="데이타구조", credit = 3,
-    HP = 39, ATK = 52, DEF = 43, SPD = 65, 
+    HP = 39, ATK = 58, DEF = 47, SPD = 65, 
     type=["DS"], SeonSu=[360],
     image="../img/monsters/데이타구조.png",
     description="데이타구조설명"
@@ -386,7 +386,7 @@ cs206.skills = {
 # 시프	시 넽	레츠고이브이
 cs230 = Monster(
     Num = 230, name="시프", credit = 3,
-    HP = 65, ATK = 60, DEF = 50, SPD = 85, 
+    HP = 65, ATK = 70, DEF = 77, SPD = 75, 
     type=["SYS"], SeonSu=[311, 341],
     image="../img/monsters/시프.png",
     description="시프설명"
@@ -422,7 +422,7 @@ cs230.skills = {
 # OS	시 넽	거북왕
 cs330 = Monster(
     Num = 330, name="OS", credit = 4,
-    HP =65, ATK = 65, DEF = 60, SPD = 130, 
+    HP =79, ATK = 119, DEF = 117, SPD = 78, 
     type = ["SYS"], SeonSu=[],
     image="../img/monsters/OS.png",  
     description="전산과 과목 중 가장 악명이 높다. 자전거를 손을 놓고 타게 만드는 과목이다.")
@@ -456,7 +456,7 @@ cs330.skills = {
 # 알고개	PS	피카츄
 cs300 = Monster(
     Num = 300, name = "알고개", credit = 3,
-    HP = 67, ATK = 89, DEF = 116, SPD = 33, 
+    HP = 45, ATK = 77, DEF = 55, SPD = 120, 
     type = ["PS"], SeonSu=[202],
     image="../img/monsters/알고개.png",
     description="알고리즘과 문제해결 능력을 기르는 과목이다. 알고리즘의 기초를 다진다.")
@@ -492,7 +492,7 @@ cs300.skills = {
 # 아키	시 넽	꼬부기
 cs311 = Monster(
     Num = 311, name="전산기조직", credit = 3,
-    HP = 70, ATK = 80, DEF = 90, SPD = 60, 
+    HP = 79, ATK = 84, DEF = 103, SPD = 78, 
     type=["SYS"], SeonSu=[330],
     image="../img/monsters/전산기조직.png",
     description="전산기조직설명"
@@ -509,7 +509,7 @@ cs311.skills = {
 # PL	전산이론	메타몽
 cs320 = Monster(
     Num = 320, name="프로그래밍언어", credit = 3,
-    HP = 80, ATK = 70, DEF = 90, SPD = 60, 
+    HP = 85, ATK = 85, DEF = 85, SPD = 85, 
     type=["CT"], SeonSu=[220],
     image="../img/monsters/프로그래밍언어.png",
     description="프로그래밍 언어설명"
@@ -526,7 +526,7 @@ cs320.skills = {
 # 네떡	시 넽	잠만보
 cs341 = Monster(
     Num = 341, name="전산망개론", credit = 3,
-    HP = 90, ATK = 80, DEF = 70, SPD = 60, 
+    HP = 160, ATK = 87, DEF = 87, SPD = 30, 
     type=["SYS"], SeonSu=[330],
     image="../img/monsters/전산망개론.png",
     description="네트워크설명"
@@ -543,7 +543,7 @@ cs341.skills = {
 # 디비개	데이터 과학	리자몽
 cs360 = Monster(
     Num = 360, name="데이터베이스개론", credit = 3,
-    HP = 100, ATK = 90, DEF = 80, SPD = 70, 
+    HP = 78, ATK = 96, DEF = 81, SPD = 100, 
     type=["DS"], SeonSu=[],
     image="../img/monsters/데이터베이스개론.png",
     description="데이터베이스개론설명"
@@ -560,7 +560,7 @@ cs360.skills = {
 # 문해기	PS	마자용
 cs202 = Monster(
     Num = 202, name="문제해결기법", credit = 3,
-    HP = 80, ATK = 70, DEF = 90, SPD = 60, 
+    HP = 190, ATK = 33, DEF = 58, SPD = 33, 
     type=["PS"], SeonSu=[],
     image="../img/monsters/문제해결기법.png",
     description="문제해결기법"
@@ -577,7 +577,7 @@ cs202.skills = {
 # 딥러개	인공지능	망나뇽
 cs371 = Monster(
     Num = 371, name="딥러닝개론", credit = 3,
-    HP = 110, ATK = 100, DEF = 90, SPD = 80, 
+    HP = 91, ATK = 117, DEF = 97, SPD = 80, 
     type=["AI"], SeonSu=[],
     image="../img/monsters/딥러닝개론.png",
     description="딥러닝개론설명"
@@ -594,7 +594,7 @@ cs371.skills = {
 # 기계학습	인공지능	라티오스
 cs376 = Monster(
     Num = 376, name="기계학습", credit = 3,
-    HP = 110, ATK = 100, DEF = 90, SPD = 80, 
+    HP = 80, ATK = 110, DEF = 95, SPD = 110, 
     type=["AI"], SeonSu=[],
     image="../img/monsters/기계학습.png",
     description="기계학습설명"
@@ -611,7 +611,7 @@ cs376.skills = {
 # 프밍이	전산이론	치코리타
 cs220 = Monster(
     Num = 220, name="프로그래밍의 이해", credit = 3,
-    HP = 110, ATK = 100, DEF = 90, SPD = 80, 
+    HP = 80, ATK = 82, DEF = 100, SPD = 80, 
     type=["PS"], SeonSu=[],
     image="../img/monsters/프로그래밍의이해.png",
     description="프로그래밍의 이해 설명"

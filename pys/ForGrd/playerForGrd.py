@@ -40,34 +40,35 @@ GPACOLOR = {
 
 PLAYER_SKILLS = {
     "*": [
-        {"name": "타자치기", "damage": 30, "type": "*", "description": "한글은 100타, 영어는 독수리타법", "level": 1},
-        {"name": "Python", "damage": 40, "type": "*", "description": "프밍기를 수강한 당신, 이제 파이썬을 다룰 줄 안다", "level": 2}
+        {"name": "타자치기", "damage": 30, "type": "*", "description": "한글은 100타, 영어는 독수리타법", "level": 1, "priority": 0},
+        {"name": "Python", "damage": 40, "type": "*", "description": "프밍기를 수강한 당신, 이제 파이썬을 다룰 줄 안다", "level": 2, "priority": 0}
     ],
     "PS": [
-        {"name": "논리왕", "damage": 50, "type": "PS", "description": "상대를 논리로 누른다", "level": 1},
-        {"name": "Master Theorem", "damage": 60, "type": "PS", "description": "상대의 복잡도를 분석한다", "level": 2},
-        {"name": "PNP", "damage": 80, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 3},
+        {"name": "논리왕", "damage": 50, "type": "PS", "description": "상대를 논리로 누른다", "level": 1, "priority": 0},
+        {"name": "Master Theorem", "damage": 60, "type": "PS", "description": "상대의 복잡도를 분석한다", "level": 2, "priority": 0},
+        {"name": "PNP", "damage": 80, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 3, "priority": 0},
     ],
     "CT": [
-        {"name": "이산화", "damage": 50, "type": "CT", "description": "상대를 이산화해 분해해버린다", "level": 1},
-        {"name": "RUST", "damage": 75, "type": "CT", "description": "메모리 관리를 더 이상 하지 않아도 된다. 이제 공격에 집중해보자", "level": 2},
-        {"name": "팬파인애플애플팬", "damage": 95, "type": "CT", "description": "학부장을 호출한다", "level": 3}
+        {"name": "이산화", "damage": 50, "type": "CT", "description": "상대를 이산화해 분해해버린다", "level": 1, "priority": 0},
+        {"name": "RUST", "damage": 75, "type": "CT", "description": "메모리 관리를 더 이상 하지 않아도 된다. 이제 공격에 집중해보자", "level": 2, "priority": 0},
+        {"name": "팬파인애플애플팬", "damage": 95, "type": "CT", "description": "학부장을 호출한다", "level": 3, "priority": 0}
     ],
     "SYS": [
-        {"name": "스택오버플로우", "damage": 55, "type": "SYS", "description": "상대의 머리를 과부화시킨다", "level": 1},
-        {"name": "CTRL^C", "damage": 65, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2},
-        {"name": "DDOS", "damage": 75, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보낸다", "level": 3},
-        {"name": "핀토스", "damage": 95, "type": "SYS", "description": "핀토스를 끝낸 자. 어떤 과제가 와도 이겨낼 수 있다.", "level": 4},
+        {"name": "스택오버플로우", "damage": 55, "type": "SYS", "description": "상대의 머리를 과부화시킨다", "level": 1, "priority": 0},
+        {"name": "CTRL^C", "damage": 65, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2, "priority": 0},
+        {"name": "DDOS", "damage": 75, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보낸다", "level": 3, "priority": 0},
+        {"name": "핀토스", "damage": 95, "type": "SYS", "description": "핀토스를 끝낸 자. 어떤 과제가 와도 이겨낼 수 있다.", "level": 4, "priority": 0},
     ],
     "DS": [
-        {"name": "OOP", "damage": 45, "type": "DS", "description": "상대를 객체화시킨다. 상대 메서드의 취약점을 파악해보자", "level": 1},
-        {"name": "SQL 인젝션", "damage": 75, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 2}
+        {"name": "OOP", "damage": 45, "type": "DS", "description": "상대를 객체화시킨다. 상대 메서드의 취약점을 파악해보자", "level": 1, "priority": 0},
+        {"name": "SQL 인젝션", "damage": 75, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 2, "priority": 0}
     ],
     "AI": [
-        {"name": "오버피팅", "damage": 85, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 1},
-        {"name": "샘 올트먼", "damage": 100, "type": "AI", "description": "상대에게 특화된 GPT를 만든다", "level": 2}
+        {"name": "오버피팅", "damage": 85, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 1, "priority": 0},
+        {"name": "샘 올트먼", "damage": 100, "type": "AI", "description": "상대에게 특화된 GPT를 만든다", "level": 2, "priority": 0}
     ]
 }
+
 def Comp(skill, target):
     multiplier = 1
     for typ in target.type:
@@ -166,7 +167,7 @@ class Player:
         """플레이어의 주력 스킬 타입 반환"""
         if self.current_semester == "새터":
             return "*"
-        else:   
+        else:
             newdict = {k: v for k, v in self.learned_skills.items() if k != "*"}
             max = 0
             maxkeys = []
