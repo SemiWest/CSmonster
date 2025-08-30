@@ -64,8 +64,8 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
     else:
         playerskill_dict = {
             "type": playerskill["type"],
-            "effect_type": "Sdamage", 
-            "skW": playerskill["damage"]
+            "effect_type": playerskill["effect_type"], 
+            "skW": playerskill["skW"]
         }
     if monsterskill is None:
         monsterskill_dict = None
@@ -106,13 +106,29 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
         else:
             return False, 0, False
 
-    # damage 스킬 처리
+    # damage 스킬 처리: 한방컷 줄이기. 
     if skill["effect_type"] == "Pdamage" or skill["effect_type"] == "Sdamage":
         damage, Mul = Damage(target, user, skill)
+
+        hp = max(1, getattr(target, "HP", 1))
+        low = (2 * hp) // 5   # 전체 HP의 2/5
+        cap = (2 * hp) // 3   # 전체 HP의 2/3
+
+        # 기준: 원래 데미지가 1/2 HP 초과인 경우만 보정
+        if damage > hp // 2:
+            high = min(damage, cap)   # 원 데미지가 cap 넘으면 cap까지만
+            if high < low:
+                high = low
+            damage = random.randint(low, high)
+
+        # 치트모드 무시 (몬스터 공격일 때만 적용)
         if attackerType != "monster" or not target.cheatmode:
             target.nowhp = max(0, int(target.nowhp - damage))
-        if damage > 10: Damage_strong()
-        elif damage > 0: Damage_weak()
+
+        if damage > 10:
+            Damage_strong()
+        elif damage > 0:
+            Damage_weak()
         return False, damage, Mul
 
     # halve_hp 스킬 처리
@@ -132,7 +148,7 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
         user.nowhp = min(user.HP, user.nowhp + heal_amount)
         return False, 0, False
 
-    # buff 스킬 처리
+    # buff 스킬 처리 
     if skill["effect_type"] == "buff":
         if isinstance(skill["skW"], tuple):
             for B in skill["skW"]:
@@ -400,7 +416,7 @@ def select_player_skill(screen):
                 draw_text(screen, f"{type_dict[skill['type']]}", sX+1212, infoY+20, typecolor_dict[skill['type']], align='right')
                 
                 draw_text(screen, "위력", sX+760, infoY+60, WHITE)
-                draw_text(screen,f"{skill['damage']}", sX+1212, infoY+60, WHITE, align='right')
+                draw_text(screen,f"{skill['skW']}", sX+1212, infoY+60, WHITE, align='right')
                 draw_wrapped_text(
                     screen,
                     skill['description'],
@@ -503,7 +519,7 @@ def skill_message(screen, AttackerType, player, enemyCSmon, Pskill, Mskill, dama
             "name": Pskill["name"],
             "type": Pskill["type"],
             "effect_type": "Sdamage", 
-            "skW": Pskill["damage"]
+            "skW": Pskill["skW"]
         }
     if Mskill is None:
         monsterskill_dict = None
