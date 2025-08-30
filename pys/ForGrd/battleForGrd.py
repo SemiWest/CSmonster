@@ -496,6 +496,7 @@ def skill_message(screen, AttackerType, player, enemyCSmon, Pskill, Mskill, dama
         playerskill_dict = None
     else:
         playerskill_dict = {
+            "name": Pskill["name"],
             "type": Pskill["type"],
             "effect_type": "Sdamage", 
             "skW": Pskill["damage"]
@@ -504,6 +505,7 @@ def skill_message(screen, AttackerType, player, enemyCSmon, Pskill, Mskill, dama
         monsterskill_dict = None
     else:
         monsterskill_dict = {
+            "name": Mskill.name,
             "type": Mskill.skill_type, 
             "effect_type": Mskill.effect_type, 
             "skW": Mskill.skW
