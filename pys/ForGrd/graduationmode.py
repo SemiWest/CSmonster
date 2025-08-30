@@ -378,9 +378,11 @@ def get_text_input(screen, prompt):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return "플레이어"
+                return "플레이어"  # Or another default value
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN and input_text.strip():
+                if event.key == pygame.K_ESCAPE:  # If the escape key is pressed
+                    return None  # Return None to signal going back
+                elif event.key == pygame.K_RETURN and input_text.strip():
                     return input_text.strip()
                 elif event.key == pygame.K_BACKSPACE:
                     input_text = input_text[:-1]
@@ -411,7 +413,7 @@ def get_text_input(screen, prompt):
         if len(input_text) == 0:
             draw_text(screen, "이름을 입력해주세요 (최대 10자)", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, GRAY, 32, align='center')
         else:
-            draw_text(screen, "Enter로 확인", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, GRAY, 32, align='center')
+            draw_text(screen, "Enter로 확인, ESC로 뒤로가기", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, GRAY, 32, align='center')
         
         pygame.display.flip()
         pygame.time.wait(50)
@@ -428,6 +430,9 @@ def game_start(screen, Me_name="넙죽이"):
     
     # 이름 입력
     newname = get_text_input(screen, "이름을 입력하세요:")
+    
+    if newname is None:
+        return
 
     # cheatmode 여부: cheat 입력
     if "cheat" in newname.lower():
@@ -505,17 +510,39 @@ def game_start(screen, Me_name="넙죽이"):
         # 학기 결과 화면
         semester_result_screen(player, screen)
         
-        if not game_running:
-            break
-        
-        # 다음 학기로 진행
+         # 다음 학기로 진행 (수정된 로직)
         print(f"Debug: 현재 진행도 {player.semester_progress}/{len(player.semester_order)}")
+        
+        # 남은 몬스터 수가 0인 경우
+        if len(player.canBeMetMonsters) == 0:
+            if player.current_semester in ["4-1", "4-여름방학", "4-2"]:
+                print("Debug: 모든 학점 취득 완료. 정상 졸업.")
+                break # 게임 루프 종료
+            else:
+                print("Debug: 모든 학점 취득 완료. 조기 졸업!")
+                player.ending_type = "조기"
+                break # 게임 루프 종료
+        
+        # 학기 진행
         if not player.advance_semester():
-            # 모든 학기 완료
-            print("Debug: 모든 학기 완료!")
-            break
-        else:
-            print(f"Debug: 다음 학기로 진행 - {player.current_semester}")
+            # 모든 학기(4-2) 완료 후에도 몬스터가 남았을 때
+            if len(player.canBeMetMonsters) > 0:
+                print("Debug: 연차초과! 추가 학기 시작.")
+                player.ending_type = "연차초과"
+                # 추가 학기 로직을 여기에 구현
+                # 예: 5-1, 5-2, 6-1, 6-2 학기를 직접 추가
+                player.semester_order = player.semester_order + ["5-1", "5-2", "6-1", "6-2"]
+                player.current_semester = player.semester_order[-4] # 5-1 학기로 설정
+                continue
+            else:
+                print("Debug: 모든 학기 완료!")
+                break
+        
+        # 6-2 학기까지 왔는데도 몬스터가 남았을 경우 제적
+        if player.current_semester == "졸업" and len(player.canBeMetMonsters) > 0:
+            print("Debug: 모든 추가 학기 실패. 제적!")
+            player.warning_count = 3 # 제적 조건 충족
+            break # 게임 루프 종료
     
     # 음악 정지
     stop_music()
