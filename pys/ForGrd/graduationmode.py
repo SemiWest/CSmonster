@@ -426,7 +426,20 @@ def get_text_input(screen, prompt):
         pygame.display.flip()
         pygame.time.wait(50)
 
-# 기존의 game_start 함수를 아래 코드로 교체하세요.
+def _remove_cleared_entry(player, monster_name):
+    # 같은 과목이 중복으로 들어간 경우까지 안전하게 모두 제거
+    while monster_name in player.clearedMonsters:
+        idx = player.clearedMonsters.index(monster_name)
+        player.clearedMonsters.pop(idx)
+        if idx < len(player.clearedSemesters):
+            player.clearedSemesters.pop(idx)
+        if idx < len(player.gpas):
+            player.gpas.pop(idx)
+
+def _add_cleared_entry(player, monster_name, semester, gpa):
+    player.clearedMonsters.append(monster_name)
+    player.clearedSemesters.append(semester)
+    player.gpas.append(gpa)
 
 def game_start(screen, Me_name="넙죽이"):
     """새로운 졸업모드 메인 게임 로직"""
@@ -458,6 +471,8 @@ def game_start(screen, Me_name="넙죽이"):
         player.pnr_used = False
         semester_intro_screen(player, screen)
         player.thisSemesterGpas = []
+        
+        need_skill_change = False  # 루프 시작 전에 초기화
 
         # 각 과목과 전투
         for i, monster_name in enumerate(player.thisSemesterMonsters):
@@ -481,46 +496,44 @@ def game_start(screen, Me_name="넙죽이"):
                 player.ending_type = "프밍기 패배"
                 game_running = False
                 break
-            
+        
+
             if battle_result == 1:  # 승리
-                if monster_name in player.clearedMonsters:
-                    player.gpas.pop(player.clearedMonsters.index(monster_name))
-                    player.clearedSemesters.pop(player.clearedMonsters.index(monster_name))
-                    player.clearedMonsters.remove(monster_name)
-                player.clearedMonsters.append(monster_name)
-                player.gpas.append(gpa)
-                player.clearedSemesters.append(player.current_semester)
+                _remove_cleared_entry(player, monster_name)          # 먼저 기존 기록 깨끗이 제거
+                _add_cleared_entry(player, monster_name, player.current_semester, gpa)
                 player.thisSemesterGpas.append(gpa)
                 need_skill_change = player.complete_monster(monster_name)
-                addSeonSus(player, enemy_monster)  # 과목들 추가
-            elif battle_result == 2:    # P
-                if monster_name in player.clearedMonsters:
-                    player.gpas.pop(player.clearedMonsters.index(monster_name))
-                    player.clearedSemesters.pop(player.clearedMonsters.index(monster_name))
-                    player.clearedMonsters.remove(monster_name)
-                player.clearedMonsters.append(monster_name)
+                addSeonSus(player, enemy_monster)
+
+            elif battle_result == 2:  # P (패스)
+                _remove_cleared_entry(player, monster_name)          # 동일 패턴
+                _add_cleared_entry(player, monster_name, player.current_semester, gpa)
                 player.thisSemesterGpas.append(gpa)
-                player.clearedSemesters.append(player.current_semester)
                 need_skill_change = player.complete_monster(monster_name)
-                player.gpas.append(gpa)
-                addSeonSus(player, enemy_monster)  # 과목들 추가
-            elif battle_result == 3:      # 3: 드랍
+                addSeonSus(player, enemy_monster)
+
+            elif battle_result == 3:  # 드랍
                 player.canBeMetMonsters.append(monster_name)
                 player.thisSemesterGpas.append(gpa)
-            elif battle_result == 4:      # 이벤트
+
+            elif battle_result == 4:  # 이벤트
                 player.thisSemesterGpas.append(gpa)
                 if gpa[1] == "성공!":
                     need_skill_change = player.complete_monster(monster_name)
-            elif battle_result == 5:    # NR
+
+            elif battle_result == 5:  # NR
                 player.canBeMetMonsters.append(monster_name)
                 player.thisSemesterGpas.append(gpa)
-            elif battle_result == 0:                # 패배
+
+            elif battle_result == 0:  # 패배
                 player.thisSemesterGpas.append(gpa)
                 player.canBeMetMonsters.append(monster_name)
-                player.clearedMonsters.append(monster_name)
-                player.gpas.append(gpa)
                 player.update_fullreset()
+
             player.update()
+
+        if not game_running:
+            break
 
         if need_skill_change:
             show_skill_change(screen, player)

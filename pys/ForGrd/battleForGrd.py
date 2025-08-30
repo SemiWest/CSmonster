@@ -106,7 +106,7 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
         else:
             return False, 0, False
 
-    # damage 스킬 처리: 한방컷 줄이기. 
+    # damage 스킬 처리(너프됨)): 한방컷 줄이기. 
     if skill["effect_type"] == "Pdamage" or skill["effect_type"] == "Sdamage":
         damage, Mul = Damage(target, user, skill)
 
