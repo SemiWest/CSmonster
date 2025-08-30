@@ -122,6 +122,7 @@ class Player:
         self.thisSemesterMonsters = []
         self.thisSemesterGpas = []
         self.clearedMonsters = []
+        self.clearedSemesters = []
         self.gpas = []
         self.completed_semesters = []
         self.mylevelup = 0
@@ -283,9 +284,16 @@ class Player:
 
         if monster_name == "몰입캠프":
             self.level += 3
-            self.update()
-            self.nowhp = self.HP
+            self.update_fullreset()
             print("Debug: 몰입캠프 클리어! 레벨이 3 상승하고 체력이 완전히 회복되었습니다.")
+        if monster_name == "코옵":
+            self.update_fullreset()
+            self.titles.append("회사원")
+            print("Debug: 코옵 클리어! 체력이 완전히 회복되고 취업 루트가 해금되었습니다.")
+        if monster_name == "개별연구":
+            self.update_fullreset()
+            self.titles.append("대학원생")
+            print("Debug: 개별연구 클리어! 체력이 완전히 회복되고 대학원 진학 루트가 해금되었습니다.")
         
         # 경험치 획득
         self.mylevelup = self.gain_exp(monsters[monster_name].drop_exp)
@@ -378,13 +386,13 @@ class Player:
     def get_final_ending(self):
         """최종 엔딩 결정"""
         if "회사원" in self.titles:
-            return "취업 엔딩"
+            return "당신은 코옵에서의 경험을 살려 프로그래머로 취업하였습니다!"
         elif "대학원생" in self.titles:
-            return "대학원 엔딩" 
-        elif self.deans_count >= 3:
-            return "딘즈 엔딩"
+            if self.deans_count >= 3:
+                return "당신은 우수한 성적을 기반으로 대학원에 진학했고 훗날 교수로 임명되었습니다!"
+            return "당신은 개별연구로 쌓은 경험을 바탕으로 대학원에 진학하였습니다!"
         else:
-            return "일반 졸업 엔딩"
+            return "당신은 졸업 후 꿈을 향해 나아갔습니다!"
         
     def heal(self, amount: int, allow_revive: bool = False) -> int:
         """체력을 회복하고 실제 회복량을 반환한다.

@@ -11,7 +11,8 @@ def addSeonSus(player, monster):
 def display_Monster_Imge(screen, monster, x, y, size=1):
     img = pygame.image.load(monster.image)
     img = pygame.transform.scale_by(img, size)
-    screen.blit(img, (x, y))
+    height = img.get_height()
+    screen.blit(img, (x, y-height//2))
 
 def save_game_log_csv(filename, player, final_semester):
     """게임 결과를 CSV에 저장"""
@@ -115,7 +116,7 @@ def semester_intro_screen(player, screen):
                 color = typecolor_dict[monsters[option].type[0]] if i == selected else WHITE
                 draw_text(screen, option, SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*80, color, align='center', size=64)
                 if i == selected:
-                    display_Monster_Imge(screen, monsters[option], SCREEN_WIDTH//2 + len(option)*32+96, SCREEN_HEIGHT//2 - 110 + i*80, size=4)
+                    display_Monster_Imge(screen, monsters[option], SCREEN_WIDTH//2 + len(option)*32+96, SCREEN_HEIGHT//2 - 68 + i*80, size=4)
             pygame.display.flip()
             key = wait_for_key()
             if key == 'enter':
@@ -146,10 +147,10 @@ def semester_intro_screen(player, screen):
     for i, monster_name in enumerate(player.canBeMetMonsters):
         if monster_name in player.clearedMonsters:
             draw_text(screen, f"{monster_name} (재수강)  ", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*40, GRAY, size=32, align='center')
-            display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 + len(monster_name)*16+80, SCREEN_HEIGHT//2 - 105 + i*40, size=2)
+            display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 + len(monster_name)*16+80, SCREEN_HEIGHT//2 - 84 + i*40, size=2)
         else:
             draw_text(screen, f"{monster_name}  ", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*40, BLACK, size=32, align='center')
-            display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 + len(monster_name)*16+16, SCREEN_HEIGHT//2 - 105 + i*40, size=2)
+            display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 + len(monster_name)*16+16, SCREEN_HEIGHT//2 - 84 + i*40, size=2)
     if player.cheatmode :
         draw_text(screen, "현재 이미 클리어한 과목들", SCREEN_WIDTH//2 + 500, SCREEN_HEIGHT//2-200, BLACK, size=32, align='center')
         for i, monster_name in enumerate(player.clearedMonsters):
@@ -166,10 +167,10 @@ def semester_intro_screen(player, screen):
     for i, monster_name in enumerate(player.thisSemesterMonsters):
         if monster_name in player.clearedMonsters:
             draw_text(screen, f"{monster_name} (재수강)  ", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*80, GRAY, size=64, align='center')
-            display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 + len(monster_name)*32+160, SCREEN_HEIGHT//2 - 110 + i*80, size=4)
+            display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 + len(monster_name)*32+160, SCREEN_HEIGHT//2 - 68 + i*80, size=4)
         else:
             draw_text(screen, f"{monster_name}  ", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*80, BLACK, size=64, align='center')
-            display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 + len(monster_name)*32+32, SCREEN_HEIGHT//2 - 110 + i*80, size=4)
+            display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 + len(monster_name)*32+32, SCREEN_HEIGHT//2 - 68 + i*80, size=4)
     draw_text(screen, "아무 키나 눌러 시작...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, align='center')
     pygame.display.flip()
     wait_for_key()
@@ -184,7 +185,7 @@ def semester_result_screen(player, screen):
             draw_text(screen, f"{monsters[player.thisSemesterMonsters[0]].reward}", SCREEN_WIDTH//2, 200, BLUE, align='center')
         else:
             draw_text(screen, f"{monsters[player.thisSemesterMonsters[0]].name} 이벤트에 실패하였습니다...", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
-    
+        
     else: 
         # 학기 결과 제목
         draw_text(screen, f"성적표", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
@@ -251,7 +252,7 @@ def semester_result_screen(player, screen):
                 player.warning_count += 1
                 y_offset += 80
         elif sem_gpa_num is not None:
-            if sem_gpa_num > 4.3:
+            if sem_gpa_num >= 4.3:
                 draw_text(screen, "축하합니다! 이번 학기 딘즈를 받았습니다!", SCREEN_WIDTH//2, y_offset, GREEN, align='center')
                 player.deans_count += 1
                 y_offset += 40
@@ -266,44 +267,94 @@ def semester_result_screen(player, screen):
         if y_offset == y_offset_before:
             draw_text(screen, "없음", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
 
-        pygame.display.flip()
-        wait_for_key()
+    pygame.display.flip()
+    wait_for_key()
 
 def show_final_result(player, screen):
     """최종 결과 화면"""
-    screen.fill(WHITE)
-    
     # 졸업 여부 판정
     if player.gameover():
-        draw_text(screen, "게임 오버", SCREEN_WIDTH//2 - 64, 100, RED)
+        screen.fill(WHITE)
+        Lose()
+        draw_text(screen, "게임 오버", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, RED, size=64, align = 'center')
+        pygame.display.flip()
+        pygame.time.wait(2000)
         if player.warning_count >= 3:
-            draw_text(screen, "학사 경고 3회로 제적되었습니다.", SCREEN_WIDTH//2 - 176, 140, BLACK)
-        else:
-            draw_text(screen, "체력이 0이 되어 졸업에 실패했습니다.", SCREEN_WIDTH//2 - 208, 140, BLACK)
+            draw_text(screen, "학사 경고 3회로 제적되었습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
     else:
-        draw_text(screen, "졸업 축하합니다!", SCREEN_WIDTH//2 - 112, 100, GREEN)
+        screen.fill(BLACK)
+        pygame.display.flip()
+        pygame.time.wait(1000)
+        draw_text(screen, f"{player.name}은 졸업 조건을 모두 채웠습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, WHITE, size=64, align='center')
+        pygame.display.flip()
+        wait_for_key()
+        # 화면 전체 페이드 효과-검은색->흰색, 0.4초간 점점 빠르게
+        for flash_frame in range(160):
+            screen.fill((flash_frame**2//100, flash_frame**2//100, flash_frame**2//100))  # 흰색으로 페이드
+            pygame.display.flip()
+            pygame.time.wait(2)  # 0.01초 대기
+
+        play_music("../music/ending.wav")
+        screen.fill(WHITE)
+        draw_text(screen, f"{player.name}은/는 최종 학점 {player.calcGPA(2)}로 졸업했다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, BLACK, WHITE, 64, 'center')
+        pygame.display.flip()
+        wait_for_key()
+
+        # 엔딩 화면 = Graduation.jpg * 8배 사이즈
+        graduation_image = pygame.image.load("../img/Graduation.jpg")
+        graduation_image = pygame.transform.scale(graduation_image, (graduation_image.get_width() * 8, graduation_image.get_height() * 8))
+        screen.blit(graduation_image, (0, 0))
+        pygame.display.flip()
+        wait_for_key()
         
         # 엔딩 타입 표시
         ending = player.get_final_ending()
         draw_text(screen, f"엔딩: {ending}", SCREEN_WIDTH//2 - len(ending)*16 - 32, 140, BLUE)
+    pygame.display.flip()
+    wait_for_key()
     
     # 최종 통계
-    y_offset = 200
-    draw_text(screen, "=== 최종 통계 ===", SCREEN_WIDTH//2 - 112, y_offset, BLACK)
+    y_offset = 100
+    screen.fill(WHITE)
+    draw_text(screen, "=== 졸업 성적표 ===", SCREEN_WIDTH//2, y_offset, BLACK, size=48, align='center')
+    y_offset += 60
+    pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
+    y_offset += 12
+    draw_text(screen,       f"과목명",                            SCREEN_WIDTH//2-450, y_offset)
+    draw_text(screen,       f"성적",                              SCREEN_WIDTH//2-50 , y_offset, align='right')
+    draw_text(screen,       f"과목명",                            SCREEN_WIDTH//2+50 , y_offset)
+    draw_text(screen,       f"성적",                              SCREEN_WIDTH//2+450, y_offset, align='right')
+    current = None
+    oneSemMonsters= 0
+    for i, Semestername in enumerate(player.clearedSemesters):
+        if Semestername != current:
+            current = Semestername
+            oneSemMonsters = 0
+            y_offset += 40
+            pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
+            y_offset += 8
+            draw_text(screen, f"{current}", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
+            y_offset += 40
+        draw_text(screen,   f"{player.clearedMonsters[i]}", SCREEN_WIDTH//2-450+(500*oneSemMonsters%2), y_offset, BLACK)
+        draw_text(screen,   f"{player.gpas[i][1]}",         SCREEN_WIDTH//2-50 +(500*oneSemMonsters%2), y_offset, gpaColor(player.gpas[i][1]), align='right')
+        oneSemMonsters += 1
+        if oneSemMonsters%2 == 0:
+            y_offset += 40
     
-    draw_text(screen, f"최종 레벨: {player.level}", SCREEN_WIDTH//2 - 96, y_offset + 40, BLACK)
-    draw_text(screen, f"완료 학기: {len(player.completed_semesters)}", SCREEN_WIDTH//2 - 96, y_offset + 80, BLACK)
-    draw_text(screen, f"처치한 과목: {len(player.clearedMonsters)}", SCREEN_WIDTH//2 - 96, y_offset + 120, BLACK)
-    draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2 - 96, y_offset + 160, BLACK)
+    pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
+
+    cum_gpa = player.calcGPA(2)
+    draw_text(screen,       f"최종 GPA", SCREEN_WIDTH//2-200, y_offset + 40)
+    draw_text(screen,       f"{cum_gpa}", SCREEN_WIDTH//2+200, y_offset + 40, gpaColor(cum_gpa), align='right')
     
-    if player.pnr_used:
-        draw_text(screen, "PNR 사용함", SCREEN_WIDTH//2 - 80, y_offset + 200, BLUE)
-    
-    # 획득 칭호
-    if player.titles:
-        draw_text(screen, "획득 칭호:", SCREEN_WIDTH//2 - 80, y_offset + 240, BLACK)
-        for i, title in enumerate(player.titles[:3]):  # 최대 3개만 표시
-            draw_text(screen, f"- {title}", SCREEN_WIDTH//2 - 64, y_offset + 280 + i*30, BLUE)
+    pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset + 80), (SCREEN_WIDTH//2+500, y_offset + 80), 2)
+    y_offset += 100
+
+    draw_text(screen, "비고", SCREEN_WIDTH//2, y_offset, BLACK, size=32, align='center')
+    y_offset += 40
+    draw_text(screen, f"이름: {player.name}", SCREEN_WIDTH//2-200, y_offset, BLACK)
+    draw_text(screen, f"최종 레벨: {player.level}", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
+    draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2+200, y_offset, BLACK, align='right')
     
     # 결과 저장
     success, message = save_game_log_csv("graduation_results.csv", player, player.current_semester)
@@ -409,16 +460,19 @@ def game_start(screen, Me_name="넙죽이"):
             
             if battle_result == 1:  # 승리
                 if monster_name in player.clearedMonsters:
-                    player.gpas[player.clearedMonsters.index(monster_name)] = gpa
-                else:
-                    player.clearedMonsters.append(monster_name)
-                    player.gpas.append(gpa)
+                    player.gpas.pop(player.clearedMonsters.index(monster_name))
+                    player.clearedSemesters.pop(player.clearedMonsters.index(monster_name))
+                    player.clearedMonsters.remove(monster_name)
+                player.clearedMonsters.append(monster_name)
+                player.gpas.append(gpa)
+                player.clearedSemesters.append(player.current_semester)
                 player.thisSemesterGpas.append(gpa)
                 player.complete_monster(monster_name)
                 addSeonSus(player, enemy_monster)  # 과목들 추가
             elif battle_result == 2:    # P
                 player.clearedMonsters.append(monster_name)
                 player.thisSemesterGpas.append(gpa)
+                player.clearedSemesters.append(player.current_semester)
                 player.complete_monster(monster_name)
                 player.gpas.append(gpa)
                 addSeonSus(player, enemy_monster)  # 과목들 추가

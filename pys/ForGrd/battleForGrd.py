@@ -768,6 +768,7 @@ def battle(getplayer, getenemy, screen=None):
     enemy = getenemy
     battle_end = False
     startBattleHp = player.nowhp
+    player.pnr_used = False  # 전투 시작 시 PNR 사용 여부 초기화
     
     # 적이 Monster 객체인 경우
     if isinstance(enemy, Monster):
@@ -819,6 +820,7 @@ def battle(getplayer, getenemy, screen=None):
                 wait_for_key()
                 return "드랍"
             elif action == 3 and player.can_use_pnr():  # PNR 사용
+                player.pnr_used = True
                 success = "P" if random.random() < 0.80 else "NR"
                 show_pnr_result(screen, success)
                 battle_end = True
