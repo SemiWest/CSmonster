@@ -11,6 +11,14 @@ enemyCSmon = None
 battle_end = False
 startBattleHp = 0
 
+# 아이템 보상 확률 차등 설정
+ITEM_DROP_RATES = {
+    "레전더리": 0.10,  # 10%
+    "에픽": 0.20,     # 20%
+    "레어": 0.30,     # 30%
+    "노말": 0.40,     # 40%
+}
+
 # 기존 좌표 및 이미지 로드는 그대로 유지
 sX, sY = 32, 32
 stX = sX+20
@@ -676,11 +684,17 @@ def item_phase(screen):
         #     pct  = int(getattr(enemyCSmon, "HP", enemyCurrentHP) * selected_item.varied) if selected_item.varied else 0
         #     damage_amount = max(base, pct)
         #     enemyCSmon.take_damage(damage_amount)
+        if selected_item.name == "렉쳐노트":
+            new_hp = enemyCSmon.nowhp * 0.5
+            damage_amount = enemyCSmon.nowhp - new_hp
+            enemyCSmon.nowhp = int(new_hp)
+        else:
+            # 기존 코드 유지 (최대 체력 기준)
+            base = selected_item.fixed if selected_item.fixed else 0
+            pct  = int(getattr(enemyCSmon, "HP", enemyCurrentHP) * selected_item.varied) if selected_item.varied else 0
+            damage_amount = max(base, pct)
+            enemyCSmon.take_damage(damage_amount)
 
-        base = selected_item.fixed if selected_item.fixed else 0
-        pct  = int(getattr(enemyCSmon, "HP", enemyCurrentHP) * selected_item.varied) if selected_item.varied else 0
-        damage_amount = max(base, pct)
-        enemyCSmon.take_damage(damage_amount)
 
         enemy_hp_after = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
         animate_health_bar(screen, esY+104, esX+135, enemyCurrentHP, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
@@ -718,6 +732,39 @@ def item_phase(screen):
     
     # 적 공격
     enemy_attack_phase(screen)
+    
+def get_random_reward_items(num_items):
+    """
+    등급별 확률에 따라 보상 아이템을 선택하는 함수
+    """
+    reward_pool = []
+    # 모든 아이템을 등급별로 분류
+    items_by_grade = {
+        "레전더리": [item for item in item_list if item.grade == "레전더리"],
+        "에픽": [item for item in item_list if item.grade == "에픽"],
+        "레어": [item for item in item_list if item.grade == "레어"],
+        "노말": [item for item in item_list if item.grade == "노말"],
+    }
+    
+    # 설정된 확률에 따라 아이템을 num_items만큼 뽑음
+    for _ in range(num_items):
+        rand_num = random.random()
+        cumulative_prob = 0
+        selected_grade = "노말"  # Default to Normal if something goes wrong
+        
+        # 누적 확률에 따라 아이템 등급 선택
+        for grade, prob in ITEM_DROP_RATES.items():
+            cumulative_prob += prob
+            if rand_num < cumulative_prob:
+                selected_grade = grade
+                break
+            
+        # 선택된 등급의 아이템 목록에서 무작위로 하나 선택
+        if items_by_grade[selected_grade]:
+            selected_item = random.choice(items_by_grade[selected_grade])
+            reward_pool.append(selected_item)
+            
+    return reward_pool
 
 def select_reward_item(screen, items):
     """승리 후 아이템 선택 UI"""
@@ -872,7 +919,8 @@ def battle(getplayer, getenemy, screen=None):
         wait_for_key()
 
         # 아이템 3개 랜덤 추첨
-        reward_items = random.sample([i for i in item_list if i.name != "빈 슬롯"], 3)
+        # reward_items = random.sample([i for i in item_list if i.name != "빈 슬롯"], 3)
+        reward_items = get_random_reward_items(3)
         selected_item = select_reward_item(screen, reward_items)
         
         # Esc 누르면 아이템 획득 안함
