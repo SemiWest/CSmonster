@@ -498,12 +498,24 @@ cs311 = Monster(
     description="전산기조직설명"
 )
 cs311.skills = {
-    '프로그래밍 언어': Monster.Skill(
-        name='프로그래밍 언어', 
+    '파이프라인': Monster.Skill(
+        name='파이프라인', 
+        effect_type="buff",
+        type="CT",
+        skW=20, 
+        description="CPU 파이프라인을 최적화해 방어력과 속도를 상승시킨다"),
+    'MultiThread': Monster.Skill(
+        name='MultiThread', 
         effect_type="Pdamage",
         type="CT",
         skW=70, 
-        description="프로그래밍 언어를 사용해 상대에게 강력한 공격을 한다."),
+        description="한 턴에 여러 차례의 연속 공격을 한다."), # TODO: 연속 공격 구현 가능한지 확인
+    'XOR': Monster.Skill(
+        name='XOR',
+        effect_type="reflect",
+        type="CT",
+        skW=0,
+        description="XOR 게이트로 상대 공격을 반전시켜 무효화시킨다."),
 }
 
 # PL	전산이론	메타몽
@@ -515,13 +527,26 @@ cs320 = Monster(
     description="프로그래밍 언어설명"
 )
 cs320.skills = {
-    '프로그래밍 언어': Monster.Skill(
-        name='프로그래밍 언어', 
+    'PPAP': Monster.Skill(
+        name='PPAP', 
         effect_type="Pdamage",
         type="CT",
-        skW=70, 
-        description="프로그래밍 언어를 사용해 상대에게 강력한 공격을 한다."),
+        skW=100,
+        description="함수 안에 함수를 넣은 밀도있는 공격을 한다"),
+    'Garbage Collection': Monster.Skill(
+        name='Garbage Collection',
+        effect_type="heal",
+        type="CT",
+        skW=20,
+        description="필요 없는 메모리를 정리하여 체력을 회복한다."),
+    'Type Error': Monster.Skill(
+        name='Type Error', 
+        effect_type="disable",
+        type="CT",
+        skW=0, 
+        description="타입 에러를 일으켜 상대의 행동을 취소한다."), #TODO: 구현 가능한지 확인해야함
 }
+
 
 # 네떡	시 넽	잠만보
 cs341 = Monster(
@@ -532,14 +557,13 @@ cs341 = Monster(
     description="네트워크설명"
 )
 cs341.skills = {
-    '네트워크 공격': Monster.Skill(
-        name='네트워크 공격', 
-        effect_type="Pdamage",
-        type="SYS",
-        skW=70,
-        description="네트워크를 통해 상대에게 강력한 공격을 한다."),
+    'DDoS': Monster.Skill(
+        name='DDOS', 
+        effect_type="Pdamage", 
+        type="SYS", 
+        skW=70, 
+        description="다수의 공격을 여러 차례 퍼붓는다."),
 }
-
 # 디비개	데이터 과학	리자몽
 cs360 = Monster(
     Num = 360, name="데이터베이스개론", credit = 3,
@@ -549,13 +573,29 @@ cs360 = Monster(
     description="데이터베이스개론설명"
 )
 cs360.skills = {
-    '데이터베이스 공격': Monster.Skill(
-        name='데이터베이스 공격', 
+    'SQL Injection': Monster.Skill(
+        name='SQL Injection',
         effect_type="Pdamage",
         type="DS",
-        skW=70, 
-        description="데이터베이스를 통해 상대에게 강력한 공격을 한다."),
+        skW=85,
+        description="데이터베이스에 강력한 공격을 가한다."
+    ),
+    '트랜잭션 복구': Monster.Skill(
+        name='트랜잭션 복구',
+        effect_type="heal",
+        type="DS",
+        skW=50,
+        description="데이터 손상을 복구하여 체력을 회복한다."
+    ),
+    '인덱스 재구성': Monster.Skill(
+        name='인덱스 재구성',
+        effect_type="buff",
+        type="DS",
+        skW=20,
+        description="시스템 최적화를 통해 능력치를 증가시킨다."
+    ),
 }
+
 
 # 문해기	PS	마자용
 cs202 = Monster(
@@ -583,12 +623,19 @@ cs371 = Monster(
     description="딥러닝개론설명"
 )
 cs371.skills = {
-    '딥러닝 공격': Monster.Skill(
-        name='딥러닝 공격', 
+    'Backpropagation': Monster.Skill(
+        name='Backpropagation', 
         effect_type="Pdamage",
         type="AI",
         skW=70,
-        description="딥러닝 기법을 사용해 상대에게 강력한 공격을 한다."),
+        description="지속적으로 학습하며 강력한 공격을 가한다."),
+    'Overfitting': Monster.Skill(
+        name='Backpropagation', 
+        effect_type="Pdamage",
+        type="AI",
+        skW=100,
+        description="한 차례 강력한 공격을 가하지만 이후 가하는 공격이 크게 약해진다."), # TODO: 추가적인 구현 필요
+    
 }
 
 # 기계학습	인공지능	라티오스
@@ -600,6 +647,12 @@ cs376 = Monster(
     description="기계학습설명"
 )
 cs376.skills = {
+    '기계 공격': Monster.Skill(
+        name='기계 공격', 
+        effect_type="Pdamage",
+        type="AI",
+        skW=70,
+        description="기계학습 기법을 사용해 상대에게 강력한 공격을 한다."),
     '기계 공격': Monster.Skill(
         name='기계 공격', 
         effect_type="Pdamage",
