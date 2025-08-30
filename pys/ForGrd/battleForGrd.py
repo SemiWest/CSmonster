@@ -43,6 +43,101 @@ ATK = pygame.image.load("../img/ATK.png")
 SPATK = pygame.image.load("../img/SP.ATK.png")
 ETC = pygame.image.load("../img/ETC.png")
 
+def comp(atskilltype, tgtype):
+    """
+    공격 타입(atskilltype)과 방어 타입(tgtypes: str 또는 list)을 받아 상성 배율을 반환.
+    - 방어 타입이 여러 개인 경우 배율을 곱셈으로 적용.
+    - 존재하지 않는 키가 오면 기본 1.0 처리.
+    """
+    return TYPE_EFFECTIVENESS[atskilltype][tgtype]
+
+def Damage(target, attacker, skilldict):
+    basedmg = ((2*attacker.level + 10)/250) * attacker.CATK / max(1, target.CDEF)  # ✅ max(1, ...)
+    multiplier = comp(skilldict["type"], target.type[0])
+    Jasok = 1.5 if attacker.type[0] == skilldict["type"] else 1.0
+    return int(multiplier * (basedmg*skilldict["skW"] + 2) * Jasok * random.uniform(0.85, 1.00)), multiplier
+
+def use_skill(attackerType, player, monster, playerskill, monsterskill):
+    playerskill_dict = {
+        "type": playerskill["type"],
+        "effect_type": "Sdamage", 
+        "skW": playerskill["damage"]
+    }
+    monsterskill_dict = {
+        "type": monsterskill.skill_type, 
+        "effect_type": monsterskill.effect_type, 
+        "skW": monsterskill.skW
+    }
+
+    """
+    self: 스킬을 쓰는 몬스터(공격자)
+    player: 대상(상대)
+    """
+    if attackerType == "monster":
+        user = monster
+        target = player
+        skill = monsterskill_dict
+        counter_skill = playerskill_dict
+    elif attackerType == "player":
+        user = player
+        target = monster
+        skill = playerskill_dict
+        counter_skill = monsterskill_dict
+
+    # reflect 스킬 처리
+    if skill["effect_type"] == "reflect":
+        if counter_skill is not None:
+            if counter_skill["effect_type"] == "Pdamage" or counter_skill["effect_type"] == "Sdamage":
+                damage, Mul= Damage(user, target, counter_skill)
+                damage = damage * skill["skW"]
+                target.nowhp = max(0, int(target.nowhp - damage))
+                if damage > target.HP//2: Damage_strong()
+                elif damage > 0: Damage_weak()
+                return True, damage, Mul
+            else: pass
+        else:
+            return False, 0, False
+
+    # damage 스킬 처리
+    if skill["effect_type"] == "Pdamage" or skill["effect_type"] == "Sdamage":
+        damage, Mul = Damage(target, user, skill)
+        target.nowhp = max(0, int(target.nowhp - damage))
+        if damage > 10: Damage_strong()
+        elif damage > 0: Damage_weak()
+        return False, damage, Mul
+
+    # halve_hp 스킬 처리
+    if skill["effect_type"] == "halve_hp":
+        if skill.is_hit(target, user) == False:
+            return False, False, False
+        current_hp = target.nowhp
+        target.nowhp = max(0, target.nowhp // 2)
+        if target.nowhp > 10: Damage_strong()
+        elif target.nowhp > 0: Damage_weak()
+        if target.hpShield and target.nowhp<=target.HP//2:
+            target.nowhp = target.HP//2
+            target.hpShield = False
+        damage = current_hp - target.nowhp
+        return False, damage, False
+
+    # heal 스킬 처리
+    if skill["effect_type"] == "heal":
+        heal_amount = int(skill["skW"] * user.HP)
+        Heal()
+        user.nowhp = min(user.HP, user.nowhp + heal_amount)
+        return False, 0, False
+
+    # buff 스킬 처리
+    if skill["effect_type"] == "buff":
+        if isinstance(skill["skW"], tuple):
+            for B in skill["skW"]:
+                user.Rank[B % 3] = max(-6,min(6, user.Rank[B % 3] + B//3 + 1))
+        else:
+            user.Rank[skill["skW"] % 3] = max(-6,min(6, user.Rank[skill["skW"] % 3] + skill["skW"]//3 + 1))
+        return False, 0, False
+
+    return False, 0, False
+
 # 기존 함수들 그대로 유지
 def display_type(screen, y, x, type):
     """타입 표시 (pygame)"""
@@ -151,8 +246,7 @@ def display_status(screen, detail=False):
     draw_text(screen, f"lv.{player.level}", psX+384, psY+52, WHITE)
 
     # 플레이어 타입 표시
-    player_type = player.playertype()
-    display_type(screen, psY, psX+470, player_type)
+    display_type(screen, psY, psX+470, player.type[0])
     
     # 플레이어 체력바
     player_hp = getattr(player, 'nowhp', getattr(player, 'HP', 100))
@@ -272,7 +366,7 @@ def select_player_skill(screen):
         for i, skill in enumerate(available_skills):
             x_pos = stX + (300 * (i % 2))
             y_pos = stY + int(i / 2) * 61 - 5
-            effectiveness = Comp(skill, enemyCSmon)
+            effectiveness = comp(skill["type"], enemyCSmon.type[0])
             
             # 스킬 표시
             prefix = "> " if i == current_index else "  "
@@ -395,8 +489,130 @@ def skill_phase(screen):
         if player.is_alive() and not stop:
             player_skill_phase(screen, selected_skill, enemy_skill)
 
+def skill_message(screen, AttackerType, player, enemyCSmon, Pskill, Mskill, damage = None, Mul=1):
+    playerskill_dict = {
+        "name": Pskill["name"],
+        "type": Pskill["type"],
+        "effect_type": "Sdamage", 
+        "skW": Pskill["damage"]
+    }
+    monsterskill_dict = {
+        "name": Mskill.name,
+        "type": Mskill.skill_type, 
+        "effect_type": Mskill.effect_type, 
+        "skW": Mskill.skW
+    }
+
+    """스킬 메시지를 출력하기 전에 상태를 먼저 출력 (pygame)"""
+    if damage != None:
+        damage = int(damage)
+    # 스킬 메시지 출력
+    if AttackerType == "player":
+        user = player
+        target = enemyCSmon
+        skill = playerskill_dict
+        counter_skill = monsterskill_dict
+    else:
+        user = enemyCSmon
+        target = player
+        skill = monsterskill_dict
+        counter_skill = playerskill_dict
+    
+    display_status(screen, True)  # 상태 출력
+    
+    if skill["effect_type"] == "reflect":
+        if damage == -121:
+            draw_text(screen, "  하지만 실패했다!", stX, stY, WHITE)
+        elif counter_skill is not None:
+            if counter_skill["effect_type"] == "Pdamage" or counter_skill["effect_type"] == "Sdamage":
+                if skill["skW"] == 0:
+                    draw_text(screen, f"  {user.name}이/가 {target.name}의 {counter_skill['name']}을/를 방어했다.", stX, stY, WHITE)
+                else:
+                    draw_text(screen, f"  {user.name}이/가 {target.name}의 {counter_skill['name']}을/를 반사!", stX, stY, WHITE)
+                    pygame.display.flip()
+                    wait_for_key()
+                    display_status(screen, True)  # 상태 출력 
+                    if damage  == False:
+                        if Mul == 0:
+                            draw_text(screen, "  효과가 없는 것 같다...", stX, stY, WHITE)
+                        else:
+                            draw_text(screen, f"  그러나 {user.name}의 공격은 빗나갔다!", stX, stY, WHITE)
+                    else:
+                        if Mul >= 1.7:
+                            draw_text(screen, "  효과가 굉장했다!", stX, stY, WHITE)
+                            pygame.display.flip()
+                            wait_for_key()
+                            display_status(screen, True)  # 상태 출력
+                        elif Mul < 0.8:
+                            draw_text(screen, "  효과가 별로인 듯 하다...", stX, stY, WHITE)
+                            pygame.display.flip()
+                            wait_for_key()
+                            display_status(screen, True)  # 상태 출력
+                        draw_text(screen, f"  {target.name}이/가 {damage}의 데미지를 입었다.", stX, stY, WHITE)
+            else:
+                draw_text(screen, "  그러나 아무 일도 일어나지 않았다!", stX, stY, WHITE)
+        else:
+            draw_text(screen, "  그러나 아무 일도 일어나지 않았다!", stX, stY, WHITE)
+
+    elif skill["effect_type"] == "Pdamage" or skill["effect_type"] == "Sdamage":
+        if damage  == False:
+            if Mul == 0:
+                draw_text(screen, "  효과가 없는 것 같다...", stX, stY, WHITE)
+            else:
+                draw_text(screen, f"  그러나 {user.name}의 공격은 빗나갔다!", stX, stY, WHITE)
+        else:
+            if Mul >= 1.7:
+                draw_text(screen, "  효과가 굉장했다!", stX, stY, WHITE)
+                pygame.display.flip()
+                wait_for_key()
+            elif Mul <= 0.8:
+                draw_text(screen, "  효과가 별로인 듯 하다...", stX, stY, WHITE)
+                pygame.display.flip()
+                wait_for_key()
+            display_status(screen, True)  # 상태 출력
+            draw_text(screen, f"  {target.name}이/가 {damage}의 데미지를 입었다.", stX, stY, WHITE)
+
+    elif skill["effect_type"] == "halve_hp":
+        if damage == False:
+            draw_text(screen, f"  그러나 {user.name}의 공격은 빗나갔다!", stX, stY, WHITE)
+        else:
+            draw_text(screen, f"  {target.name}의 체력이 반으로 줄었다!", stX, stY, WHITE)
+            pygame.display.flip()
+            wait_for_key()
+            display_status(screen, True)  # 상태 출력
+            draw_text(screen, f"  {target.name}이/가 {damage}의 데미지를 입었다!", stX, stY, WHITE)
+    
+    elif skill["effect_type"] == "heal":
+        heal_amount = int(skill["skW"] * user.HP)
+        draw_text(screen, f"  {user.name}의 체력이 {heal_amount} 회복되었다!", stX, stY, WHITE)
+
+    elif skill["effect_type"] == "buff":
+        if isinstance(skill["skW"], tuple):
+            for B in skill["skW"]:
+                if B % 8 == 0:
+                    draw_text(screen, f"  {user.name}의 공격이 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"), stX, stY, WHITE)
+                elif B % 8 == 1:
+                    draw_text(screen, f"  {user.name}의 방어가 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"), stX, stY, WHITE)
+                elif B % 8 == 2:
+                    draw_text(screen, f"  {user.name}의 스피드가 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"), stX, stY, WHITE)
+                if B != skill["skW"][-1]:
+                    pygame.display.flip()
+                    wait_for_key()
+                    display_status(screen, True)  # 상태 출력
+        else:
+            if skill['skW'] % 8 == 0:
+                draw_text(screen, f"  {user.name}의 공격이 " + (f"{skill['skW']//8 + 1}랭크 증가했다!" if skill['skW']//8 >= 0 else f"{-(skill['skW']//8 + 1)}랭크 감소했다!"), stX, stY, WHITE)
+            elif skill['skW'] % 8 == 1:
+                draw_text(screen, f"  {user.name}의 방어가 " + (f"{skill['skW']//8 + 1}랭크 증가했다!" if skill['skW']//8 >= 0 else f"{-(skill['skW']//8 + 1)}랭크 감소했다!"), stX, stY, WHITE)
+            elif skill['skW'] % 8 == 2:
+                draw_text(screen, f"  {user.name}의 스피드가 " + (f"{skill['skW']//8 + 1}랭크 증가했다!" if skill['skW']//8 >= 0 else f"{-(skill['skW']//8 + 1)}랭크 감소했다!"), stX, stY, WHITE)
+    pygame.display.flip()
+    wait_for_key()  # 메시지를 잠시 보여줌
+
 def player_skill_phase(screen, selected_skill, enemy_skill):
+    playerCurrentHP = getattr(player, 'nowhp', getattr(player, 'HP', 100))
     enemyCurrentHP = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
+    
     # 스킬 사용 메시지
     display_status(screen, True)
     draw_text(screen, f"  {player.name}의 {selected_skill['name']}!", stX, stY, WHITE)
@@ -404,183 +620,32 @@ def player_skill_phase(screen, selected_skill, enemy_skill):
     wait_for_key()
 
     # 스킬 효과 적용
-    result, message = player.use_skill(selected_skill["name"], enemyCSmon)
-    
-    # 체력바 애니메이션
-    enemy_hp_after = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
-    animate_health_bar(screen, esY+104, esX+135, enemyCurrentHP, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
-    # [추가] 반사 처리: 적이 반사 준비 상태였다면 플레이어에게 반사 피해
-    if getattr(enemyCSmon, "hpShield", False) and getattr(enemyCSmon, "reflect_ratio", 0.0) > 0.0:
-        reflect = int(result.get("damage", 0) * enemyCSmon.reflect_ratio)
-        if reflect > 0:
-            player_prev = player.nowhp
-            player.nowhp = max(0, player.nowhp - reflect)
-            # 1회성 해제
-            enemyCSmon.hpShield = False
-            # 반사 애니메이션 & 메시지
-            animate_health_bar(screen, psY+104, psX+135, player_prev, player.nowhp, getattr(player, 'HP', 100))
-            display_status(screen, True)
-            draw_text(screen, f"  {enemyCSmon.name}의 반사! {player.name}에게 {reflect} 피해를 돌려주었다!", stX, stY, WHITE)
-            pygame.display.flip()
-            wait_for_key()
-    
-    # 결과 메시지
     display_status(screen, True)
-    if result:
-        kind = result.get("kind", "damage")
-        damage = result.get("damage", 0)
-        effectiveness = result.get("effectiveness", 1.0)
-        msg = result.get("message")
+    stop, damage, Mul = use_skill("player", player, enemyCSmon, selected_skill, enemy_skill)
+    animate_health_bar(screen, esY+104, esX+135,enemyCurrentHP, enemyCSmon.nowhp, enemyCSmon.HP)
+    animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player.nowhp, player.HP)  
+    skill_message(screen, "player", player, enemyCSmon, selected_skill, enemy_skill, damage, Mul)
 
-        # 1) use_skill이 만든 문장 먼저 표시
-        if msg:
-            draw_text(screen, f"  {msg}", stX, stY, WHITE)
-            pygame.display.flip()
-            wait_for_key()
-            display_status(screen, True)
+    return stop
 
-        # 2) 종류별 보조 출력
-        if kind == "damage":
-            draw_text(screen, f"  {enemyCSmon.name}는 {damage}의 피해를 입었다!", stX, stY, WHITE)
-            pygame.display.flip()
-            wait_for_key()
-            display_status(screen, True)
-
-            if effectiveness > 1.5:
-                draw_text(screen, "  효과가 뛰어났다!", stX, stY, WHITE)
-                pygame.display.flip()
-                wait_for_key()
-                display_status(screen, True)
-            elif effectiveness < 0.8:
-                draw_text(screen, "  효과가 별로인 듯 하다...", stX, stY, WHITE)
-                pygame.display.flip()
-                wait_for_key()
-                display_status(screen, True)
-
-        elif kind == "heal":
-            healed = result.get("healed", 0)
-            # msg가 이미 뜨지만, 여분 안내를 추가하고 싶으면:
-            # draw_text(screen, f"  {player.name}의 체력이 {healed} 회복되었다!", stX, stY, WHITE)
-            # pygame.display.flip(); wait_for_key()
-
-        elif kind == "buff":
-            # 버프 수치 표시를 추가하고 싶다면:
-            Vatk = result.get("Vatk"); Vdef = result.get("Vdef"); Vspd = result.get("Vspd")
-            # draw_text(screen, f"  능력치 변경 ATK×{Vatk} DEF×{Vdef} SPD×{Vspd}", stX, stY, WHITE)
-            # pygame.display.flip(); wait_for_key()
-
-        elif kind == "reflect":
-            # 반사 준비 안내는 msg에 이미 포함됨
-            pass
-
-        elif kind == "halve_hp":
-            # 이미 상대 HP가 줄었고 msg도 표시됨
-            pass
-
-        else:
-            # noop 등
-            pass
-    else:
-        draw_text(screen, f"  {message}", stX, stY, WHITE)
-        pygame.display.flip()
-        wait_for_key()
-
-def enemy_attack_phase(screen, player_skill, skill):
-    """적 공격 단계"""
+def enemy_attack_phase(screen, selected_skill, enemy_skill):
     playerCurrentHP = getattr(player, 'nowhp', getattr(player, 'HP', 100))
-    enemyCurrentHP_snap = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
-
-    # 스킬 사용
+    enemyCurrentHP = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
+    
+    # 스킬 사용 메시지
     display_status(screen, True)
-    draw_text(screen, f"  {enemyCSmon.name}의 {skill.name}!", stX, stY, WHITE)
+    draw_text(screen, f"  {enemyCSmon.name}의 {enemy_skill.name}!", stX, stY, WHITE)
     pygame.display.flip()
     wait_for_key()
-    
-    result, message = enemyCSmon.use_skill(player, skill)
-    # kind에 따라 애니메이션 대상 분기
-    kind = (result or {}).get("kind", "damage")
-    if kind == "damage" or kind == "halve_hp":
-        player_hp_after = getattr(player, 'nowhp', getattr(player, 'HP', 100))
-        animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player_hp_after, getattr(player, 'HP', 100))
-    elif kind == "heal":
-        enemy_hp_after = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
-        animate_health_bar(screen, esY+104, esX+135, enemyCurrentHP_snap, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
-    else:
-        # buff / reflect / noop 등: HP 변화 없음 → 애니메이션 생략
-        pass
-    
-    # [추가] 반사 처리: 플레이어가 반사 준비 상태였다면 적에게 반사 피해
-    if getattr(player, "hpShield", False) and getattr(player, "reflect_ratio", 0.0) > 0.0:
-        reflect = int(result.get("damage", 0) * player.reflect_ratio)
-        if reflect > 0:
-            enemy_prev = enemyCSmon.nowhp
-            enemyCSmon.nowhp = max(0, enemyCSmon.nowhp - reflect)
-            # 1회성 해제
-            player.hpShield = False
-            # 반사 애니메이션 & 메시지
-            animate_health_bar(screen, esY+104, esX+135, enemy_prev, enemyCSmon.nowhp, getattr(enemyCSmon, 'HP', 100))
-            display_status(screen, True)
-            draw_text(screen, f"  {player.name}의 반사! {enemyCSmon.name}에게 {reflect} 피해를 돌려주었다!", stX, stY, WHITE)
-            pygame.display.flip()
-            wait_for_key()
 
-    # 결과 메시지
-    # ──[ 교체: enemy_attack_phase()의 "결과 메시지" 부분 전체 ]───────────────
-    # 결과 메시지
+    # 스킬 효과 적용
     display_status(screen, True)
-    if result:
-        kind = result.get("kind", "damage")
-        damage = result.get("damage", 0)
-        effectiveness = result.get("effectiveness", 1.0)
-        msg = result.get("message")
+    stop, damage, Mul = use_skill("monster", player, enemyCSmon, selected_skill, enemy_skill)
+    animate_health_bar(screen, esY+104, esX+135,enemyCurrentHP, enemyCSmon.nowhp, enemyCSmon.HP)
+    animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player.nowhp, player.HP)  
+    skill_message(screen, "monster", player, enemyCSmon, selected_skill, enemy_skill, damage, Mul)
 
-        # 1) 메시지 우선
-        if msg:
-            draw_text(screen, f"  {msg}", stX, stY, WHITE)
-            pygame.display.flip()
-            wait_for_key()
-            display_status(screen, True)
-
-        # 2) 종류별 보조 출력
-        if kind == "damage":
-            draw_text(screen, f"  {player.name}은(는) {damage}의 피해를 입었다!", stX, stY, WHITE)
-            pygame.display.flip()
-            wait_for_key()
-            display_status(screen, True)
-
-            if effectiveness > 1.5:
-                draw_text(screen, "  효과가 뛰어났다!", stX, stY, WHITE)
-                pygame.display.flip()
-                wait_for_key()
-                display_status(screen, True)
-            elif effectiveness < 0.8:
-                draw_text(screen, "  효과가 별로인 듯 하다...", stX, stY, WHITE)
-                pygame.display.flip()
-                wait_for_key()
-                display_status(screen, True)
-
-        elif kind == "heal":
-            # 힐: msg에 이미 안내 포함
-            pass
-
-        elif kind == "buff":
-            # 버프: 필요 시 수치 표시
-            pass
-
-        elif kind == "reflect":
-            # 반사 준비: msg에 포함
-            pass
-
-        elif kind == "halve_hp":
-            # 이미 플레이어 HP 반감 적용 완료
-            pass
-
-        else:
-            pass
-    else:
-        draw_text(screen, f"  {message}", stX, stY, WHITE)
-        pygame.display.flip()
-        wait_for_key()
+    return stop
 
 def select_item(screen, temp=None):
     """아이템 선택 - 플레이어용"""
@@ -825,7 +890,6 @@ def get_random_reward_items(num_items):
             
     return reward_pool
 
-
 def select_reward_item(screen, items):
     """승리 후 아이템 선택 UI"""
     current_index = 0
@@ -879,7 +943,6 @@ def battle(getplayer, getenemy, screen=None):
     enemy = getenemy
     battle_end = False
     startBattleHp = player.nowhp
-    player.pnr_used = False  # 전투 시작 시 PNR 사용 여부 초기화
     
     # 적이 Monster 객체인 경우
     if isinstance(enemy, Monster):

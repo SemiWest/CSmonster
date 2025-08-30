@@ -70,12 +70,6 @@ PLAYER_SKILLS = {
     ]
 }
 
-def Comp(skill, target):
-    multiplier = 1
-    for typ in target.type:
-        multiplier *= comp(skill["type"], typ)
-    return multiplier
-
 def gpaColor(gpa):
     if len(gpa) >= 3:
         gpa = float(gpa)
@@ -107,10 +101,10 @@ class Player:
         self.level = 5
         self.exp = 0
 
-        self.H = 30
+        self.H = 70
 
-        self.A = 56
-        self.D = 60
+        self.A = 110
+        self.D = 70
         self.SP = 90
         self.skills = {}  # 스킬 저장
         self.usedskill = None
@@ -127,6 +121,7 @@ class Player:
         self.clearedSemesters = []
         self.gpas = []
         self.completed_semesters = []
+        self.Rank = [0]*3
         self.mylevelup = 0
         self.skilllevelup = [False, False, False, False, False, False]  # CT, DS, SYS, PS, AI
         
@@ -183,10 +178,10 @@ class Player:
                 if newdict[k] == max and newdict[k] != 0:
                     maxkeys.append(k)
             if len(maxkeys) == 0:
-                return "*"
+                return ["*"]
             if self.starting in maxkeys:
-                return self.starting
-            return random.choice(maxkeys)
+                return [self.starting]
+            return [random.choice(maxkeys)]
 
     def get_available_skills(self):
         """사용 가능한 스킬 목록 반환"""
@@ -197,19 +192,11 @@ class Player:
                 available.append(skilllist[level-1])
         return available
     
-    def update_battle(self, Vatk, Vdef, Vspd):
-        self.CATK = int(self.ATK * Vatk)  # 공격력
-        self.CDEF = int(self.DEF * Vdef)  # 방어력
-        self.CSPD = int(self.SPD * Vspd)
+    def update_battle(self):        
+        self.CATK = int(self.ATK * (2+max(0, self.Rank[0]))/(2-min(0, self.Rank[0]))) # 공격력
+        self.CDEF = int(self.DEF * (2+max(0, self.Rank[1]))/(2-min(0, self.Rank[1]))) # 방어력
+        self.CSPD = int(self.SPD * (2+max(0, self.Rank[2]))/(2-min(0, self.Rank[2]))) # 스피드
 
-    def take_damage(self, damage):
-        if self.cheatmode:
-            damage = 0
-
-        self.nowhp -= damage
-        if self.nowhp < 0:
-            self.nowhp = 0
-        
     def update(self):
         self.type = self.playertype()  # 플레이어 타입 설정
         # HP = [ { (종족값 x 2) + 개체값 + 100 } x 레벨/100 ] + 10
@@ -222,46 +209,19 @@ class Player:
         
         self.max_exp = int((self.level ** 3))  # 경험치 필요량
 
-        self.update_battle(1 ,1 ,1)
+        self.update_battle()
         
     def update_fullreset(self):
         self.update()
         self.nowhp = self.HP  # 현재 체력 회복
-
-    def use_skill(self, skill_name, target_monster):
-        """스킬 사용"""
-        # 스킬 찾기
-        available_skills = self.get_available_skills()
-        skill = None
-        
-        for available_skill in available_skills:
-            if available_skill["name"] == skill_name:
-                skill = available_skill
-                break
-        
-        if not skill:
-            return None, "스킬을 찾을 수 없습니다"
-        
-        # 데미지 계산
-        damage, effectiveness = self.damage(skill, target_monster)
-        
-        # 몬스터에게 데미지 적용
-        if hasattr(target_monster, 'nowhp'):
-            target_monster.nowhp -= damage
-            if target_monster.nowhp < 0:
-                target_monster.nowhp = 0
-        
-        return {
-            "damage": damage,
-            "effectiveness": effectiveness,
-            "skill": skill,
-        }, "성공"
     
-    def damage(self, skill, target):
-        basedmg = ((2*self.level + 10)/250) * self.CATK / max(1, target.CDEF)  # ✅ max(1, ...)
-        multiplier = Comp(skill, target)
-        Jasok = 1.5 if self.type[0] == skill["type"] else 1.0
-        return int(multiplier * (basedmg*skill["damage"] + 2) * Jasok * random.uniform(0.85, 1.00)), multiplier
+    def take_damage(self, damage):
+        if self.cheatmode:
+            damage = 0
+
+        self.nowhp -= damage
+        if self.nowhp < 0:
+            self.nowhp = 0
 
     def can_use_pnr(self):
         """PNR 사용 가능 여부"""
