@@ -403,14 +403,14 @@ cs320.skills = {
         name='PPAP', 
         effect_type="Pdamage",
         type="CT",
-        skW=100,
+        skW=60,
         priority=2,
         description="함수 안에 함수를 넣은 밀도있는 공격을 한다"),
     'Garbage Collection': Monster.Skill(
         name='Garbage Collection',
         effect_type="heal",
         type="CT",
-        skW=20,
+        skW=0.5,
         priority=0,
         description="필요 없는 메모리를 정리하여 체력을 회복한다."),
     'Functional Programming': Monster.Skill(
@@ -473,7 +473,7 @@ cs360.skills = {
         name='인덱스 재구성',
         effect_type="buff",
         type="DS",
-        skW=20,
+        skW=0,
         description="시스템 최적화를 통해 능력치를 증가시킨다."
     ),
 }
