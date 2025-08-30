@@ -794,12 +794,14 @@ def select_reward_item(screen, items):
     """승리 후 아이템 선택 UI"""
     current_index = 0
     while True:
-        display_status(screen)
-        draw_text(screen, "  승리 보상! 아이템을 선택하세요.", stX, stY, YELLOW)
 
+        display_status(screen)
         dark_overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
         dark_overlay.fill((0, 0, 0, 180))  # 마지막 값(120)은 투명도, 0~255
         screen.blit(dark_overlay, (0, 0))
+
+        
+        draw_text(screen, "  승리 보상! 아이템을 선택하세요.", stX, stY, YELLOW)
 
         for i, item in enumerate(items):
             name_color = get_item_color_by_grade(item.grade)  # 등급별 색상 함수 사용
