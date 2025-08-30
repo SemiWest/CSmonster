@@ -57,6 +57,11 @@ def change_options(BGM, BGMV, ES, ESV, eChannel, mChannel):
     effect_channel = eChannel
     music_channel = mChannel
 
+def mute_music(num=0):
+    pygame.mixer.music.set_volume(musicVolume * num / 100)
+def unmute_music():
+    pygame.mixer.music.set_volume(musicVolume / 100)
+
 def play_alternating_music(file_list):
     """두 개 이상의 배경음악을 끊김 없이 번갈아가며 재생"""
     global music_thread_running
@@ -198,4 +203,4 @@ def Lose():
     play_effect("../sound/Lose.mp3")
 
 def Report():
-    play_effect("../sound/report.mp3")
+    play_effect("../sound/report.mp3", 150)

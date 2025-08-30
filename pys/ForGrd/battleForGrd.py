@@ -188,6 +188,16 @@ def display_player_details(screen, player, x):
                 if isinstance(detail, tuple) and len(detail) >= 3:
                     draw_text(screen, detail[0], x + detail[1], y_pos, detail[2])
 
+def get_color_by_effectiveness(effectiveness):
+    if effectiveness > 1.5:             # 2배
+        return RED
+    elif 0.4 <= effectiveness < 0.8:    # 0.5배
+        return LIGHTGRAY
+    elif effectiveness < 0.4:           # 0배
+        return GRAY
+    else:                               # 1배
+        return WHITE
+
 def select_player_skill(screen):
     """플레이어 스킬 선택"""
     available_skills = player.get_available_skills()
@@ -207,12 +217,26 @@ def select_player_skill(screen):
         # 스킬 목록 표시
         for i, skill in enumerate(available_skills):
             x_pos = stX + (300 * (i % 2))
-            y_pos = stY + int(i / 2) * 56
+            y_pos = stY + int(i / 2) * 61 - 5
             effectiveness = Comp(skill, enemyCSmon)
-                
-            prefix = "> " if i == current_index else "  "
-            draw_text(screen, f"{prefix}{skill['name']}", x_pos, y_pos, RED if effectiveness > 1.5 else GRAY if effectiveness < 0.8 else WHITE)
             
+            # 스킬 표시
+            prefix = "> " if i == current_index else "  "
+            prefix_color = WHITE if i == current_index else GRAY  # 원하는 색상 지정
+            draw_text(screen, prefix, x_pos, y_pos, prefix_color)
+            draw_text(screen, skill['name'], x_pos + 30, y_pos, get_color_by_effectiveness(effectiveness))
+            # draw_text(screen, skill['name'], x_pos + 30, y_pos, get_color_by_effectiveness(effectiveness), highlight= typecolor_dict[skill['type']])
+
+            # 효과 표시
+            if get_color_by_effectiveness(effectiveness) == RED:
+                draw_text(screen, "효과가 굉장함", x_pos + 30, y_pos + 35, RED, size=16)
+            elif get_color_by_effectiveness(effectiveness) == GRAY:
+                draw_text(screen, "효과 없음", x_pos + 30, y_pos + 35, GRAY, size=16)
+            elif get_color_by_effectiveness(effectiveness) == LIGHTGRAY:
+                draw_text(screen, "효과가 별로임", x_pos + 30, y_pos + 35, LIGHTGRAY, size=16)
+            else:
+                draw_text(screen, "효과 있음", x_pos + 30, y_pos + 35, WHITE, size=16)
+
             if i == current_index:
                 # 선택된 스킬 상세정보 표시
                 # 선택된 스킬의 상세정보 표시
