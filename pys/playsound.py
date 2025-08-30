@@ -6,8 +6,6 @@ import time
 import threading
 import unicodedata
 
-import pygame
-
 # 전역 변수
 musicOnOff = True
 musicVolume = 50  # 배경음악 볼륨 기본값 (0 ~ 100)
