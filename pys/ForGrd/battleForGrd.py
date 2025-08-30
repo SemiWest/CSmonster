@@ -395,7 +395,7 @@ def select_player_skill(screen):
                 draw_text(screen, f"{type_dict[skill['type']]}", sX+1212, infoY+20, typecolor_dict[skill['type']], align='right')
                 
                 draw_text(screen, "위력", sX+760, infoY+60, WHITE)
-                draw_text(screen,f"{skill['damage']:.1f}", sX+1212, infoY+60, WHITE, align='right')
+                draw_text(screen,f"{skill['damage']}", sX+1212, infoY+60, WHITE, align='right')
                 draw_wrapped_text(
                     screen,
                     skill['description'],
