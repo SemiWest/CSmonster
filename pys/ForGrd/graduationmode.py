@@ -471,7 +471,7 @@ def game_start(screen, Me_name="넙죽이"):
                 player.gpas.append(gpa)
                 player.clearedSemesters.append(player.current_semester)
                 player.thisSemesterGpas.append(gpa)
-                player.complete_monster(monster_name)
+                need_skill_change = player.complete_monster(monster_name)
                 addSeonSus(player, enemy_monster)  # 과목들 추가
             elif battle_result == 2:    # P
                 if monster_name in player.clearedMonsters:
@@ -481,7 +481,7 @@ def game_start(screen, Me_name="넙죽이"):
                 player.clearedMonsters.append(monster_name)
                 player.thisSemesterGpas.append(gpa)
                 player.clearedSemesters.append(player.current_semester)
-                player.complete_monster(monster_name)
+                need_skill_change = player.complete_monster(monster_name)
                 player.gpas.append(gpa)
                 addSeonSus(player, enemy_monster)  # 과목들 추가
             elif battle_result == 3:      # 3: 드랍
@@ -490,7 +490,7 @@ def game_start(screen, Me_name="넙죽이"):
             elif battle_result == 4:      # 이벤트
                 player.thisSemesterGpas.append(gpa)
                 if gpa[1] == "성공!":
-                    player.complete_monster(monster_name)
+                    need_skill_change = player.complete_monster(monster_name)
             elif battle_result == 5:    # NR
                 player.canBeMetMonsters.append(monster_name)
                 player.thisSemesterGpas.append(gpa)
@@ -501,6 +501,10 @@ def game_start(screen, Me_name="넙죽이"):
                 player.gpas.append(gpa)
                 player.update_fullreset()
             player.update()
+
+        if need_skill_change:
+            show_skill_change(screen, player)
+
 
         # 학기 결과 화면
         semester_result_screen(player, screen)
@@ -524,3 +528,120 @@ def game_start(screen, Me_name="넙죽이"):
     show_final_result(player, screen)
     
     return player
+
+def show_skill_change(screen, player):
+
+    newskill_boolean = player.skilllevelup
+    type_index = newskill_boolean.index(True)
+    newskill_type = ['*', 'CT', 'DS', 'SYS', 'PS', 'AI'][type_index]
+
+    newskill_level = player.current_skills[newskill_type]
+
+    newskill = PLAYER_SKILLS[newskill_type][newskill_level-1]
+
+
+
+    for _, skill in enumerate(player.get_available_skills()):
+        print(f"Debug: available skills: {skill['name']}")
+
+    pygame.display.flip()
+    display_status(screen)
+
+    draw_text(screen, f"  {player.name}은/는 {newskill['name']} 을/를 배우고 싶다...", stX, stY, color= WHITE)
+    pygame.display.flip()
+    wait_for_key()
+    display_status(screen)
+
+    draw_text(screen, f"  하지만 기술 슬롯이 모두 가득 찼다!", stX, stY, color= WHITE)
+    pygame.display.flip()
+    wait_for_key()
+    display_status(screen)
+
+    draw_text(screen, f"  어떤 기술을 잊어버릴까?", stX, stY, color= WHITE)
+    pygame.display.flip()
+    wait_for_key()
+    display_status(screen)
+    
+
+    replace_skill = display_skill_change(screen, newskill, player)
+
+    pygame.display.flip()
+    display_status(screen)
+
+    # 새로운 기술을 배우지 않음
+    if replace_skill == newskill:
+        draw_text(screen, f"  {newskill['name']} 을/를 배우지 않았다!", stX, stY, color= WHITE)
+        pygame.display.flip()
+        wait_for_key()
+        display_status(screen)
+
+        player.current_skills[newskill['type']] = 0
+
+    # 새로운 기술을 배움 (가지고 있는 기술을 버림)
+    else:
+        draw_text(screen, f"  3.. 2.. 1..", stX, stY, color= WHITE)
+        pygame.display.flip()
+        wait_for_key()
+        display_status(screen)
+
+        draw_text(screen, f"  {player.name}은/는 {replace_skill['name']} 을/를 까맣게 잊어버렸다!", stX, stY, color= WHITE)
+        pygame.display.flip()
+        wait_for_key()
+        display_status(screen)
+
+        draw_text(screen, f"  그리고", stX, stY, color= WHITE)
+        pygame.display.flip()
+        wait_for_key()
+        display_status(screen)
+
+        draw_text(screen, f"  {newskill['name']} 을/를 배웠다!", stX, stY, color= WHITE)
+        pygame.display.flip()
+        wait_for_key()
+        display_status(screen)
+
+        player.current_skills[replace_skill['type']] = 0
+
+    
+def display_skill_change(screen, newskill, player):
+    current_index = 0
+
+    while True:
+        display_status(screen)
+        dark_overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+        dark_overlay.fill((0, 0, 0, 180))  # 마지막 값(120)은 투명도, 0~255
+        screen.blit(dark_overlay, (0, 0))
+
+        draw_text(screen, "  잊어 버릴 기술을 선택하자.", stX, stY, YELLOW)
+
+        available_skills = player.get_available_skills()
+        skills_without_new = [skill for skill in available_skills if skill != newskill]
+        skills_ordered = skills_without_new + [newskill]
+
+        for i, skill in enumerate(skills_ordered):
+
+            prefix = "> " if i == current_index else "  "
+            prefix_color = WHITE 
+            # 현재 가지고 있는 색
+
+            if i != len(skills_ordered)-1:
+                draw_text(screen, prefix, stX, stY-350 + i * 60, prefix_color)
+                draw_text(screen, f"  {skill['name']}", stX, stY-350 + i * 60, typecolor_dict[skill['type']])
+                draw_text(screen, f"{skill['type']}", stX + 500, stY-350 + i * 60, typecolor_dict[skill['type']])
+                draw_text(screen, f"위력: {skill['damage']}", stX + 600, stY-350 + i * 60, WHITE)
+
+            else:
+                draw_text(screen, prefix, stX, stY + 40, prefix_color)
+                draw_text(screen, f"  {newskill['name']}", stX, stY+40, typecolor_dict[newskill['type']])
+                draw_text(screen, f"{newskill['type']}", stX + 500, stY+40, typecolor_dict[newskill['type']])
+                draw_text(screen, f"위력: {newskill['damage']}", stX + 600, stY+40, WHITE)
+
+        pygame.display.flip()
+        key = wait_for_key()
+        if key == 'enter':
+            return available_skills[current_index]
+        elif key == 'up' and current_index > 0:
+            current_index -= 1
+            option_change_sound()
+        elif key == 'down' and current_index < len(available_skills)-1:
+            current_index += 1
+            option_change_sound()
