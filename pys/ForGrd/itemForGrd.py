@@ -93,21 +93,10 @@ Ransomware = Items(
     varied=0.5,
 )
 
-Alcohol = Items(
-    name="알코올",
-    description="기분이 좋아지는 미지의 초록 병. 스피드를 30% 올린다.",
-    effect="buff",
-    grade="레어",
-    varied=0.3,
-    buffto="speed",
-    canuse_on_fainted=False,
-    special=False
-)
-
 # 노말 (새로 2개 추가)
 SnackBar = Items(
     name="에너지바",
-    description="에너지바를 먹는다. 10 또는 최대 체력의 10% 중 큰 값을 회복한다.", 
+    description="에너지바를 먹는다. 체력을 10만큼 회복한다.", 
     effect="heal",
     grade="노말",
     fixed=10,
@@ -123,6 +112,25 @@ Virus = Items(
     buffto="speed"
 )
 
+Alcohol = Items(
+    name="알코올",
+    description="기분이 좋아지는 미지의 초록 병. 스피드를 30% 올린다.",
+    effect="buff",
+    grade="노말",
+    varied=0.3,
+    buffto="speed",
+    canuse_on_fainted=False,
+    special=False
+)
+
+Google = Items(
+    name="구글신",
+    description="구글신에게 나를 치료할 수 있는 방법을 검색한다. 체력을 5만큼 회복한다. ",
+    effect="heal",
+    grade="노말",
+    fixed=5
+)
+
 # 아이템 목록
 items = {
     "빈 슬롯": Noneitem,
@@ -134,7 +142,8 @@ items = {
     "랜섬웨어": Ransomware,
     "에너지바": SnackBar,
     "바이러스": Virus,
-    "알코올": Alcohol
+    "알코올": Alcohol,
+    "구글신": Google
 }
 
 item_list = [
