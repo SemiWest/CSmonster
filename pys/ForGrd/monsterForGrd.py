@@ -319,7 +319,7 @@ cs204 = Monster(
     description="이산구조설명"
 )
 cs204.skills = {
-    'Modus Pones': Monster.Skill(
+    'Modus Ponens': Monster.Skill(
         name='Modus Pones', 
         effect_type="Sdamage",
         type="DS",
