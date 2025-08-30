@@ -303,7 +303,7 @@ def show_final_result(player, screen):
         wait_for_key()
 
         # 엔딩 화면 = Graduation.jpg * 8배 사이즈
-        graduation_image = pygame.image.load("../img/Graduation.jpg")
+        graduation_image = pygame.image.load("../img/Graduation.png")
         graduation_image = pygame.transform.scale(graduation_image, (graduation_image.get_width() * 8, graduation_image.get_height() * 8))
         screen.blit(graduation_image, (0, 0))
         pygame.display.flip()
