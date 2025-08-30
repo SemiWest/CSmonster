@@ -416,6 +416,8 @@ def get_text_input(screen, prompt):
         pygame.display.flip()
         pygame.time.wait(50)
 
+# 기존의 game_start 함수를 아래 코드로 교체하세요.
+
 def game_start(screen, Me_name="넙죽이"):
     """새로운 졸업모드 메인 게임 로직"""
     # pygame 화면 초기화 강제 실행
@@ -471,7 +473,11 @@ def game_start(screen, Me_name="넙죽이"):
                 player.thisSemesterGpas.append(gpa)
                 player.complete_monster(monster_name)
                 addSeonSus(player, enemy_monster)  # 과목들 추가
-            elif battle_result == 2:    # P TODO: P/NR일때는 GPA에 산정 안하도록 수정해야 할듯. 
+            elif battle_result == 2:    # P
+                if monster_name in player.clearedMonsters:
+                    player.gpas.pop(player.clearedMonsters.index(monster_name))
+                    player.clearedSemesters.pop(player.clearedMonsters.index(monster_name))
+                    player.clearedMonsters.remove(monster_name)
                 player.clearedMonsters.append(monster_name)
                 player.thisSemesterGpas.append(gpa)
                 player.clearedSemesters.append(player.current_semester)
@@ -479,16 +485,16 @@ def game_start(screen, Me_name="넙죽이"):
                 player.gpas.append(gpa)
                 addSeonSus(player, enemy_monster)  # 과목들 추가
             elif battle_result == 3:      # 3: 드랍
-                player.canBeMetMonsters.append(monster_name)  # 드랍
+                player.canBeMetMonsters.append(monster_name)
                 player.thisSemesterGpas.append(gpa)
             elif battle_result == 4:      # 이벤트
                 player.thisSemesterGpas.append(gpa)
                 if gpa[1] == "성공!":
                     player.complete_monster(monster_name)
-            elif battle_result == 5:
-                player.canBeMetMonsters.append(monster_name)  # NR
+            elif battle_result == 5:    # NR
+                player.canBeMetMonsters.append(monster_name)
                 player.thisSemesterGpas.append(gpa)
-            elif battle_result == 0:            # 패배
+            elif battle_result == 0:                # 패배
                 player.thisSemesterGpas.append(gpa)
                 player.canBeMetMonsters.append(monster_name)
                 player.clearedMonsters.append(monster_name)
@@ -498,8 +504,6 @@ def game_start(screen, Me_name="넙죽이"):
 
         # 학기 결과 화면
         semester_result_screen(player, screen)
-        # player.update_fullreset()
-        # 학기 끝날때마다 체력 회복 일단 정지
         
         if not game_running:
             break

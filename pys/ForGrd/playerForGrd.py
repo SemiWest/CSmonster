@@ -49,9 +49,10 @@ PLAYER_SKILLS = {
         {"name": "PNP", "damage": 80, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 3},
     ],
     "CT": [
-        {"name": "이산화", "damage": 50, "type": "CT", "description": "상대를 이산화해 분해해버린다", "level": 1},
-        {"name": "RUST", "damage": 75, "type": "CT", "description": "메모리 관리를 더 이상 하지 않아도 된다. 이제 공격에 집중해보자", "level": 2},
-        {"name": "팬파인애플애플팬", "damage": 95, "type": "CT", "description": "학부장을 호출한다", "level": 3}
+        {"name": "증명", "damage": 45, "type": "CT", "description": "상대는 약함을 증명해보자.", "level": 1},
+        {"name": "이산화", "damage": 60, "type": "CT", "description": "상대를 이산화해 분해해버린다", "level": 2},
+        {"name": "RUST", "damage": 75, "type": "CT", "description": "순수 함수를 배웠다. 어렵다.", "level": 3},
+        {"name": "팬파인애플애플팬", "damage": 95, "type": "CT", "description": "학부장을 호출한다", "level": 4}
     ],
     "SYS": [
         {"name": "스택오버플로우", "damage": 55, "type": "SYS", "description": "상대의 머리를 과부화시킨다", "level": 1},
@@ -137,6 +138,10 @@ class Player:
         self.warning_count = 0
         self.deans_count = 0
         self.titles = []
+        
+        #학기 수 관리 시스템
+        self.all_monster_count = len(monsters) - 3 # 졸업연구, 몰입캠프, 코옵, 개별연구 등 이벤트성 제외
+        self.ending_type = "정상" # 초기값은 '정상'
         
         # 스킬 시스템 (플레이어가 직접 배우는 스킬들)
         self.learned_skills = {
@@ -268,7 +273,10 @@ class Player:
         src = self.thisSemesterGpas if Option == 1 else self.gpas
 
         for credit, grade in src:
-            # P/NR은 GPA에서 제외
+            # P나 NR 학점은 GPA 산정에서 제외
+            if grade in ["P", "NR", "-"]:
+                continue
+            
             sum1 += GPASCORE[grade] * credit
             sum2 += credit
 
@@ -310,10 +318,17 @@ class Player:
 
         skill_type = monsters[monster_name].type[0]
         
-        if monster_name in ["프밍기"]:
+        if monster_name == "프밍기":
             self.learned_skills['*'] += 1
             print(f"Debug: {'*'} 스킬이 {self.learned_skills['*']} 레벨로 상승!")
             typearray[0] = True
+
+            # 프밍기 처치 시 CT 스킬을 추가로 획득하는 로직
+            if self.learned_skills['CT'] < 5:
+                self.learned_skills['CT'] += 1
+                print(f"Debug: {'CT'} 스킬이 {self.learned_skills['CT']} 레벨로 상승!")
+                typearray[1] = True
+
 
         else:     
             if self.learned_skills[skill_type] < 5:
