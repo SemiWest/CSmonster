@@ -139,6 +139,10 @@ class Player:
         self.deans_count = 0
         self.titles = []
         
+        #학기 수 관리 시스템
+        self.all_monster_count = len(monsters) - 3 # 졸업연구, 몰입캠프, 코옵, 개별연구 등 이벤트성 제외
+        self.ending_type = "정상" # 초기값은 '정상'
+        
         # 스킬 시스템 (플레이어가 직접 배우는 스킬들)
         self.learned_skills = {
             "*": 1,  # 기본 스킬
