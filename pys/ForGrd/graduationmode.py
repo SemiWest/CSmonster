@@ -178,6 +178,7 @@ def semester_intro_screen(player, screen):
 def semester_result_screen(player, screen):
     """학기 결과 화면"""
     screen.fill(WHITE)
+    mute_music(0.1)
     Report()
     if monsters[player.thisSemesterMonsters[0]].type[0] == "EVENT":
         if player.thisSemesterGpas[0][1] == "성공!":
@@ -269,6 +270,7 @@ def semester_result_screen(player, screen):
 
     pygame.display.flip()
     wait_for_key()
+    unmute_music()
 
 def show_final_result(player, screen):
     """최종 결과 화면"""
