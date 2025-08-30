@@ -155,6 +155,7 @@ item_list = [
     Ransomware,
     SnackBar,
     Virus,
-    Alcohol
+    Alcohol,
+    Google
 ]
 

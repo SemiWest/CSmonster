@@ -3,6 +3,8 @@ from ForGrd.monsterForGrd import *
 from ForGrd.itemForGrd import *
 import random
 
+DIFFICULTY_MULTIPLIER = 1.1
+
 # 플레이어 스킬 정의
 """ 코파일럿이 만들어놓은거임 수정하면 될듯? -이준서"""
 GPASCORE = {
@@ -40,40 +42,35 @@ GPACOLOR = {
 
 PLAYER_SKILLS = {
     "*": [
-        {"name": "타자치기", "damage": 30, "type": "*", "description": "한글은 100타, 영어는 독수리타법", "level": 1},
-        {"name": "Python", "damage": 40, "type": "*", "description": "프밍기를 수강한 당신, 이제 파이썬을 다룰 줄 안다", "level": 2}
+        {"name": "타자치기", "damage": 25*DIFFICULTY_MULTIPLIER, "type": "*", "description": "한글은 100타, 영어는 독수리타법", "level": 1, "priority": 0},
+        {"name": "Python", "damage": 35*DIFFICULTY_MULTIPLIER, "type": "*", "description": "프밍기를 수강한 당신, 이제 파이썬을 다룰 줄 안다", "level": 2, "priority": 0}
     ],
     "PS": [
-        {"name": "논리왕", "damage": 50, "type": "PS", "description": "상대를 논리로 누른다", "level": 1},
-        {"name": "Master Theorem", "damage": 60, "type": "PS", "description": "상대의 복잡도를 분석한다", "level": 2},
-        {"name": "PNP", "damage": 80, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 3},
+        {"name": "논리왕", "damage": 45*DIFFICULTY_MULTIPLIER, "type": "PS", "description": "상대를 논리로 누른다", "level": 1, "priority": 0},
+        {"name": "Master Theorem", "damage": 55*DIFFICULTY_MULTIPLIER, "type": "PS", "description": "상대의 복잡도를 분석한다", "level": 2, "priority": 1},
+        {"name": "PNP", "damage": 75*DIFFICULTY_MULTIPLIER, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 3, "priority": 3},
     ],
     "CT": [
-        {"name": "증명", "damage": 45, "type": "CT", "description": "상대는 약함을 증명해보자.", "level": 1},
-        {"name": "이산화", "damage": 60, "type": "CT", "description": "상대를 이산화해 분해해버린다", "level": 2},
-        {"name": "RUST", "damage": 75, "type": "CT", "description": "순수 함수를 배웠다. 어렵다.", "level": 3},
-        {"name": "팬파인애플애플팬", "damage": 95, "type": "CT", "description": "학부장을 호출한다", "level": 4}
+        {"name": "증명", "damage": 40*DIFFICULTY_MULTIPLIER, "type": "CT", "description": "상대는 약함을 증명해보자.", "level": 1, "priority": 0},
+        {"name": "이산화", "damage": 50*DIFFICULTY_MULTIPLIER, "type": "CT", "description": "상대를 이산화해 분해해버린다", "level": 2, "priority": 1},
+        {"name": "RUST", "damage": 65*DIFFICULTY_MULTIPLIER, "type": "CT", "description": "순수 함수를 배웠다. 어렵다.", "level": 3, "priority": 3},
+        {"name": "팬파인애플애플팬", "damage": 80*DIFFICULTY_MULTIPLIER, "type": "CT", "description": "학부장을 호출한다", "level": 4, "priority": 4}
     ],
     "SYS": [
-        {"name": "스택오버플로우", "damage": 55, "type": "SYS", "description": "상대의 머리를 과부화시킨다", "level": 1},
-        {"name": "CTRL^C", "damage": 65, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2},
-        {"name": "DDOS", "damage": 75, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보낸다", "level": 3},
-        {"name": "핀토스", "damage": 95, "type": "SYS", "description": "핀토스를 끝낸 자. 어떤 과제가 와도 이겨낼 수 있다.", "level": 4},
+        {"name": "스택오버플로우", "damage": 45*DIFFICULTY_MULTIPLIER, "type": "SYS", "description": "상대의 머리를 과부화시킨다", "level": 1, "priority": 1},
+        {"name": "CTRL^C", "damage": 50*DIFFICULTY_MULTIPLIER, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2, "priority": 3},
+        {"name": "DDOS", "damage": 60*DIFFICULTY_MULTIPLIER, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보낸다", "level": 3, "priority": 2},
+        {"name": "핀토스", "damage": 75*DIFFICULTY_MULTIPLIER, "type": "SYS", "description": "핀토스를 끝낸 자. 어떤 과제가 와도 이겨낼 수 있다.", "level": 4, "priority": 4},
     ],
     "DS": [
-        {"name": "OOP", "damage": 45, "type": "DS", "description": "상대를 객체화시킨다. 상대 메서드의 취약점을 파악해보자", "level": 1},
-        {"name": "SQL 인젝션", "damage": 75, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 2}
+        {"name": "OOP", "damage": 45*DIFFICULTY_MULTIPLIER, "type": "DS", "description": "상대를 객체화시킨다. 상대 메서드의 취약점을 파악해보자", "level": 1, "priority": 1},
+        {"name": "SQL 인젝션", "damage": 70*DIFFICULTY_MULTIPLIER, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 2, "priority": 3}
     ],
     "AI": [
-        {"name": "오버피팅", "damage": 85, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 1},
-        {"name": "샘 올트먼", "damage": 100, "type": "AI", "description": "상대에게 특화된 GPT를 만든다", "level": 2}
+        {"name": "오버피팅", "damage": 70*DIFFICULTY_MULTIPLIER, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 1, "priority": 3},
+        {"name": "샘 올트먼", "damage": 80*DIFFICULTY_MULTIPLIER, "type": "AI", "description": "상대에게 특화된 GPT를 만든다", "level": 2, "priority": 4}
     ]
 }
-def Comp(skill, target):
-    multiplier = 1
-    for typ in target.type:
-        multiplier *= comp(skill["type"], typ)
-    return multiplier
 
 def gpaColor(gpa):
     if len(gpa) >= 3:
@@ -106,10 +103,10 @@ class Player:
         self.level = 5
         self.exp = 0
 
-        self.H = 30
+        self.H = 70
 
-        self.A = 56
-        self.D = 60
+        self.A = 110
+        self.D = 70
         self.SP = 90
         self.skills = {}  # 스킬 저장
         self.usedskill = None
@@ -126,6 +123,7 @@ class Player:
         self.clearedSemesters = []
         self.gpas = []
         self.completed_semesters = []
+        self.Rank = [0]*3
         self.mylevelup = 0
         self.skilllevelup = [False, False, False, False, False, False]  # CT, DS, SYS, PS, AI
         
@@ -181,7 +179,7 @@ class Player:
         """플레이어의 주력 스킬 타입 반환"""
         if self.current_semester == "새터":
             return "*"
-        else:   
+        else:
             newdict = {k: v for k, v in self.learned_skills.items() if k != "*"}
             max = 0
             maxkeys = []
@@ -192,10 +190,10 @@ class Player:
                 if newdict[k] == max and newdict[k] != 0:
                     maxkeys.append(k)
             if len(maxkeys) == 0:
-                return "*"
+                return ["*"]
             if self.starting in maxkeys:
-                return self.starting
-            return random.choice(maxkeys)
+                return [self.starting]
+            return [random.choice(maxkeys)]
 
     def get_available_skills(self):
         """사용 가능한 스킬 목록 반환"""
@@ -206,11 +204,29 @@ class Player:
                 available.append(skilllist[level-1])
         return available
     
-    def update_battle(self, Vatk, Vdef, Vspd):
-        self.CATK = int(self.ATK * Vatk)  # 공격력
-        self.CDEF = int(self.DEF * Vdef)  # 방어력
-        self.CSPD = int(self.SPD * Vspd)
+    def update_battle(self):        
+        self.CATK = int(self.ATK * (2+max(0, self.Rank[0]))/(2-min(0, self.Rank[0]))) # 공격력
+        self.CDEF = int(self.DEF * (2+max(0, self.Rank[1]))/(2-min(0, self.Rank[1]))) # 방어력
+        self.CSPD = int(self.SPD * (2+max(0, self.Rank[2]))/(2-min(0, self.Rank[2]))) # 스피드
 
+    def update(self):
+        self.type = self.playertype()  # 플레이어 타입 설정
+        # HP = [ { (종족값 x 2) + 개체값 + 100 } x 레벨/100 ] + 10
+        self.HP = int((self.H * 2 + 16 + 100) * (self.level / 100)) + 10
+
+        # E = [ { (종족값 x 2) + 개체값} x 레벨/100 + 5 ]
+        self.ATK = int((self.A * 2 + 16) * (self.level / 100)) + 5
+        self.DEF = int((self.D * 2 + 16) * (self.level / 100)) + 5
+        self.SPD = int((self.SP * 2 + 16) * (self.level / 100)) + 5
+        
+        self.max_exp = int((self.level ** 3))  # 경험치 필요량
+
+        self.update_battle()
+        
+    def update_fullreset(self):
+        self.update()
+        self.nowhp = self.HP  # 현재 체력 회복
+    
     def take_damage(self, damage):
         if self.cheatmode:
             damage = 0
@@ -218,59 +234,6 @@ class Player:
         self.nowhp -= damage
         if self.nowhp < 0:
             self.nowhp = 0
-        
-    def update(self):
-        self.type = self.playertype()  # 플레이어 타입 설정
-        # HP = [ { (종족값 x 2) + 개체값 + 100 } x 레벨/100 ] + 10
-        self.HP = int((self.H * 2 + 31 + 100) * (self.level / 100)) + 10
-
-        # E = [ { (종족값 x 2) + 개체값} x 레벨/100 + 5 ]
-        self.ATK = int((self.A * 2 + 31) * (self.level / 100)) + 5
-        self.DEF = int((self.D * 2 + 31) * (self.level / 100)) + 5
-        self.SPD = int((self.SP * 2 + 31) * (self.level / 100)) + 5
-        
-        self.max_exp = int((self.level ** 3))  # 경험치 필요량
-
-        self.update_battle(1 ,1 ,1)
-        
-    def update_fullreset(self):
-        self.update()
-        self.nowhp = self.HP  # 현재 체력 회복
-
-    def use_skill(self, skill_name, target_monster):
-        """스킬 사용"""
-        # 스킬 찾기
-        available_skills = self.get_available_skills()
-        skill = None
-        
-        for available_skill in available_skills:
-            if available_skill["name"] == skill_name:
-                skill = available_skill
-                break
-        
-        if not skill:
-            return None, "스킬을 찾을 수 없습니다"
-        
-        # 데미지 계산
-        damage, effectiveness = self.damage(skill, target_monster)
-        
-        # 몬스터에게 데미지 적용
-        if hasattr(target_monster, 'nowhp'):
-            target_monster.nowhp -= damage
-            if target_monster.nowhp < 0:
-                target_monster.nowhp = 0
-        
-        return {
-            "damage": damage,
-            "effectiveness": effectiveness,
-            "skill": skill,
-        }, "성공"
-    
-    def damage(self, skill, target):
-        basedmg = ((2*self.level + 10)/250) * self.CATK / max(1, target.CDEF)  # ✅ max(1, ...)
-        multiplier = Comp(skill, target)
-        Jasok = 1.5 if self.type[0] == skill["type"] else 1.0
-        return int(multiplier * (basedmg*skill["damage"] + 2) * Jasok * random.uniform(0.85, 1.00)), multiplier
 
     def can_use_pnr(self):
         """PNR 사용 가능 여부"""

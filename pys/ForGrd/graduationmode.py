@@ -198,10 +198,13 @@ def semester_result_screen(player, screen):
         draw_text(screen,       f"과목명",                            SCREEN_WIDTH//2-200, y_offset)
         draw_text(screen,       f"성적",                              SCREEN_WIDTH//2+200, y_offset, align='right')
         y_offset += 60
-        for i, monster_name in enumerate(player.thisSemesterMonsters):
+        for i in range(min(len(player.thisSemesterMonsters), len(player.thisSemesterGpas))):
+            monster_name = player.thisSemesterMonsters[i]
+            gpa_data = player.thisSemesterGpas[i]
+
             draw_text(screen,   f"{monster_name}",                      SCREEN_WIDTH//2-200, y_offset + i*40, BLACK)
-            draw_text(screen,   f"{player.thisSemesterGpas[i][1]}",     SCREEN_WIDTH//2+200, y_offset + i*40, gpaColor(player.thisSemesterGpas[i][1]), align='right')
-        
+            draw_text(screen,   f"{gpa_data[1]}",                       SCREEN_WIDTH//2+200, y_offset + i*40, gpaColor(gpa_data[1]), align='right')
+                
         pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-200, y_offset + len(player.thisSemesterMonsters)*40 + 20), (SCREEN_WIDTH//2+200, y_offset + len(player.thisSemesterMonsters)*40 + 20), 2)
         y_offset += len(player.thisSemesterMonsters)*40 + 60
 
@@ -274,14 +277,19 @@ def semester_result_screen(player, screen):
 
 def show_final_result(player, screen):
     """최종 결과 화면"""
-    # 졸업 여부 판정
-    if player.gameover():
+    # 졸업 또는 게임 오버 여부 판정
+    # 프밍기 패배 또는 일반적인 게임오버(학사경고 3회)인 경우
+    if player.gameover() or player.ending_type == "프밍기 패배":
         screen.fill(WHITE)
         Lose()
         draw_text(screen, "게임 오버", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, RED, size=64, align = 'center')
         pygame.display.flip()
         pygame.time.wait(2000)
-        if player.warning_count >= 3:
+        # '프밍기 패배' 엔딩 메시지 추가
+        if player.ending_type == "프밍기 패배":
+            draw_text(screen, "당신은 프밍기 시험에 실패했습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
+            draw_text(screen, "전산과에 오면 안될 상이라는 운명입니다...", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+140, BLACK, align='center')
+        elif player.warning_count >= 3:
             draw_text(screen, "학사 경고 3회로 제적되었습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
     else:
         screen.fill(BLACK)
@@ -303,7 +311,7 @@ def show_final_result(player, screen):
         wait_for_key()
 
         # 엔딩 화면 = Graduation.jpg * 8배 사이즈
-        graduation_image = pygame.image.load("../img/Graduation.jpg")
+        graduation_image = pygame.image.load("../img/Graduation.png")
         graduation_image = pygame.transform.scale(graduation_image, (graduation_image.get_width() * 8, graduation_image.get_height() * 8))
         screen.blit(graduation_image, (0, 0))
         pygame.display.flip()
@@ -378,9 +386,11 @@ def get_text_input(screen, prompt):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return "플레이어"
+                return "플레이어"  # Or another default value
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN and input_text.strip():
+                if event.key == pygame.K_ESCAPE:  # If the escape key is pressed
+                    return None  # Return None to signal going back
+                elif event.key == pygame.K_RETURN and input_text.strip():
                     return input_text.strip()
                 elif event.key == pygame.K_BACKSPACE:
                     input_text = input_text[:-1]
@@ -411,7 +421,7 @@ def get_text_input(screen, prompt):
         if len(input_text) == 0:
             draw_text(screen, "이름을 입력해주세요 (최대 10자)", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, GRAY, 32, align='center')
         else:
-            draw_text(screen, "Enter로 확인", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, GRAY, 32, align='center')
+            draw_text(screen, "Enter로 확인, ESC로 뒤로가기", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, GRAY, 32, align='center')
         
         pygame.display.flip()
         pygame.time.wait(50)
@@ -428,9 +438,12 @@ def game_start(screen, Me_name="넙죽이"):
     
     # 이름 입력
     newname = get_text_input(screen, "이름을 입력하세요:")
+    
+    if newname is None:
+        return
 
-    # cheatmode 여부: cheat 입력
-    if "cheat" in newname.lower():
+    # cheat/admin/debug 키워드가 이름에 하나라도 포함되면 치트모드 활성화
+    if any(k in newname.lower() for k in ("cheat", "admin", "debug")):
         player.cheatmode = True
 
     player.name = newname
@@ -461,6 +474,12 @@ def game_start(screen, Me_name="넙죽이"):
             
             # 전투 진행
             battle_result, gpa = battle(player, enemy_monster, screen)
+
+            # 프밍기 패배 또는 드랍 시 게임 오버 처리
+            if monster_name == "프밍기" and battle_result in [0, 3, 5]: # 0: 패배, 3: 드랍, 5: NR
+                player.ending_type = "프밍기 패배"
+                game_running = False
+                break
             
             if battle_result == 1:  # 승리
                 if monster_name in player.clearedMonsters:
@@ -509,17 +528,39 @@ def game_start(screen, Me_name="넙죽이"):
         # 학기 결과 화면
         semester_result_screen(player, screen)
         
-        if not game_running:
-            break
-        
-        # 다음 학기로 진행
+         # 다음 학기로 진행 (수정된 로직)
         print(f"Debug: 현재 진행도 {player.semester_progress}/{len(player.semester_order)}")
+        
+        # 남은 몬스터 수가 0인 경우
+        if len(player.canBeMetMonsters) == 0:
+            if player.current_semester in ["4-1", "4-여름방학", "4-2"]:
+                print("Debug: 모든 학점 취득 완료. 정상 졸업.")
+                break # 게임 루프 종료
+            else:
+                print("Debug: 모든 학점 취득 완료. 조기 졸업!")
+                player.ending_type = "조기"
+                break # 게임 루프 종료
+        
+        # 학기 진행
         if not player.advance_semester():
-            # 모든 학기 완료
-            print("Debug: 모든 학기 완료!")
-            break
-        else:
-            print(f"Debug: 다음 학기로 진행 - {player.current_semester}")
+            # 모든 학기(4-2) 완료 후에도 몬스터가 남았을 때
+            if len(player.canBeMetMonsters) > 0:
+                print("Debug: 연차초과! 추가 학기 시작.")
+                player.ending_type = "연차초과"
+                # 추가 학기 로직을 여기에 구현
+                # 예: 5-1, 5-2, 6-1, 6-2 학기를 직접 추가
+                player.semester_order = player.semester_order + ["5-1", "5-2", "6-1", "6-2"]
+                player.current_semester = player.semester_order[-4] # 5-1 학기로 설정
+                continue
+            else:
+                print("Debug: 모든 학기 완료!")
+                break
+        
+        # 6-2 학기까지 왔는데도 몬스터가 남았을 경우 제적
+        if player.current_semester == "졸업" and len(player.canBeMetMonsters) > 0:
+            print("Debug: 모든 추가 학기 실패. 제적!")
+            player.warning_count = 3 # 제적 조건 충족
+            break # 게임 루프 종료
     
     # 음악 정지
     stop_music()

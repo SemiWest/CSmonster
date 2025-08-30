@@ -2,6 +2,19 @@ from adventure import *
 import ForGrd.graduationmode as graduationmode
 import option
 import sys
+import argparse
+
+# 명령줄 인수 파서 생성
+parser = argparse.ArgumentParser(description="게임 실행 옵션")
+parser.add_argument('--debug', action='store_true', help="디버그 모드 활성화")
+parser.add_argument('--cheat', action='store_true', help="게임 시작 시 치트 모드 활성화")
+
+# 인수 파싱
+args = parser.parse_args()
+
+# 파싱된 값으로 변수 설정
+debug_mode = args.debug
+cheat_mode_on_start = args.cheat # 게임 시작 시 치트 모드 활성화 여부
 
 music_volume = 50
 music_on = True
