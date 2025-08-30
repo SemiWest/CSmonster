@@ -145,7 +145,7 @@ cs101.skills = {
         name='휴보는 내 친구', 
         effect_type="buff",
         type="CT",
-        skW=30, 
+        skW=3, 
         priority=0, 
         description="휴보에게서 에너지가 가득 담긴 비퍼를 받는다. 공격력을 크게 올린다."),
     'CSV 접근': Monster.Skill(
@@ -238,9 +238,9 @@ cs206.skills = {
         name='HashMap', 
         effect_type="buff",
         type="DS",
-        skW=3,
+        skW=0,
         priority=0,
-        description="해시맵을 사용하여 최적의 공격 방법을 찾는다. 특수공격을 올린다."),
+        description="해시맵을 사용하여 최적의 공격 방법을 찾는다. 공격을 올린다."),
 }
 
 # 시프	시 넽	레츠고이브이
@@ -294,7 +294,7 @@ cs330.skills = {
         name='메모리 누수 해결', 
         effect_type="buff", 
         type="SYS",
-        skW=(random.randint(8, 15), random.randint(-16, -9)),
+        skW=(random.randint(3, 6), random.randint(-7, -4)),
         priority=0,
         description="내 아까운 메모리...해결했다."),
     '과제': Monster.Skill(
@@ -332,9 +332,9 @@ cs300.skills = {
         name='퀵소트', 
         effect_type="buff",
         type="CT",
-        skW=(10,12),
+        skW=4,
         priority=1, 
-        description="빠르게 정렬해 방어와 특수 방어를 모두 크게 올린다."),
+        description="빠르게 정렬해 방어를 크게 올린다."),
     '빅O': Monster.Skill(
         name='빅O', 
         effect_type="Pdamage",
@@ -371,7 +371,7 @@ cs311.skills = {
         name='파이프라인', 
         effect_type="buff",
         type="CT",
-        skW=20, 
+        skW=(1,2), 
         priority=0,
         description="CPU 파이프라인을 최적화해 방어력과 속도를 상승시킨다"),
     'MultiThread': Monster.Skill(
