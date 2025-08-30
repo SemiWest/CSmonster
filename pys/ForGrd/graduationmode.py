@@ -682,13 +682,13 @@ def display_skill_change(screen, newskill, player):
                 draw_text(screen, prefix, stX, stY-350 + i * 60, prefix_color)
                 draw_text(screen, f"  {skill['name']}", stX, stY-350 + i * 60, typecolor_dict[skill['type']])
                 draw_text(screen, f"{skill['type']}", stX + 500, stY-350 + i * 60, typecolor_dict[skill['type']])
-                draw_text(screen, f"위력: {skill['damage']}", stX + 600, stY-350 + i * 60, WHITE)
+                draw_text(screen, f"위력: {skill['skW']}", stX + 600, stY-350 + i * 60, WHITE)
 
             else:
                 draw_text(screen, prefix, stX, stY + 40, prefix_color)
                 draw_text(screen, f"  {newskill['name']}", stX, stY+40, typecolor_dict[newskill['type']])
                 draw_text(screen, f"{newskill['type']}", stX + 500, stY+40, typecolor_dict[newskill['type']])
-                draw_text(screen, f"위력: {newskill['damage']}", stX + 600, stY+40, WHITE)
+                draw_text(screen, f"위력: {newskill['skW']}", stX + 600, stY+40, WHITE)
 
         pygame.display.flip()
         key = wait_for_key()
