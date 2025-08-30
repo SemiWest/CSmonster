@@ -770,7 +770,7 @@ def item_phase(screen):
     player.items[chosen_idx] = copy.deepcopy(Noneitem)
     
     # 적 공격
-    enemy_attack_phase(screen, None, enemy_skill=random.choice(list(enemyCSmon.skills.values())))
+    enemy_attack_phase(screen, None, skill=random.choice(list(enemyCSmon.skills.values())))
     
 def get_random_reward_items(num_items):
     """
