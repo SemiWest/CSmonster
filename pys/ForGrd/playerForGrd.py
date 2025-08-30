@@ -150,6 +150,16 @@ class Player:
             "PS": 0,  # 기본적으로 코딩은 할 수 있음
             "AI": 0
         }
+
+        # 현재 내가 들고 있는 스킬
+        self.current_skills = {
+            "*": 1,
+            "CT": 0,
+            "DS": 0,
+            "SYS": 0,
+            "PS": 0,
+            "AI": 0
+        }
         
         # 아이템 인벤토리
         self.items = [
@@ -188,7 +198,7 @@ class Player:
     def get_available_skills(self):
         """사용 가능한 스킬 목록 반환"""
         available = []
-        for skill_type, level in self.learned_skills.items():
+        for skill_type, level in self.current_skills.items():
             if level > 0:
                 skilllist = PLAYER_SKILLS.get(skill_type, [])
                 available.append(skilllist[level-1])
@@ -270,25 +280,32 @@ class Player:
         self.mylevelup = self.gain_exp(monsters[monster_name].drop_exp)
         
         # 과목별 스킬 성장
-        self.skilllevelup = self.grow_skill_from_monster(monster_name)
-    
+        self.skilllevelup, need_skill_change  = self.grow_skill_from_monster(monster_name)
+
+        return need_skill_change
+
     def grow_skill_from_monster(self, monster_name):
         """몬스터 처치에 따른 스킬 성장"""
+
+        need_skill_change = False
+
         typearray = [False, False, False, False, False, False]
 
         if monsters[monster_name].type[0] == "EVENT":
-            return typearray
-
+            return typearray, need_skill_change
+    
         skill_type = monsters[monster_name].type[0]
         
         if monster_name == "프밍기":
             self.learned_skills['*'] += 1
+            self.current_skills['*'] = self.learned_skills['*']
             print(f"Debug: {'*'} 스킬이 {self.learned_skills['*']} 레벨로 상승!")
             typearray[0] = True
 
             # 프밍기 처치 시 CT 스킬을 추가로 획득하는 로직
             if self.learned_skills['CT'] < 5:
                 self.learned_skills['CT'] += 1
+                self.current_skills['CT'] = self.learned_skills['CT']
                 print(f"Debug: {'CT'} 스킬이 {self.learned_skills['CT']} 레벨로 상승!")
                 typearray[1] = True
 
@@ -296,6 +313,7 @@ class Player:
         else:     
             if self.learned_skills[skill_type] < 5:
                 self.learned_skills[skill_type] += 1
+                self.current_skills[skill_type] = self.learned_skills[skill_type]
                 print(f"Debug: {skill_type} 스킬이 {self.learned_skills[skill_type]} 레벨로 상승!")
                 if skill_type == "CT":
                     typearray[1] = True
@@ -307,9 +325,18 @@ class Player:
                     typearray[4] = True
                 elif skill_type == "AI":
                     typearray[5] = True
+        
+        # 현재 가지고 있는 스킬이 4개면 바꾸기
+        num_current_skills = sum(1 for level in self.current_skills.values() if level > 0)
+        if num_current_skills > 4:
+            need_skill_change = True
 
-        return typearray
-    
+        print(f"Debug: self.current_skills: {self.current_skills}")
+        print(f"Debug: num_current_skills: {num_current_skills}")
+        print(f"Debug: need_skill_change: {need_skill_change}")
+
+        return typearray, need_skill_change
+
     def advance_semester(self):
         """다음 학기로 진행"""        
         # 학기 초기화

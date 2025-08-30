@@ -909,7 +909,7 @@ def select_reward_item(screen, items):
         screen.blit(dark_overlay, (0, 0))
 
         
-        draw_text(screen, "  승리 보상! 아이템을 선택하세요.", stX, stY, YELLOW)
+        draw_text(screen, "  승리 보상! 아이템을 선택하자.", stX, stY, YELLOW)
 
         for i, item in enumerate(items):
             name_color = get_item_color_by_grade(item.grade)  # 등급별 색상 함수 사용
