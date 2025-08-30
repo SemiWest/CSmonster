@@ -839,8 +839,11 @@ def item_phase(screen):
     from ForGrd.itemForGrd import Noneitem
     player.items[chosen_idx] = copy.deepcopy(Noneitem)
     
+    enemy_skills = getattr(enemyCSmon, 'skills', {})
+    if enemy_skills:
+        enemy_skill = random.choice(list(enemy_skills.values()))
     # 적 공격
-    enemy_attack_phase(screen, None, skill=random.choice(list(enemyCSmon.skills.values())))
+    enemy_attack_phase(screen, None, enemy_skill)
     
 def get_random_reward_items(num_items):
     """
