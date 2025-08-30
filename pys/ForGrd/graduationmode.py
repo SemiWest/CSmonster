@@ -138,7 +138,7 @@ def semester_intro_screen(player, screen):
         player.thisSemesterMonsters = random.choice([["코옵"],["개별연구"]])
         return
 
-    if "데이터베이스개론" in player.clearedMonsters and "2-2" in player.completed_semesters and "기계학습" not in player.clearedMonsters and "기계학습" not in player.canBeMetMonsters:
+    if "시프" in player.clearedMonsters and "2-1" in player.completed_semesters and "기계학습" not in player.clearedMonsters and "기계학습" not in player.canBeMetMonsters:
         player.canBeMetMonsters.append("기계학습")
     
     # 등장 과목 표시
@@ -546,7 +546,7 @@ def game_start(screen, Me_name="넙죽이"):
         print(f"Debug: 현재 진행도 {player.semester_progress}/{len(player.semester_order)}")
         
         # 남은 몬스터 수가 0인 경우
-        if len(player.canBeMetMonsters) == 0:
+        if len(player.clearedMonsters) >= 14:
             if player.current_semester in ["4-1", "4-여름방학", "4-2"]:
                 print("Debug: 모든 학점 취득 완료. 정상 졸업.")
                 break # 게임 루프 종료
@@ -682,13 +682,13 @@ def display_skill_change(screen, newskill, player):
                 draw_text(screen, prefix, stX, stY-350 + i * 60, prefix_color)
                 draw_text(screen, f"  {skill['name']}", stX, stY-350 + i * 60, typecolor_dict[skill['type']])
                 draw_text(screen, f"{skill['type']}", stX + 500, stY-350 + i * 60, typecolor_dict[skill['type']])
-                draw_text(screen, f"위력: {skill['damage']}", stX + 600, stY-350 + i * 60, WHITE)
+                draw_text(screen, f"위력: {skill['skW']}", stX + 600, stY-350 + i * 60, WHITE)
 
             else:
                 draw_text(screen, prefix, stX, stY + 40, prefix_color)
                 draw_text(screen, f"  {newskill['name']}", stX, stY+40, typecolor_dict[newskill['type']])
                 draw_text(screen, f"{newskill['type']}", stX + 500, stY+40, typecolor_dict[newskill['type']])
-                draw_text(screen, f"위력: {newskill['damage']}", stX + 600, stY+40, WHITE)
+                draw_text(screen, f"위력: {newskill['skW']}", stX + 600, stY+40, WHITE)
 
         pygame.display.flip()
         key = wait_for_key()
