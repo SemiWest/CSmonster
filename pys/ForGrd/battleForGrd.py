@@ -97,7 +97,8 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
             if counter_skill["effect_type"] == "Pdamage" or counter_skill["effect_type"] == "Sdamage":
                 damage, Mul= Damage(user, target, counter_skill)
                 damage = damage * skill["skW"]
-                target.nowhp = max(0, int(target.nowhp - damage))
+                if attackerType != "monster" or not target.cheatmode:
+                    target.nowhp = max(0, int(target.nowhp - damage))
                 if damage > target.HP//2: Damage_strong()
                 elif damage > 0: Damage_weak()
                 return True, damage, Mul
@@ -108,7 +109,8 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
     # damage 스킬 처리
     if skill["effect_type"] == "Pdamage" or skill["effect_type"] == "Sdamage":
         damage, Mul = Damage(target, user, skill)
-        target.nowhp = max(0, int(target.nowhp - damage))
+        if attackerType != "monster" or not target.cheatmode:
+            target.nowhp = max(0, int(target.nowhp - damage))
         if damage > 10: Damage_strong()
         elif damage > 0: Damage_weak()
         return False, damage, Mul
@@ -116,7 +118,8 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
     # halve_hp 스킬 처리
     if skill["effect_type"] == "halve_hp":
         current_hp = target.nowhp
-        target.nowhp = max(0, target.nowhp // 2)
+        if attackerType != "monster" or not target.cheatmode:
+            target.nowhp = max(0, target.nowhp // 2)
         if target.nowhp > 10: Damage_strong()
         elif target.nowhp > 0: Damage_weak()
         damage = current_hp - target.nowhp
@@ -597,23 +600,23 @@ def skill_message(screen, AttackerType, player, enemyCSmon, Pskill, Mskill, dama
     elif skill["effect_type"] == "buff":
         if isinstance(skill["skW"], tuple):
             for B in skill["skW"]:
-                if B % 8 == 0:
-                    draw_text(screen, f"  {user.name}의 공격이 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"), stX, stY, WHITE)
-                elif B % 8 == 1:
-                    draw_text(screen, f"  {user.name}의 방어가 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"), stX, stY, WHITE)
-                elif B % 8 == 2:
-                    draw_text(screen, f"  {user.name}의 스피드가 " + (f"{B//8 + 1}랭크 증가했다!" if B//8 >= 0 else f"{-(B//8 + 1)}랭크 감소했다!"), stX, stY, WHITE)
+                if B % 3 == 0:
+                    draw_text(screen, f"  {user.name}의 공격이 " + (f"{B//3 + 1}랭크 증가했다!" if B//3 >= 0 else f"{-(B//3 + 1)}랭크 감소했다!"), stX, stY, WHITE)
+                elif B % 3 == 1:
+                    draw_text(screen, f"  {user.name}의 방어가 " + (f"{B//3 + 1}랭크 증가했다!" if B//3 >= 0 else f"{-(B//3 + 1)}랭크 감소했다!"), stX, stY, WHITE)
+                elif B % 3 == 2:
+                    draw_text(screen, f"  {user.name}의 스피드가 " + (f"{B//3 + 1}랭크 증가했다!" if B//3 >= 0 else f"{-(B//3 + 1)}랭크 감소했다!"), stX, stY, WHITE)
                 if B != skill["skW"][-1]:
                     pygame.display.flip()
                     wait_for_key()
                     display_status(screen, True)  # 상태 출력
         else:
-            if skill['skW'] % 8 == 0:
-                draw_text(screen, f"  {user.name}의 공격이 " + (f"{skill['skW']//8 + 1}랭크 증가했다!" if skill['skW']//8 >= 0 else f"{-(skill['skW']//8 + 1)}랭크 감소했다!"), stX, stY, WHITE)
-            elif skill['skW'] % 8 == 1:
-                draw_text(screen, f"  {user.name}의 방어가 " + (f"{skill['skW']//8 + 1}랭크 증가했다!" if skill['skW']//8 >= 0 else f"{-(skill['skW']//8 + 1)}랭크 감소했다!"), stX, stY, WHITE)
-            elif skill['skW'] % 8 == 2:
-                draw_text(screen, f"  {user.name}의 스피드가 " + (f"{skill['skW']//8 + 1}랭크 증가했다!" if skill['skW']//8 >= 0 else f"{-(skill['skW']//8 + 1)}랭크 감소했다!"), stX, stY, WHITE)
+            if skill['skW'] % 3 == 0:
+                draw_text(screen, f"  {user.name}의 공격이 " + (f"{skill['skW']//3 + 1}랭크 증가했다!" if skill['skW']//3 >= 0 else f"{-(skill['skW']//3 + 1)}랭크 감소했다!"), stX, stY, WHITE)
+            elif skill['skW'] % 3 == 1:
+                draw_text(screen, f"  {user.name}의 방어가 " + (f"{skill['skW']//3 + 1}랭크 증가했다!" if skill['skW']//3 >= 0 else f"{-(skill['skW']//3 + 1)}랭크 감소했다!"), stX, stY, WHITE)
+            elif skill['skW'] % 3 == 2:
+                draw_text(screen, f"  {user.name}의 스피드가 " + (f"{skill['skW']//3 + 1}랭크 증가했다!" if skill['skW']//3 >= 0 else f"{-(skill['skW']//3 + 1)}랭크 감소했다!"), stX, stY, WHITE)
     pygame.display.flip()
     wait_for_key()  # 메시지를 잠시 보여줌
 
