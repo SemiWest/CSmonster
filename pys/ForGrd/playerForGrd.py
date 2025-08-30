@@ -3,6 +3,8 @@ from ForGrd.monsterForGrd import *
 from ForGrd.itemForGrd import *
 import random
 
+DIFFICULTY_MULTIPLIER = 1.1
+
 # 플레이어 스킬 정의
 """ 코파일럿이 만들어놓은거임 수정하면 될듯? -이준서"""
 GPASCORE = {
@@ -40,33 +42,33 @@ GPACOLOR = {
 
 PLAYER_SKILLS = {
     "*": [
-        {"name": "타자치기", "damage": 30, "type": "*", "description": "한글은 100타, 영어는 독수리타법", "level": 1, "priority": 0},
-        {"name": "Python", "damage": 40, "type": "*", "description": "프밍기를 수강한 당신, 이제 파이썬을 다룰 줄 안다", "level": 2, "priority": 0}
+        {"name": "타자치기", "damage": 25*DIFFICULTY_MULTIPLIER, "type": "*", "description": "한글은 100타, 영어는 독수리타법", "level": 1, "priority": 0},
+        {"name": "Python", "damage": 35*DIFFICULTY_MULTIPLIER, "type": "*", "description": "프밍기를 수강한 당신, 이제 파이썬을 다룰 줄 안다", "level": 2, "priority": 0}
     ],
     "PS": [
-        {"name": "논리왕", "damage": 50, "type": "PS", "description": "상대를 논리로 누른다", "level": 1, "priority": 0},
-        {"name": "Master Theorem", "damage": 60, "type": "PS", "description": "상대의 복잡도를 분석한다", "level": 2, "priority": 0},
-        {"name": "PNP", "damage": 80, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 3, "priority": 0},
+        {"name": "논리왕", "damage": 45*DIFFICULTY_MULTIPLIER, "type": "PS", "description": "상대를 논리로 누른다", "level": 1, "priority": 0},
+        {"name": "Master Theorem", "damage": 55*DIFFICULTY_MULTIPLIER, "type": "PS", "description": "상대의 복잡도를 분석한다", "level": 2, "priority": 1},
+        {"name": "PNP", "damage": 75*DIFFICULTY_MULTIPLIER, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 3, "priority": 3},
     ],
     "CT": [
-        {"name": "증명", "damage": 45, "type": "CT", "description": "상대는 약함을 증명해보자.", "level": 1},
-        {"name": "이산화", "damage": 60, "type": "CT", "description": "상대를 이산화해 분해해버린다", "level": 2, "priority": 0},
-        {"name": "RUST", "damage": 75, "type": "CT", "description": "순수 함수를 배웠다. 어렵다.", "level": 3, "priority": 0},
-        {"name": "팬파인애플애플팬", "damage": 95, "type": "CT", "description": "학부장을 호출한다", "level": 4, "priority": 0}
+        {"name": "증명", "damage": 40*DIFFICULTY_MULTIPLIER, "type": "CT", "description": "상대는 약함을 증명해보자.", "level": 1, "priority": 0},
+        {"name": "이산화", "damage": 50*DIFFICULTY_MULTIPLIER, "type": "CT", "description": "상대를 이산화해 분해해버린다", "level": 2, "priority": 1},
+        {"name": "RUST", "damage": 65*DIFFICULTY_MULTIPLIER, "type": "CT", "description": "순수 함수를 배웠다. 어렵다.", "level": 3, "priority": 3},
+        {"name": "팬파인애플애플팬", "damage": 80*DIFFICULTY_MULTIPLIER, "type": "CT", "description": "학부장을 호출한다", "level": 4, "priority": 4}
     ],
     "SYS": [
-        {"name": "스택오버플로우", "damage": 55, "type": "SYS", "description": "상대의 머리를 과부화시킨다", "level": 1, "priority": 0},
-        {"name": "CTRL^C", "damage": 65, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2, "priority": 0},
-        {"name": "DDOS", "damage": 75, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보낸다", "level": 3, "priority": 0},
-        {"name": "핀토스", "damage": 95, "type": "SYS", "description": "핀토스를 끝낸 자. 어떤 과제가 와도 이겨낼 수 있다.", "level": 4, "priority": 0},
+        {"name": "스택오버플로우", "damage": 45*DIFFICULTY_MULTIPLIER, "type": "SYS", "description": "상대의 머리를 과부화시킨다", "level": 1, "priority": 1},
+        {"name": "CTRL^C", "damage": 50*DIFFICULTY_MULTIPLIER, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2, "priority": 3},
+        {"name": "DDOS", "damage": 60*DIFFICULTY_MULTIPLIER, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보낸다", "level": 3, "priority": 2},
+        {"name": "핀토스", "damage": 75*DIFFICULTY_MULTIPLIER, "type": "SYS", "description": "핀토스를 끝낸 자. 어떤 과제가 와도 이겨낼 수 있다.", "level": 4, "priority": 4},
     ],
     "DS": [
-        {"name": "OOP", "damage": 45, "type": "DS", "description": "상대를 객체화시킨다. 상대 메서드의 취약점을 파악해보자", "level": 1, "priority": 0},
-        {"name": "SQL 인젝션", "damage": 75, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 2, "priority": 0}
+        {"name": "OOP", "damage": 45*DIFFICULTY_MULTIPLIER, "type": "DS", "description": "상대를 객체화시킨다. 상대 메서드의 취약점을 파악해보자", "level": 1, "priority": 1},
+        {"name": "SQL 인젝션", "damage": 70*DIFFICULTY_MULTIPLIER, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 2, "priority": 3}
     ],
     "AI": [
-        {"name": "오버피팅", "damage": 85, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 1, "priority": 0},
-        {"name": "샘 올트먼", "damage": 100, "type": "AI", "description": "상대에게 특화된 GPT를 만든다", "level": 2, "priority": 0}
+        {"name": "오버피팅", "damage": 70*DIFFICULTY_MULTIPLIER, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 1, "priority": 3},
+        {"name": "샘 올트먼", "damage": 80*DIFFICULTY_MULTIPLIER, "type": "AI", "description": "상대에게 특화된 GPT를 만든다", "level": 2, "priority": 4}
     ]
 }
 
