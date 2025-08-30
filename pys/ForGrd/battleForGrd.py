@@ -10,6 +10,7 @@ enemy = None
 enemyCSmon = None
 battle_end = False
 startBattleHp = 0
+BASIC_PNR_SUCCESS_RATE = 0.7
 
 # 아이템 보상 확률 차등 설정
 ITEM_DROP_RATES = {
@@ -394,7 +395,7 @@ def select_player_skill(screen):
                 draw_text(screen, f"{type_dict[skill['type']]}", sX+1212, infoY+20, typecolor_dict[skill['type']], align='right')
                 
                 draw_text(screen, "위력", sX+760, infoY+60, WHITE)
-                draw_text(screen,f"{skill['damage']}", sX+1212, infoY+60, WHITE, align='right')
+                draw_text(screen,f"{skill['damage']:.1f}", sX+1212, infoY+60, WHITE, align='right')
                 draw_wrapped_text(
                     screen,
                     skill['description'],
@@ -757,20 +758,24 @@ def item_phase(screen):
     elif selected_item.effect == "heal":
         heal_amount_req = 0
         
-        # 'fixed' 속성만 있는 경우
-        if hasattr(selected_item, 'fixed') and selected_item.fixed and not hasattr(selected_item, 'varied'):
-            heal_amount_req = selected_item.fixed
+        # MonsterZero처럼 varied가 1인 경우 (전체 회복)
+        if selected_item.varied == 1:
+            heal_amount_req = player.HP - player.nowhp
         
-        # 'varied' 속성만 있는 경우
-        elif hasattr(selected_item, 'varied') and selected_item.varied and not hasattr(selected_item, 'fixed'):
-            heal_amount_req = int(player.HP * selected_item.varied)
-        
-        # 'fixed'와 'varied'가 모두 있는 경우
-        elif hasattr(selected_item, 'fixed') and selected_item.fixed and hasattr(selected_item, 'varied') and selected_item.varied:
+        # 아메리카노처럼 fixed와 varied가 모두 있는 경우 (큰 값 선택)
+        elif selected_item.fixed > 0 and selected_item.varied > 0:
             heal_base = selected_item.fixed
             heal_pct = int(player.HP * selected_item.varied)
             heal_amount_req = max(heal_base, heal_pct)
         
+        # 구글신, 에너지바처럼 fixed만 있는 경우
+        elif selected_item.fixed > 0:
+            heal_amount_req = selected_item.fixed
+        
+        # 그 외 varied만 있는 경우 (에너지바의 varied=0.1처럼)
+        elif selected_item.varied > 0:
+            heal_amount_req = int(player.HP * selected_item.varied)
+            
         healed = player.heal(heal_amount_req, allow_revive=getattr(selected_item, "canuse_on_fainted", False))
 
         animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player.nowhp, player.HP)
@@ -995,13 +1000,29 @@ def battle(getplayer, getenemy, screen=None):
                 return "드랍"
             elif action == 3 and player.can_use_pnr():  # PNR 사용
                 player.pnr_used = True
-                success = "P" if random.random() < 0.80 else "NR"
+            
+                
+                # 몬스터의 현재 HP와 최대 HP를 가져옵니다.
+                enemy_current_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
+                enemy_max_hp = getattr(enemyCSmon, 'HP', 100)
+
+                # 몬스터의 남은 체력 비율을 계산합니다.
+                hp_ratio = enemy_current_hp / enemy_max_hp
+                
+                # PNR 성공률의 최대 변동 폭을 계산합니다. (최대 확률 95%로 고정)
+                pnr_variable_rate = 0.95 - BASIC_PNR_SUCCESS_RATE
+                
+                # 최종 PNR 성공 확률을 계산합니다.
+                pnr_success_rate = BASIC_PNR_SUCCESS_RATE + (1 - hp_ratio) * pnr_variable_rate
+                
+                # 확률을 적용하여 PNR 성공 여부를 결정합니다.
+                success = "P" if random.random() < pnr_success_rate else "NR"
                 show_pnr_result(screen, success)
-                # PNR 사용 시에도 전투 루프를 계속 진행
+                
                 if success == "P":
-                    return "PNR_P" # 새로운 반환값
+                    return "PNR_P"
                 else:
-                    return "PNR_NR" # 새로운 반환값
+                    return "PNR_NR"
             
             # 적 체력 확인
             enemy_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))

@@ -139,20 +139,29 @@ cs101.skills = {
         effect_type="Pdamage",
         type="CT",
         skW=30, 
-        priority=1, 
+        priority=0, 
         description="근본중의 근본인 Hello, World!를 출력해 상대에게 데미지를 준다. 반드시 선제공격한다."),
     '휴보는 내 친구': Monster.Skill(
         name='휴보는 내 친구', 
         effect_type="buff",
         type="CT",
-        skW=9, 
+        skW=30, 
+        priority=0, 
         description="휴보에게서 에너지가 가득 담긴 비퍼를 받는다. 공격력을 크게 올린다."),
     'CSV 접근': Monster.Skill(
         name='CSV 접근', 
         effect_type="Sdamage", 
         type="DS",
         skW=50,
+        priority=1, 
         description="CSV 파일에 접근하여 상대의 구조를 파헤친다."),
+    '나는야 시간표 브레이커': Monster.Skill(
+        name='나는야 시간표 브레이커', 
+        effect_type="Sdamage", 
+        type="DS",
+        skW=30,
+        priority=4, 
+        description="새내기의 시간표를 혼란스럽게 만든다.")
     
 }
 
@@ -177,19 +186,21 @@ cs204.skills = {
         effect_type="Pdamage",
         type="CT",
         skW=60, 
+        priority=0,
         description="아리스토텔레스의 현명함을 빌려 상대를 공격한다."),
     '이산화': Monster.Skill(
         name='이산화', 
         effect_type="halve_hp",
         type="PS",
         skW=0,
+        priority=2,
         description="상대를 이산화시켜 HP를 반으로 줄인다."),
     '무한루프그래프': Monster.Skill(
         name='무한루프그래프', 
         effect_type="reflect", 
         type = "CT",
         skW=0,
-        priority=4, 
+        priority=1, 
         description="무한 루프 그래프를 만들어 상대의 공격을 흘려보낸다."),
 }
 
@@ -207,25 +218,28 @@ cs206.skills = {
         effect_type="Sdamage",
         type="CT",
         skW=100,
+        priority=1,
         description="스택 오버플로우를 일으켜 공격한다."),
     'FIFO': Monster.Skill(
         name='FIFO', 
         effect_type="reflect", 
         type="DS",
         skW=0.5,
-        priority=4, 
+        priority=3, 
         description="큐를 U자로 만들어 상대를 향하게 한다. 상대의 공격을 절반의 피해로 상대에게 출력한다."),
-    '트리 구축': Monster.Skill(
-        name='트리 구축', 
+    '트리 파괴': Monster.Skill(
+        name='트리 파괴', 
         effect_type="Sdamage",
         type="DS",
         skW=50,
+        priority=2,
         description="거대한 트리를 상대에게 쓰러뜨린다. 반드시 명중한다."),
     'HashMap': Monster.Skill(
         name='HashMap', 
         effect_type="buff",
         type="DS",
         skW=3,
+        priority=0,
         description="해시맵을 사용하여 최적의 공격 방법을 찾는다. 특수공격을 올린다."),
 }
 
@@ -243,25 +257,28 @@ cs230.skills = {
         effect_type="Sdamage",
         type="SYS",
         skW=100,
+        priority=2,
         description="버퍼 오버플로우를 일으켜 공격한다."),
     '페이지 폴트': Monster.Skill(
         name='페이지 폴트', 
         effect_type="Sdamage", 
         type="PS",
         skW=70,
+        priority=2,
         description="상대가 사용중인 페이지를 페이징 파일로 옮겨버린다."),
-    '시프 스킬 3': Monster.Skill(
-        name='미정', 
+    'Disassemble': Monster.Skill(
+        name='Disassemble', 
         effect_type="Sdamage", 
         type="PS",
         skW=50,
-        priority=1,
-        description="어떻게 해서 공격한다. 선제공격한다."),
+        priority=3,
+        description="상대의 코드를 역공학하여 공격한다. 반드시 선제공격한다."),
     '셀프 디버그': Monster.Skill(
         name='셀프 디버그', 
         effect_type="heal", 
         type="SYS",
         skW=0.5,
+        priority=0,
         description="자기 자신을 디버깅해 에러를 고친다. 체력을 최대 체력의 절반만큼 회복한다."),
 }
 
@@ -273,29 +290,33 @@ cs330 = Monster(
     image="../img/monsters/OS.png",  
     description="전산과 과목 중 가장 악명이 높다. 자전거를 손을 놓고 타게 만드는 과목이다.")
 cs330.skills = {
-    '우주방사선': Monster.Skill(
-        name='우주방사선', 
+    '메모리 누수 해결': Monster.Skill(
+        name='메모리 누수 해결', 
         effect_type="buff", 
         type="SYS",
         skW=(random.randint(8, 15), random.randint(-16, -9)),
-        description="무작위로 능력치 하나를 크게 올리고 대신 능력치 하나를 낮춘다."),
-    'System32 삭제': Monster.Skill(
-        name='System32 삭제', 
+        priority=0,
+        description="내 아까운 메모리...해결했다."),
+    '과제': Monster.Skill(
+        name='과제', 
         effect_type="Sdamage", 
         type="PS",
         skW=130,
-        description="상대의 운영체제 폴더를 삭제한다. 명중률이 낮다."),
-    '페이지 폴트': Monster.Skill(
-        name='페이지 폴트', 
+        priority=3,
+        description="과제가 나왔다. 큰일났다;; 명중률이 낮다."),
+    '커널 패닉': Monster.Skill(
+        name='커널 패닉', 
         effect_type="Sdamage", 
         type="PS",
         skW=70,
-        description="상대가 사용중인 페이지를 페이징 파일로 옮겨버린다."),
+        priority=4,
+        description="OS 망했다."),
     '셀프 디버그': Monster.Skill(
         name='셀프 디버그', 
         effect_type="heal", 
         type="SYS",
         skW=0.5,
+        priority=0,
         description="자기 자신을 디버깅해 에러를 고친다. 체력을 최대 체력의 절반만큼 회복한다."),
 }
 
@@ -319,12 +340,14 @@ cs300.skills = {
         effect_type="Pdamage",
         type="CT",
         skW=60, 
+        priority=2,
         description="총 방어 수치가 높은 만큼 더 강하게 공격한다."),
     '이산화2': Monster.Skill(
         name='이산화2', 
         effect_type="halve_hp",
         type="PS",
         skW=0,
+        priority=3,
         description="상대를 이산화시켜 HP를 반으로 줄인다."),
     '무한루프그래프': Monster.Skill(
         name='무한루프그래프', 
@@ -344,12 +367,27 @@ cs311 = Monster(
     description="전산기조직설명"
 )
 cs311.skills = {
-    '프로그래밍 언어': Monster.Skill(
-        name='프로그래밍 언어', 
+    '파이프라인': Monster.Skill(
+        name='파이프라인', 
+        effect_type="buff",
+        type="CT",
+        skW=20, 
+        priority=0,
+        description="CPU 파이프라인을 최적화해 방어력과 속도를 상승시킨다"),
+    'MultiThread': Monster.Skill(
+        name='MultiThread', 
         effect_type="Pdamage",
         type="CT",
         skW=70, 
-        description="프로그래밍 언어를 사용해 상대에게 강력한 공격을 한다."),
+        priority=2,
+        description="한 턴에 여러 차례의 연속 공격을 한다."), # TODO: 연속 공격 구현 가능한지 확인
+    'XOR': Monster.Skill(
+        name='XOR',
+        effect_type="reflect",
+        type="CT",
+        skW=0,
+        priority=3,
+        description="XOR 게이트로 상대 공격을 반전시켜 무효화시킨다."),
 }
 
 # PL	전산이론	메타몽
@@ -361,13 +399,36 @@ cs320 = Monster(
     description="프로그래밍 언어설명"
 )
 cs320.skills = {
-    '프로그래밍 언어': Monster.Skill(
-        name='프로그래밍 언어', 
+    'PPAP': Monster.Skill(
+        name='PPAP', 
         effect_type="Pdamage",
         type="CT",
-        skW=70, 
-        description="프로그래밍 언어를 사용해 상대에게 강력한 공격을 한다."),
+        skW=100,
+        priority=2,
+        description="함수 안에 함수를 넣은 밀도있는 공격을 한다"),
+    'Garbage Collection': Monster.Skill(
+        name='Garbage Collection',
+        effect_type="heal",
+        type="CT",
+        skW=20,
+        priority=0,
+        description="필요 없는 메모리를 정리하여 체력을 회복한다."),
+    'Functional Programming': Monster.Skill(
+        name='Functional Programming',
+        effect_type="reflect",
+        type="CT",
+        skW=20,
+        priority=4,
+        description="함수형 프로그래밍이 나를 거부한다. "),
+    'Type Error': Monster.Skill(
+        name='Type Error', 
+        effect_type="disable",
+        type="CT",
+        skW=0, 
+        priority=3,
+        description="타입 에러를 일으켜 상대의 행동을 취소한다."), #TODO: 구현 가능한지 확인해야함
 }
+
 
 # 네떡	시 넽	잠만보
 cs341 = Monster(
@@ -378,14 +439,13 @@ cs341 = Monster(
     description="네트워크설명"
 )
 cs341.skills = {
-    '네트워크 공격': Monster.Skill(
-        name='네트워크 공격', 
-        effect_type="Pdamage",
-        type="SYS",
-        skW=70,
-        description="네트워크를 통해 상대에게 강력한 공격을 한다."),
+    'DDoS': Monster.Skill(
+        name='DDOS', 
+        effect_type="Pdamage", 
+        type="SYS", 
+        skW=70, 
+        description="다수의 공격을 여러 차례 퍼붓는다."),
 }
-
 # 디비개	데이터 과학	리자몽
 cs360 = Monster(
     Num = 360, name="데이터베이스개론", credit = 3,
@@ -395,13 +455,29 @@ cs360 = Monster(
     description="데이터베이스개론설명"
 )
 cs360.skills = {
-    '데이터베이스 공격': Monster.Skill(
-        name='데이터베이스 공격', 
+    'SQL Injection': Monster.Skill(
+        name='SQL Injection',
         effect_type="Pdamage",
         type="DS",
-        skW=70, 
-        description="데이터베이스를 통해 상대에게 강력한 공격을 한다."),
+        skW=85,
+        description="데이터베이스에 강력한 공격을 가한다."
+    ),
+    '트랜잭션 복구': Monster.Skill(
+        name='트랜잭션 복구',
+        effect_type="heal",
+        type="DS",
+        skW=50,
+        description="데이터 손상을 복구하여 체력을 회복한다."
+    ),
+    '인덱스 재구성': Monster.Skill(
+        name='인덱스 재구성',
+        effect_type="buff",
+        type="DS",
+        skW=20,
+        description="시스템 최적화를 통해 능력치를 증가시킨다."
+    ),
 }
+
 
 # 문해기	PS	마자용
 cs202 = Monster(
@@ -429,12 +505,19 @@ cs371 = Monster(
     description="딥러닝개론설명"
 )
 cs371.skills = {
-    '딥러닝 공격': Monster.Skill(
-        name='딥러닝 공격', 
+    'Backpropagation': Monster.Skill(
+        name='Backpropagation', 
         effect_type="Pdamage",
         type="AI",
         skW=70,
-        description="딥러닝 기법을 사용해 상대에게 강력한 공격을 한다."),
+        description="지속적으로 학습하며 강력한 공격을 가한다."),
+    'Overfitting': Monster.Skill(
+        name='Backpropagation', 
+        effect_type="Pdamage",
+        type="AI",
+        skW=100,
+        description="한 차례 강력한 공격을 가하지만 이후 가하는 공격이 크게 약해진다."), # TODO: 추가적인 구현 필요
+    
 }
 
 # 기계학습	인공지능	라티오스
@@ -446,6 +529,12 @@ cs376 = Monster(
     description="기계학습설명"
 )
 cs376.skills = {
+    '기계 공격': Monster.Skill(
+        name='기계 공격', 
+        effect_type="Pdamage",
+        type="AI",
+        skW=70,
+        description="기계학습 기법을 사용해 상대에게 강력한 공격을 한다."),
     '기계 공격': Monster.Skill(
         name='기계 공격', 
         effect_type="Pdamage",

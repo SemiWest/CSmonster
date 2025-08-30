@@ -198,10 +198,13 @@ def semester_result_screen(player, screen):
         draw_text(screen,       f"과목명",                            SCREEN_WIDTH//2-200, y_offset)
         draw_text(screen,       f"성적",                              SCREEN_WIDTH//2+200, y_offset, align='right')
         y_offset += 60
-        for i, monster_name in enumerate(player.thisSemesterMonsters):
+        for i in range(min(len(player.thisSemesterMonsters), len(player.thisSemesterGpas))):
+            monster_name = player.thisSemesterMonsters[i]
+            gpa_data = player.thisSemesterGpas[i]
+
             draw_text(screen,   f"{monster_name}",                      SCREEN_WIDTH//2-200, y_offset + i*40, BLACK)
-            draw_text(screen,   f"{player.thisSemesterGpas[i][1]}",     SCREEN_WIDTH//2+200, y_offset + i*40, gpaColor(player.thisSemesterGpas[i][1]), align='right')
-        
+            draw_text(screen,   f"{gpa_data[1]}",                       SCREEN_WIDTH//2+200, y_offset + i*40, gpaColor(gpa_data[1]), align='right')
+                
         pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-200, y_offset + len(player.thisSemesterMonsters)*40 + 20), (SCREEN_WIDTH//2+200, y_offset + len(player.thisSemesterMonsters)*40 + 20), 2)
         y_offset += len(player.thisSemesterMonsters)*40 + 60
 
@@ -274,14 +277,19 @@ def semester_result_screen(player, screen):
 
 def show_final_result(player, screen):
     """최종 결과 화면"""
-    # 졸업 여부 판정
-    if player.gameover():
+    # 졸업 또는 게임 오버 여부 판정
+    # 프밍기 패배 또는 일반적인 게임오버(학사경고 3회)인 경우
+    if player.gameover() or player.ending_type == "프밍기 패배":
         screen.fill(WHITE)
         Lose()
         draw_text(screen, "게임 오버", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, RED, size=64, align = 'center')
         pygame.display.flip()
         pygame.time.wait(2000)
-        if player.warning_count >= 3:
+        # '프밍기 패배' 엔딩 메시지 추가
+        if player.ending_type == "프밍기 패배":
+            draw_text(screen, "당신은 프밍기 시험에 실패했습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
+            draw_text(screen, "전산과에 오면 안될 상이라는 운명입니다...", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+140, BLACK, align='center')
+        elif player.warning_count >= 3:
             draw_text(screen, "학사 경고 3회로 제적되었습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
     else:
         screen.fill(BLACK)
@@ -434,8 +442,8 @@ def game_start(screen, Me_name="넙죽이"):
     if newname is None:
         return
 
-    # cheatmode 여부: cheat 입력
-    if "cheat" in newname.lower():
+    # cheat/admin/debug 키워드가 이름에 하나라도 포함되면 치트모드 활성화
+    if any(k in newname.lower() for k in ("cheat", "admin", "debug")):
         player.cheatmode = True
 
     player.name = newname
@@ -466,6 +474,12 @@ def game_start(screen, Me_name="넙죽이"):
             
             # 전투 진행
             battle_result, gpa = battle(player, enemy_monster, screen)
+
+            # 프밍기 패배 또는 드랍 시 게임 오버 처리
+            if monster_name == "프밍기" and battle_result in [0, 3, 5]: # 0: 패배, 3: 드랍, 5: NR
+                player.ending_type = "프밍기 패배"
+                game_running = False
+                break
             
             if battle_result == 1:  # 승리
                 if monster_name in player.clearedMonsters:
