@@ -261,9 +261,26 @@ def hpcolor(ratio):
 
 def animate_health_bar(screen, y, x, current_hp, target_hp, max_hp):
     """체력바를 부드럽게 애니메이션으로 업데이트 (pygame)"""
-    current_ratio = int(current_hp * 31 / max_hp)
-    target_ratio = int(target_hp * 31 / max_hp)
-    steps = abs(current_ratio-target_ratio)
+    # current_ratio = int(current_hp * 31 / max_hp)
+    # target_ratio = int(target_hp * 31 / max_hp)
+    # steps = abs(current_ratio-target_ratio)
+
+    # def draw_HP(surface, text, x, y, color, highlight=BLACK):
+    #     fontforHP = pygame.font.Font("../neodgm.ttf", 20)
+    #     font_obj = fontforHP
+    #     text_surface = font_obj.render(text, True, color, highlight)
+    #     surface.blit(text_surface, (x, y))
+    #     return text_surface.get_rect(topleft=(x, y))
+
+    def get_ratio(hp, max_hp):
+        if hp <= 0:
+            return 0
+        ratio = int(hp * 31 / max_hp)
+        return max(1, ratio) if hp > 0 else 0
+
+    current_ratio = get_ratio(current_hp, max_hp)
+    target_ratio = get_ratio(target_hp, max_hp)
+    steps = abs(current_ratio - target_ratio)
 
     def draw_HP(surface, text, x, y, color, highlight=BLACK):
         fontforHP = pygame.font.Font("../neodgm.ttf", 20)
@@ -1117,11 +1134,14 @@ def battle(getplayer, getenemy, screen=None):
         global hap_num, battle_end, item_num
         hap_num = 1
         item_num = 0
-        
-        display_status(screen, detail=True)
-        draw_text(screen, f"  앗! 야생의 {enemyCSmon.name}이/가 나타났다!", stX, stY, WHITE)
-        pygame.display.flip()
-        wait_for_key()
+
+        # 특수몹이 아닌 경우에만 등장 메시지 출력
+        if not enemyCSmon.special:
+            display_status(screen, detail=True)
+            draw_text(screen, f"  앗! 야생의 {enemyCSmon.name}이/가 나타났다!", stX, stY, WHITE)
+            pygame.display.flip()
+            wait_for_key()
+
         if player.current_semester == "새터":
             display_status(screen, detail=True)
             draw_text(screen, f"  * 스킬을 사용해 적을 쓰러뜨리자!", stX, stY, WHITE)
@@ -1132,7 +1152,20 @@ def battle(getplayer, getenemy, screen=None):
             draw_text(screen, f"  스킬과 아이템을 적절히 활용해 휼륭한 성적으로 졸업해보자!", stX, stY, WHITE)
             pygame.display.flip()
             wait_for_key()
-        
+
+        if enemyCSmon.special:
+            display_status(screen, detail=True)
+            draw_text(screen, f"  어라, 야생의 {enemyCSmon.name}이/가 나타났다!", stX, stY, WHITE)
+            pygame.display.flip()
+            wait_for_key()
+
+            if enemyCSmon.Num == "777":     # 몰캠
+                pass
+            elif enemyCSmon.Num == "888":   # 코옵
+                pass
+            elif enemyCSmon.Num == "999":   # 개별연구
+                pass
+
         while not battle_end:
             # 플레이어 턴
             action = select_action(screen)
