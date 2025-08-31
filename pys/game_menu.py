@@ -247,7 +247,7 @@ def show_records():
     import os
     import csv
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    filepath = os.path.join(base_dir, "game_log.csv")
+    filepath = os.path.join(base_dir, "ForGrd/graduation_results.csv")
     
     if not os.path.isfile(filepath):
         # 기록이 없는 경우
@@ -264,8 +264,7 @@ def show_records():
         reader = csv.reader(file)
         header = next(reader)  # 헤더 스킵
         for row in reader:
-            if len(row) > 2 and row[2] == "클리어":
-                clear_records.append(row)
+            clear_records.append(row)
     
     if not clear_records:
         screen.fill(WHITE)
@@ -287,18 +286,17 @@ def show_records():
         record = clear_records[current_page]
         draw_text(screen, f"{current_page + 1}. {record[0]}", 50, y_pos, BLACK)
         y_pos += 40
-        draw_text(screen, f"    플레이 난이도 {record[1]} | 졸업 GPA {record[3]} | 총 전투 횟수 {record[4]}", 50, y_pos, BLACK)
+        draw_text(screen, f"    이름 {record[1]} | 졸업 GPA {record[2]} | 레벨 {record[3]}", 50, y_pos, BLACK)
         y_pos += 40
-        draw_text(screen, "    잡은 전산몬스터", 50, y_pos, BLACK)
+        draw_text(screen, f"    딘즈 {record[4]}회 | 장짤 {record[5]}회 | 학사경고 {record[6]}회", 50, y_pos, BLACK)
         y_pos += 40
-        
-        # 잡은 몬스터 표시
-        for i in range(5, len(record), 3):
-            if i+2 < len(record) and record[i] != "빈 슬롯":
-                monster_text = f"       {record[i]} lv {record[i+1]}  잡은 스테이지: {record[i+2]}"
-                draw_text(screen, monster_text, 50, y_pos, BLACK)
-                y_pos += 40
-        
+        draw_text(screen, f"    최종 학기 {record[7]} | 엔딩 타입 {record[8]}", 50, y_pos, BLACK)
+        y_pos += 40
+        skills = []
+        for i in range(9, len(record), 2):
+            if record[i]:
+                skills.append(f"{record[i]}타입 스킬 레벨 {record[i+1]}, ")
+        draw_text(screen, f"    스킬: " + ", ".join(skills), 50, y_pos, BLACK)      
         y_pos += 40
         if current_page < len(clear_records) - 1:
             draw_text(screen, "아무 키나 눌러 다음 페이지로 (q키: 종료)", 50, y_pos, GRAY)
