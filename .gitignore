@@ -3,6 +3,7 @@ __pycache__/
 *$py.class
 logs/
 *.log
+game.log
 
 # macOS
 .DS_Store
