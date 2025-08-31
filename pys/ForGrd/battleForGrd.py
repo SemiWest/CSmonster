@@ -13,7 +13,7 @@ startBattleHp = 0
 BASIC_PNR_SUCCESS_RATE = 0.7
 # 난이도 조절을 위한 전역 변수
 # 1~100 사이의 값으로 설정. 값이 높을수록 더 지능적인 선택을 함.
-INTELLIGENCE_LEVEL = 70
+INTELLIGENCE_LEVEL = 40
 
 # 아이템 보상 확률 차등 설정
 ITEM_DROP_RATES = {

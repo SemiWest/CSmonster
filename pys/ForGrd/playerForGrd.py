@@ -3,7 +3,7 @@ from ForGrd.monsterForGrd import *
 from ForGrd.itemForGrd import *
 import random
 
-DIFFICULTY_MULTIPLIER = 1.15
+DIFFICULTY_MULTIPLIER = 1.2
 
 # 플레이어 스킬 정의
 """ 코파일럿이 만들어놓은거임 수정하면 될듯? -이준서"""
