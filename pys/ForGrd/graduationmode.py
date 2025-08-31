@@ -17,48 +17,60 @@ def display_Monster_Imge(screen, monster, x, y, size=1):
     height = img.get_height()
     screen.blit(img, (x, y-height//2))
 
-def save_game_log_csv(filename, player, final_semester):
+def save_game_log_csv(filename, player):
     """게임 결과를 CSV에 저장"""
-    try:
-        # 절대 경로 생성
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        filepath = os.path.join(base_dir, filename)
+    # 절대 경로 생성
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    filepath = os.path.join(base_dir, filename)
+    
+    # 파일이 없으면 헤더 작성 필요
+    write_header = not os.path.exists(filepath) or os.path.getsize(filepath) == 0
+    
+    # CSV 파일에 게임 결과 저장
+    with open(filepath, 'a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
         
-        # 파일이 없으면 헤더 작성 필요
-        write_header = not os.path.exists(filepath) or os.path.getsize(filepath) == 0
-        
-        # CSV 파일에 게임 결과 저장
-        with open(filepath, 'a', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            
-            # 헤더 작성
-            if write_header:
-                writer.writerow([
-                    '이름', '최종학기', '레벨', '처치과목수', '딘즈달성', 
-                    '장짤횟수', '학사경고', '획득칭호', '최종엔딩', '저장시간'
-                ])
-            
-            # 게임 결과 데이터 저장
-            import datetime
-            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            
+        # 헤더 작성
+        if write_header:
             writer.writerow([
-                player.name,
-                final_semester,
-                player.level,
-                len(player.defeated_monsters),
-                player.deans_count,
-                player.jangzal_count,
-                player.warning_count,
-                ', '.join(player.titles) if player.titles else '없음',
-                player.get_final_ending(),
-                now
+                '날짜', '이름', '최종 GPA', '최종 레벨', '딘즈 횟수', '장짤 횟수', '학사경고 횟수',
+                '최종 학기', '엔딩 타입', '스킬1', '스킬1레벨', '스킬2', '스킬2레벨',
+                '스킬3', '스킬3레벨', '스킬4', '스킬4레벨'
             ])
-            
-        return True, f"게임 결과가 {filename}에 저장되었습니다."
         
-    except Exception as e:
-        return False, f"저장 실패: {str(e)}"
+        # 게임 결과 데이터 저장
+        import datetime
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # 최종 스킬들 스킬타입, 스킬레벨
+        skillresult = []
+        # current_skills 에서 레벨이 0이상인 스킬들 key와 value를 skillresult에 추가
+        for skill, level in player.learned_skills.items():
+            if level > 0:
+                skillresult.append(skill)
+                skillresult.append(str(level))
+        gpa = player.calcGPA(2)
+        print(gpa)
+        writer.writerow([
+            now,
+            player.name,
+            gpa,
+            player.level,
+            player.deans_count,
+            player.jangzal_count,
+            player.warning_count,
+            player.current_semester,
+            player.ending_type,
+            skillresult[0] if len(skillresult) > 0 else '',
+            skillresult[1] if len(skillresult) > 1 else '',
+            skillresult[2] if len(skillresult) > 2 else '',
+            skillresult[3] if len(skillresult) > 3 else '',
+            skillresult[4] if len(skillresult) > 4 else '',
+            skillresult[5] if len(skillresult) > 5 else '',
+            skillresult[6] if len(skillresult) > 6 else '',
+            skillresult[7] if len(skillresult) > 7 else ''
+        ])
+        
+    return True, f"게임 결과가 {filename}에 저장되었습니다."
 
 def get_current_semester_monsters(player):
     length = len(player.canBeMetMonsters)
@@ -392,7 +404,7 @@ def show_final_result(player, screen):
     draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2+450, y_offset, BLACK, align='right')
     
     # 결과 저장
-    success, message = save_game_log_csv("graduation_results.csv", player, player.current_semester)
+    success, message = save_game_log_csv("graduation_results.csv", player)
     
     if success:
         draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
