@@ -57,7 +57,7 @@ PLAYER_SKILLS = {
         {"name": "팬파인애플애플팬", "effect_type": "Sdamage", "skW": round(70*DIFFICULTY_MULTIPLIER/5)*5, "type": "CT", "description": "학부장을 호출한다", "level": 4, "priority": 4}
     ],
     "SYS": [
-        {"name": "스택오버플로우", "effect_type": "buff", "skW": 3, "type": "SYS", "description": "일정 턴 동안 방어력을 증가시킨다.", "level": 1, "priority": 1},
+        {"name": "스택오버플로우", "effect_type": "buff", "skW": 4, "type": "SYS", "description": "일정 턴 동안 방어력을 증가시킨다.", "level": 1, "priority": 1},
         {"name": "CTRL^C", "effect_type": "Sdamage", "skW": round(5*DIFFICULTY_MULTIPLIER/5)*5, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2, "priority": 5},
         {"name": "DDOS", "effect_type": "halve_hp", "skW": 0, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보내 체력을 절반으로 만든다.", "level": 3, "priority": 2},
         {"name": "핀토스", "effect_type": "heal", "skW": 0.5, "type": "SYS", "description": "핀토스를 끝낸 자. 자신의 체력을 크게 회복한다.", "level": 4, "priority": 4},

@@ -264,9 +264,26 @@ def hpcolor(ratio):
 
 def animate_health_bar(screen, y, x, current_hp, target_hp, max_hp):
     """체력바를 부드럽게 애니메이션으로 업데이트 (pygame)"""
-    current_ratio = int(current_hp * 31 / max_hp)
-    target_ratio = int(target_hp * 31 / max_hp)
-    steps = abs(current_ratio-target_ratio)
+    # current_ratio = int(current_hp * 31 / max_hp)
+    # target_ratio = int(target_hp * 31 / max_hp)
+    # steps = abs(current_ratio-target_ratio)
+
+    # def draw_HP(surface, text, x, y, color, highlight=BLACK):
+    #     fontforHP = pygame.font.Font("../neodgm.ttf", 20)
+    #     font_obj = fontforHP
+    #     text_surface = font_obj.render(text, True, color, highlight)
+    #     surface.blit(text_surface, (x, y))
+    #     return text_surface.get_rect(topleft=(x, y))
+
+    def get_ratio(hp, max_hp):
+        if hp <= 0:
+            return 0
+        ratio = int(hp * 31 / max_hp)
+        return max(1, ratio) if hp > 0 else 0
+
+    current_ratio = get_ratio(current_hp, max_hp)
+    target_ratio = get_ratio(target_hp, max_hp)
+    steps = abs(current_ratio - target_ratio)
 
     def draw_HP(surface, text, x, y, color, highlight=BLACK):
         fontforHP = pygame.font.Font("../neodgm.ttf", 20)
@@ -394,9 +411,9 @@ def display_player_details(screen, player, x):
         (("다음 레벨까지", 0, WHITE), (f"{player.max_exp - player.exp}", 228, BLUE), ("경험치 남음", 352, WHITE)),
         "",
         (("체력", 0, WHITE), (f"{player.nowhp}"+"/"+f"{player.HP}", 228, CYAN)),
-        (("공격", 0, WHITE), (f"{player.ATK}", 228, CYAN)),
-        (("방어", 0, WHITE), (f"{player.DEF}", 228, CYAN)),
-        (("속도", 0, WHITE), (f"{player.SPD}", 228, CYAN)),
+        (("공격", 0, WHITE), (f"{player.CATK}", 228, GREEN if player.CATK > player.ATK else RED if player.CATK < player.ATK else WHITE), None if player.Rank[0]==0 else ((("+" if player.Rank[0]>0 else "-") + f"{abs(player.Rank[0])}"), 292, RED if player.Rank[0]<0 else GREEN)),
+        (("방어", 0, WHITE), (f"{player.CDEF}", 228, GREEN if player.CDEF > player.DEF else RED if player.CDEF < player.DEF else WHITE), None if player.Rank[1]==0 else ((("+" if player.Rank[1]>0 else "-") + f"{abs(player.Rank[1])}"), 292, RED if player.Rank[1]<0 else GREEN)),
+        (("속도", 0, WHITE), (f"{player.CSPD}", 228, GREEN if player.CSPD > player.SPD else RED if player.CSPD < player.SPD else WHITE), None if player.Rank[2]==0 else ((("+" if player.Rank[2]>0 else "-") + f"{abs(player.Rank[2])}"), 292, RED if player.Rank[2]<0 else GREEN)),
         "",
         (("현재 학기", 0, WHITE), (f"{player.current_semester}", 228, WHITE)),
         "",
@@ -506,19 +523,19 @@ def select_player_skill(screen):
             # 스킬 표시
             prefix = "> " if i == current_index else "  "
             prefix_color = WHITE if i == current_index else GRAY  # 원하는 색상 지정
-            draw_text(screen, prefix, x_pos, y_pos, prefix_color)
-            draw_text(screen, skill['name'], x_pos + 30, y_pos, get_color_by_effectiveness(effectiveness))
-            # draw_text(screen, skill['name'], x_pos + 30, y_pos, get_color_by_effectiveness(effectiveness), highlight= typecolor_dict[skill['type']])
+            draw_text(screen, prefix, x_pos, y_pos+5, prefix_color)
+            draw_text(screen, skill['name'], x_pos + 32, y_pos, get_color_by_effectiveness(effectiveness))
+            # draw_text(screen, skill['name'], x_pos + 32, y_pos, get_color_by_effectiveness(effectiveness), highlight= typecolor_dict[skill['type']])
 
             # 효과 표시
             if get_color_by_effectiveness(effectiveness) == RED:
-                draw_text(screen, "효과가 굉장함", x_pos + 30, y_pos + 35, RED, size=16)
+                draw_text(screen, "효과가 굉장함", x_pos + 32, y_pos + 35, RED, size=16)
             elif get_color_by_effectiveness(effectiveness) == GRAY:
-                draw_text(screen, "효과 없음", x_pos + 30, y_pos + 35, GRAY, size=16)
+                draw_text(screen, "효과 없음", x_pos + 32, y_pos + 35, GRAY, size=16)
             elif get_color_by_effectiveness(effectiveness) == LIGHTGRAY:
-                draw_text(screen, "효과가 별로임", x_pos + 30, y_pos + 35, LIGHTGRAY, size=16)
+                draw_text(screen, "효과가 별로임", x_pos + 32, y_pos + 35, LIGHTGRAY, size=16)
             else:
-                draw_text(screen, "효과 있음", x_pos + 30, y_pos + 35, WHITE, size=16)
+                draw_text(screen, "효과 있음", x_pos + 32, y_pos + 35, WHITE, size=16)
 
             if i == current_index:
                 # 선택된 스킬 상세정보 표시
@@ -639,7 +656,7 @@ def skill_message(screen, AttackerType, player, enemyCSmon, Pskill, Mskill, dama
         playerskill_dict = {
             "name": Pskill["name"],
             "type": Pskill["type"],
-            "effect_type": "Sdamage", 
+            "effect_type": Pskill["effect_type"],
             "skW": Pskill["skW"]
         }
     if Mskill is None:
@@ -818,22 +835,26 @@ def select_item(screen, temp=None):
         display_status(screen)
         
         for i, item in enumerate(sorted_items):
-            x_pos = stX + i * 210
-            y_pos = stY 
+            x_pos = stX + (200 * (i % 3))
+            y_pos = stY + int(i / 3) * 61
 
             color = coloring[i] if coloring[i] else WHITE
             
+            # 스킬 표시
             prefix = "> " if i == current_index else "  "
-            draw_text(screen, f"{prefix}{item.name}", x_pos, y_pos, color)
-            
+            prefix_color = WHITE if i == current_index else GRAY  # 원하는 색상 지정
+            draw_text(screen, prefix, x_pos, y_pos, prefix_color)
+            draw_text(screen, f"{item.name}", x_pos + 32, y_pos, color)
+            infoY = sY+536
             if i == current_index:
                 draw_wrapped_text(
                     screen,
                     descriptions[i],
-                    stX,
-                    stY + 60,
+                    sX+760,
+                    infoY + 20,
                     WHITE,
-                    max_width=1100
+                    font_size=16,
+                    max_width= 452 # 원하는 최대 너비 지정
                 )
         
         pygame.display.flip()
@@ -852,23 +873,16 @@ def select_item(screen, temp=None):
             return -1
         elif len(player.items) == 1:
             current_index = 0
-        # elif key == 'up' and (current_index > 1 and current_index < len(player.items)):
-        #     current_index -= 2
-        #     option_change_sound()
-        # elif key == 'down' and (current_index >= 0 and current_index < len(player.items)-2):
-        #     current_index += 2
-        #     option_change_sound()
-        # elif key == 'left' and (current_index % 2 == 1 and current_index < len(player.items) and current_index >= 0):
-        #     current_index -= 1
-        #     option_change_sound()
-        # elif key == 'right' and (current_index % 2 == 0 and current_index < len(player.items) and current_index >= 0 and current_index != len(player.items)-1):
-        #     current_index += 1
-        #     option_change_sound()
-
-        elif key == 'left' and current_index > 0:
+        elif key == 'up' and (current_index > 2 and current_index < len(player.items)):
+            current_index -= 3
+            option_change_sound()
+        elif key == 'down' and (current_index >= 0 and current_index < len(player.items)-3):
+            current_index += 3
+            option_change_sound()
+        elif key == 'left' and (current_index % 3 != 0 and current_index < len(player.items) and current_index >= 0):
             current_index -= 1
             option_change_sound()
-        elif key == 'right' and current_index < len(player.items) - 1:
+        elif key == 'right' and (current_index % 3 != 2 and current_index < len(player.items) and current_index >= 0 and current_index != len(player.items)-1):
             current_index += 1
             option_change_sound()
 
@@ -1124,11 +1138,14 @@ def battle(getplayer, getenemy, screen=None):
         global hap_num, battle_end, item_num
         hap_num = 1
         item_num = 0
-        
-        display_status(screen, detail=True)
-        draw_text(screen, f"  앗! 야생의 {enemyCSmon.name}이/가 나타났다!", stX, stY, WHITE)
-        pygame.display.flip()
-        wait_for_key()
+
+        # 특수몹이 아닌 경우에만 등장 메시지 출력
+        if not enemyCSmon.special:
+            display_status(screen, detail=True)
+            draw_text(screen, f"  앗! 야생의 {enemyCSmon.name}이/가 나타났다!", stX, stY, WHITE)
+            pygame.display.flip()
+            wait_for_key()
+
         if player.current_semester == "새터":
             display_status(screen, detail=True)
             draw_text(screen, f"  * 스킬을 사용해 적을 쓰러뜨리자!", stX, stY, WHITE)
@@ -1139,7 +1156,20 @@ def battle(getplayer, getenemy, screen=None):
             draw_text(screen, f"  스킬과 아이템을 적절히 활용해 휼륭한 성적으로 졸업해보자!", stX, stY, WHITE)
             pygame.display.flip()
             wait_for_key()
-        
+
+        if enemyCSmon.special:
+            display_status(screen, detail=True)
+            draw_text(screen, f"  어라, 야생의 {enemyCSmon.name}이/가 나타났다!", stX, stY, WHITE)
+            pygame.display.flip()
+            wait_for_key()
+
+            if enemyCSmon.Num == "777":     # 몰캠
+                pass
+            elif enemyCSmon.Num == "888":   # 코옵
+                pass
+            elif enemyCSmon.Num == "999":   # 개별연구
+                pass
+
         while not battle_end:
             # 플레이어 턴
             action = select_action(screen)
