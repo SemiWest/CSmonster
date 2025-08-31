@@ -560,6 +560,8 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                 player.thisSemesterGpas.append(gpa)
 
             elif battle_result == 0:  # 패배
+                if monster_name in player.clearedMonsters:
+                    _remove_cleared_entry(player, monster_name)
                 player.thisSemesterGpas.append(gpa)
                 player.canBeMetMonsters.append(monster_name)
                 _add_cleared_entry(player, monster_name, player.current_semester, gpa)

@@ -161,10 +161,10 @@ def main_menu():
         running = True
         pygame.event.clear()
 
-
         while running:
             if main_menu_reload:
                 main_menu_animation()
+                pygame.event.clear()
                 main_menu_reload = False
             
             if musicOnOff:

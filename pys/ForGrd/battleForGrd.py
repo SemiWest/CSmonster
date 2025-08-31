@@ -408,9 +408,9 @@ def display_player_details(screen, player, x):
         (("다음 레벨까지", 0, WHITE), (f"{player.max_exp - player.exp}", 228, BLUE), ("경험치 남음", 352, WHITE)),
         "",
         (("체력", 0, WHITE), (f"{player.nowhp}"+"/"+f"{player.HP}", 228, CYAN)),
-        (("공격", 0, WHITE), (f"{player.ATK}", 228, CYAN)),
-        (("방어", 0, WHITE), (f"{player.DEF}", 228, CYAN)),
-        (("속도", 0, WHITE), (f"{player.SPD}", 228, CYAN)),
+        (("공격", 0, WHITE), (f"{player.CATK}", 228, GREEN if player.CATK > player.ATK else RED if player.CATK < player.ATK else WHITE), None if player.Rank[0]==0 else ((("+" if player.Rank[0]>0 else "-") + f"{abs(player.Rank[0])}"), 292, RED if player.Rank[0]<0 else GREEN)),
+        (("방어", 0, WHITE), (f"{player.CDEF}", 228, GREEN if player.CDEF > player.DEF else RED if player.CDEF < player.DEF else WHITE), None if player.Rank[1]==0 else ((("+" if player.Rank[1]>0 else "-") + f"{abs(player.Rank[1])}"), 292, RED if player.Rank[1]<0 else GREEN)),
+        (("속도", 0, WHITE), (f"{player.CSPD}", 228, GREEN if player.CSPD > player.SPD else RED if player.CSPD < player.SPD else WHITE), None if player.Rank[2]==0 else ((("+" if player.Rank[2]>0 else "-") + f"{abs(player.Rank[2])}"), 292, RED if player.Rank[2]<0 else GREEN)),
         "",
         (("현재 학기", 0, WHITE), (f"{player.current_semester}", 228, WHITE)),
         "",
@@ -520,19 +520,19 @@ def select_player_skill(screen):
             # 스킬 표시
             prefix = "> " if i == current_index else "  "
             prefix_color = WHITE if i == current_index else GRAY  # 원하는 색상 지정
-            draw_text(screen, prefix, x_pos, y_pos, prefix_color)
-            draw_text(screen, skill['name'], x_pos + 30, y_pos, get_color_by_effectiveness(effectiveness))
-            # draw_text(screen, skill['name'], x_pos + 30, y_pos, get_color_by_effectiveness(effectiveness), highlight= typecolor_dict[skill['type']])
+            draw_text(screen, prefix, x_pos, y_pos+5, prefix_color)
+            draw_text(screen, skill['name'], x_pos + 32, y_pos, get_color_by_effectiveness(effectiveness))
+            # draw_text(screen, skill['name'], x_pos + 32, y_pos, get_color_by_effectiveness(effectiveness), highlight= typecolor_dict[skill['type']])
 
             # 효과 표시
             if get_color_by_effectiveness(effectiveness) == RED:
-                draw_text(screen, "효과가 굉장함", x_pos + 30, y_pos + 35, RED, size=16)
+                draw_text(screen, "효과가 굉장함", x_pos + 32, y_pos + 35, RED, size=16)
             elif get_color_by_effectiveness(effectiveness) == GRAY:
-                draw_text(screen, "효과 없음", x_pos + 30, y_pos + 35, GRAY, size=16)
+                draw_text(screen, "효과 없음", x_pos + 32, y_pos + 35, GRAY, size=16)
             elif get_color_by_effectiveness(effectiveness) == LIGHTGRAY:
-                draw_text(screen, "효과가 별로임", x_pos + 30, y_pos + 35, LIGHTGRAY, size=16)
+                draw_text(screen, "효과가 별로임", x_pos + 32, y_pos + 35, LIGHTGRAY, size=16)
             else:
-                draw_text(screen, "효과 있음", x_pos + 30, y_pos + 35, WHITE, size=16)
+                draw_text(screen, "효과 있음", x_pos + 32, y_pos + 35, WHITE, size=16)
 
             if i == current_index:
                 # 선택된 스킬 상세정보 표시
@@ -653,7 +653,7 @@ def skill_message(screen, AttackerType, player, enemyCSmon, Pskill, Mskill, dama
         playerskill_dict = {
             "name": Pskill["name"],
             "type": Pskill["type"],
-            "effect_type": "Sdamage", 
+            "effect_type": Pskill["effect_type"],
             "skW": Pskill["skW"]
         }
     if Mskill is None:
@@ -832,22 +832,26 @@ def select_item(screen, temp=None):
         display_status(screen)
         
         for i, item in enumerate(sorted_items):
-            x_pos = stX + i * 210
-            y_pos = stY 
+            x_pos = stX + (200 * (i % 3))
+            y_pos = stY + int(i / 3) * 61
 
             color = coloring[i] if coloring[i] else WHITE
             
+            # 스킬 표시
             prefix = "> " if i == current_index else "  "
-            draw_text(screen, f"{prefix}{item.name}", x_pos, y_pos, color)
-            
+            prefix_color = WHITE if i == current_index else GRAY  # 원하는 색상 지정
+            draw_text(screen, prefix, x_pos, y_pos, prefix_color)
+            draw_text(screen, f"{item.name}", x_pos + 32, y_pos, color)
+            infoY = sY+536
             if i == current_index:
                 draw_wrapped_text(
                     screen,
                     descriptions[i],
-                    stX,
-                    stY + 60,
+                    sX+760,
+                    infoY + 20,
                     WHITE,
-                    max_width=1100
+                    font_size=16,
+                    max_width= 452 # 원하는 최대 너비 지정
                 )
         
         pygame.display.flip()
@@ -866,23 +870,16 @@ def select_item(screen, temp=None):
             return -1
         elif len(player.items) == 1:
             current_index = 0
-        # elif key == 'up' and (current_index > 1 and current_index < len(player.items)):
-        #     current_index -= 2
-        #     option_change_sound()
-        # elif key == 'down' and (current_index >= 0 and current_index < len(player.items)-2):
-        #     current_index += 2
-        #     option_change_sound()
-        # elif key == 'left' and (current_index % 2 == 1 and current_index < len(player.items) and current_index >= 0):
-        #     current_index -= 1
-        #     option_change_sound()
-        # elif key == 'right' and (current_index % 2 == 0 and current_index < len(player.items) and current_index >= 0 and current_index != len(player.items)-1):
-        #     current_index += 1
-        #     option_change_sound()
-
-        elif key == 'left' and current_index > 0:
+        elif key == 'up' and (current_index > 2 and current_index < len(player.items)):
+            current_index -= 3
+            option_change_sound()
+        elif key == 'down' and (current_index >= 0 and current_index < len(player.items)-3):
+            current_index += 3
+            option_change_sound()
+        elif key == 'left' and (current_index % 3 != 0 and current_index < len(player.items) and current_index >= 0):
             current_index -= 1
             option_change_sound()
-        elif key == 'right' and current_index < len(player.items) - 1:
+        elif key == 'right' and (current_index % 3 != 2 and current_index < len(player.items) and current_index >= 0 and current_index != len(player.items)-1):
             current_index += 1
             option_change_sound()
 
