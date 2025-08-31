@@ -1219,10 +1219,10 @@ def display_molcamp_quiz(screen, quizes):
             pygame.display.flip()
             wait_for_key()
 
-            display_status(screen) 
+            player.level += 1
+            display_status(screen)
             draw_text(screen, f"  레벨이 1 올랐다!", stX, stY, YELLOW)
             pygame.display.flip()
-            player.level += 1
 
             display_status(screen) 
             Level_up()
