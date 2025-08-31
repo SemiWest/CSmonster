@@ -1,3 +1,4 @@
+from turtle import color
 from game_menu import *
 from ForGrd.playerForGrd import *
 from ForGrd.itemForGrd import get_item_color_by_grade
@@ -48,6 +49,7 @@ ME = pygame.transform.scale_by(ME, 10)
 ATK = pygame.image.load("../img/ATK.png")
 SPATK = pygame.image.load("../img/SP.ATK.png")
 ETC = pygame.image.load("../img/ETC.png")
+SPEC_TEXT = pygame.image.load("../img/special_txt.png")
 
 def comp(atskilltype, tgtype):
     """
@@ -1118,6 +1120,128 @@ def select_reward_item(screen, items):
 
 # 메인 전투 함수 수정
 # 기존의 battle 함수를 아래 코드로 교체하세요.
+def option_accept_challenge(screen, options, y_offset = 30):
+    current_index = 0
+    while True:
+
+        display_status(screen)
+        screen.blit(SPEC_TEXT, (sX+8, sY+536 - 300))
+        draw_text(screen, "몰입 캠프! 코드 문해력 퀴즈!", sX+8 + 300, sY+536 - 300 + 30, ORANGE, size = 32, align='center')
+        draw_wrapped_text(screen, "수락한다면 주어진 파이썬 코드의 실행 결과(출력값)를 맞추는 미니게임에 도전하게 된다. ", sX+ 20 , sY+536 - 300 + 50 + y_offset, WHITE, max_width= 600, font_size=16)
+        draw_wrapped_text(screen, "플레이어가 문제의 정답을 맞히면, 몰입 캠프에서 많은 경험치를 얻게 되어 빠르게 성장할 수 있다. 정답을 맞히지 못하면, 패널티 없이 전투가 계속 진행된다.", sX+20, sY+536 - 300 + 50 + y_offset * 3, WHITE, max_width= 600, font_size=16)
+        draw_wrapped_text(screen, "정답을 맞혀 더 강한 자신이 되어 보자!", sX+20, sY+536 - 300 + 50 + y_offset * 6, WHITE, max_width= 600, font_size=16)
+        draw_wrapped_text(screen, "도전을 수락할까?", sX+20, sY+536 - 300 + 50 + y_offset * 7, YELLOW, max_width= 600, font_size=16)
+
+        for i, option in enumerate(options):
+            x_pos = stX + (300 * (i % 2))
+            y_pos = stY + int(i / 2) * 56
+
+            prefix = "> " if i == current_index else "  "
+            draw_text(screen, f"{prefix}{option}", x_pos, y_pos, WHITE)
+
+        pygame.display.flip()
+
+        key = wait_for_key()
+        if key == 'enter':
+            return current_index
+        elif key == 'left' and current_index > 0:
+            current_index -= 1
+            option_change_sound()
+        elif key == 'right' and current_index < len(options)-1:
+            current_index += 1
+            option_change_sound()
+        
+
+def molcamp_quiz(screen):
+    # 몰입 캠프 퀴즈 로직 구현
+    quizes = [
+        {'Question': ["x = 5", "x += True", "print(x)"], 'Options': ["1. Error", "2. 5", "3. 6"], 'Answer': 3},
+        {'Question': ["print(len([0] * 5 == [0, 0, 0, 0, 0]))"], 'Options': ["1. Error", "2. True", "3. False"], 'Answer': 1},
+        {'Question': ["print([1, 2, 3][True])"], 'Options': ["1. 1", "2. 2", "3. 3"], 'Answer': 2}
+    ]
+    return display_molcamp_quiz(screen, quizes)
+
+def display_quiz_interface(screen, quiz):
+    for line in quiz['Question']:
+        draw_text(screen, line, stX + 600, stY - 300 + quiz['Question'].index(line) * 40, WHITE, size=48, align='center')
+
+def display_molcamp_quiz(screen, quizes):
+    result = 0
+    for i, quiz in enumerate(quizes):
+        current_index = 0
+        while True:
+            display_status(screen)
+            apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 222))
+            draw_text(screen, f"  {i+1}번 문제: 다음 출력값의 결과는?", stX, stY, YELLOW)
+
+            display_quiz_interface(screen, quiz)
+
+            for option in quiz['Options']:
+                x_pos = stX + quiz['Options'].index(option) * 200
+                y_pos = stY + 50
+
+                prefix = "> " if quiz['Options'].index(option) == current_index else "  "
+                draw_text(screen, f"{prefix}{option}", x_pos, y_pos, WHITE)
+
+            pygame.display.flip()
+            key = wait_for_key()
+            if key == 'enter':
+                option_select_sound()
+                break
+            elif key == 'left' and current_index > 0:
+                current_index -= 1
+                option_change_sound()
+            elif key == 'right' and current_index < len(quiz["Options"])-1:
+                current_index += 1
+                option_change_sound()
+        
+        display_status(screen)
+        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 222))
+        display_quiz_interface(screen, quiz)
+        draw_text(screen, f"  {quiz['Options'][current_index]}를 선택했다.", stX, stY, WHITE)
+        pygame.display.flip()
+        wait_for_key()
+
+        display_status(screen)
+        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 222))
+        display_quiz_interface(screen, quiz)
+        draw_text(screen, f"  {quiz['Options'][quiz['Answer']-1]}가 정답이였다!", stX, stY, YELLOW)
+        pygame.display.flip()
+        wait_for_key()
+
+        # 정답
+        if quiz['Options'][current_index] == quiz['Options'][quiz['Answer']-1]:
+
+            result += 1
+
+            display_status(screen)
+            draw_text(screen, f"  맞았다!", stX, stY, YELLOW)
+            pygame.display.flip()
+            wait_for_key()
+
+            display_status(screen) 
+            draw_text(screen, f"  레벨이 1 올랐다!", stX, stY, YELLOW)
+            pygame.display.flip()
+            player.level += 1
+
+            display_status(screen) 
+            Level_up()
+            wait_for_key()
+
+
+        else:
+            display_status(screen)
+            draw_text(screen, f"  틀렸다!", stX, stY, RED)
+            pygame.display.flip()
+            wait_for_key()
+
+    display_status(screen)
+    draw_text(screen, f"  총 {result}문제를 맞췄다!", stX, stY, WHITE)
+    pygame.display.flip()
+    wait_for_key()
+
+    return result
+
 
 def battle(getplayer, getenemy, screen=None):
     global player, enemy, enemyCSmon, battle_end, startBattleHp
@@ -1176,99 +1300,132 @@ def battle(getplayer, getenemy, screen=None):
             pygame.display.flip()
             wait_for_key()
 
-            if enemyCSmon.Num == "777":     # 몰캠
+            y_offset = 30
+
+            if enemyCSmon.Num == 777:     # 몰캠
+                # print("Debug: 몰캠 전투 시작")
+                
+                current_index = option_accept_challenge(screen, options=["수락한다", "거절한다"], y_offset=y_offset)
+                do_event = False
+
+                # 거절
+                if current_index == 1:
+                    do_event = False
+                    display_status(screen, detail=True)
+                    draw_text(screen, f"  몰입 캠프를 거절한다...", stX, stY, WHITE)
+                    pygame.display.flip()
+                    wait_for_key()
+
+                # 수락
+                elif current_index == 0:
+                    do_event = True
+                    display_status(screen, detail=True)
+                    draw_text(screen, f"  몰입 캠프에 도전한다!", stX, stY, WHITE)
+                    pygame.display.flip()
+                    wait_for_key()
+
+            elif enemyCSmon.Num == 888:   # 코옵
                 pass
-            elif enemyCSmon.Num == "888":   # 코옵
-                pass
-            elif enemyCSmon.Num == "999":   # 개별연구
+            elif enemyCSmon.Num == 999:   # 개별연구
                 pass
 
         while not battle_end:
-            # 플레이어 턴
-            action = select_action(screen)
-            
-            if action == -999:  # 디버그 스킵
-                # 스킵으로 즉시 승리 처리
-                Battle_win()
-                display_status(screen, detail=True)
-                draw_text(screen, f"  [DEBUG] 전투를 스킵했습니다!", stX, stY, YELLOW)
-                pygame.display.flip()
-                wait_for_key()
-                battle_end = True
-                return "승리"
-            elif action == 0:  # 스킬 사용
-                esc = skill_phase(screen)
-                if esc == -1:
-                    continue
-            elif action == 1:  # 아이템 사용
-                if not any(i.name != "빈 슬롯" for i in player.items):
+            if enemyCSmon.Num == 777:     # 몰캠
+                if do_event:
+                    lup_amt = molcamp_quiz(screen)
+                    strl = "레벨업" + " +" + str(lup_amt) + " 및 체력 완전 회복"
+                    print(strl)
+                    madcamp.reward = strl
+                    return "승리"
+
+                else:
+                    return "드랍"
+                
+            else:
+                # 플레이어 턴
+                action = select_action(screen)
+                
+                if action == -999:  # 디버그 스킵
+                    # 스킵으로 즉시 승리 처리
+                    Battle_win()
                     display_status(screen, detail=True)
-                    draw_text(screen, f"  아이템이 없다!", stX, stY, WHITE)
+                    draw_text(screen, f"  [DEBUG] 전투를 스킵했습니다!", stX, stY, YELLOW)
                     pygame.display.flip()
                     wait_for_key()
-                    continue
-                else:
-                    esc = item_phase(screen)
+                    battle_end = True
+                    return "승리"
+                elif action == 0:  # 스킬 사용
+                    esc = skill_phase(screen)
                     if esc == -1:
                         continue
-            elif action == 2:  # 드랍
-                display_status(screen, detail=True)
-                draw_text(screen, f"  과목을 드랍했다!", stX, stY, WHITE)
-                pygame.display.flip()
-                wait_for_key()
-                return "드랍"
-            elif action == 3 and player.can_use_pnr():  # PNR 사용
-                player.pnr_used = True
-            
+                elif action == 1:  # 아이템 사용
+                    if not any(i.name != "빈 슬롯" for i in player.items):
+                        display_status(screen, detail=True)
+                        draw_text(screen, f"  아이템이 없다!", stX, stY, WHITE)
+                        pygame.display.flip()
+                        wait_for_key()
+                        continue
+                    else:
+                        esc = item_phase(screen)
+                        if esc == -1:
+                            continue
+                elif action == 2:  # 드랍
+                    display_status(screen, detail=True)
+                    draw_text(screen, f"  과목을 드랍했다!", stX, stY, WHITE)
+                    pygame.display.flip()
+                    wait_for_key()
+                    return "드랍"
+                elif action == 3 and player.can_use_pnr():  # PNR 사용
+                    player.pnr_used = True
                 
-                # 몬스터의 현재 HP와 최대 HP를 가져옵니다.
-                enemy_current_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
-                enemy_max_hp = getattr(enemyCSmon, 'HP', 100)
+                    
+                    # 몬스터의 현재 HP와 최대 HP를 가져옵니다.
+                    enemy_current_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
+                    enemy_max_hp = getattr(enemyCSmon, 'HP', 100)
 
-                # 몬스터의 남은 체력 비율을 계산합니다.
-                hp_ratio = enemy_current_hp / enemy_max_hp
+                    # 몬스터의 남은 체력 비율을 계산합니다.
+                    hp_ratio = enemy_current_hp / enemy_max_hp
+                    
+                    # PNR 성공률의 최대 변동 폭을 계산합니다. (최대 확률 95%로 고정)
+                    pnr_variable_rate = 0.95 - BASIC_PNR_SUCCESS_RATE
+                    
+                    # 최종 PNR 성공 확률을 계산합니다.
+                    pnr_success_rate = BASIC_PNR_SUCCESS_RATE + (1 - hp_ratio) * pnr_variable_rate
+                    
+                    # 확률을 적용하여 PNR 성공 여부를 결정합니다.
+                    success = "P" if random.random() < pnr_success_rate else "NR"
+                    show_pnr_result(screen, success)
+                    
+                    if success == "P":
+                        return "PNR_P"
+                    else:
+                        return "PNR_NR"
                 
-                # PNR 성공률의 최대 변동 폭을 계산합니다. (최대 확률 95%로 고정)
-                pnr_variable_rate = 0.95 - BASIC_PNR_SUCCESS_RATE
+                # 적 체력 확인
+                enemy_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
+                if enemy_hp <= 0:
+                    display_status(screen, detail=True)
+                    draw_text(screen, f"  {enemyCSmon.name}이/가 쓰러졌다!", stX, stY, WHITE)
+                    pygame.display.flip()
+                    wait_for_key()
+                    
+                    battle_end = True
+                    return "승리"
                 
-                # 최종 PNR 성공 확률을 계산합니다.
-                pnr_success_rate = BASIC_PNR_SUCCESS_RATE + (1 - hp_ratio) * pnr_variable_rate
+                # 플레이어 체력 확인
+                if not player.is_alive():
+                    display_status(screen, detail=True)
+                    draw_text(screen, f"  {player.name}이/가 쓰러졌다!", stX, stY, WHITE)
+                    pygame.display.flip()
+                    wait_for_key()
+                    battle_end = True
+                    return "패배"
                 
-                # 확률을 적용하여 PNR 성공 여부를 결정합니다.
-                success = "P" if random.random() < pnr_success_rate else "NR"
-                show_pnr_result(screen, success)
-                
-                if success == "P":
-                    return "PNR_P"
-                else:
-                    return "PNR_NR"
-            
-            # 적 체력 확인
-            enemy_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
-            if enemy_hp <= 0:
-                display_status(screen, detail=True)
-                draw_text(screen, f"  {enemyCSmon.name}이/가 쓰러졌다!", stX, stY, WHITE)
-                pygame.display.flip()
-                wait_for_key()
-                
-                battle_end = True
-                return "승리"
-            
-            # 플레이어 체력 확인
-            if not player.is_alive():
-                display_status(screen, detail=True)
-                draw_text(screen, f"  {player.name}이/가 쓰러졌다!", stX, stY, WHITE)
-                pygame.display.flip()
-                wait_for_key()
-                battle_end = True
-                return "패배"
-            
-            hap_num += 1
+                hap_num += 1
     
     # 전투 시작
     result = battle_logic(screen)
     
-    # 여기는 변경 없음
     if result == "승리":
         Battle_win()
         display_status(screen)

@@ -266,9 +266,9 @@ class Player:
         self.skilllevelup = [False, False, False, False, False, False]
 
         if monster_name == "몰입캠프":
-            self.level += 3
+            self.level += 0
             self.update_fullreset()
-            print("Debug: 몰입캠프 클리어! 레벨이 3 상승하고 체력이 완전히 회복되었습니다.")
+            print("Debug: 몰입캠프 클리어! 레벨이 일정 상승하고 체력이 완전히 회복되었습니다.")
         if monster_name == "코옵":
             self.update_fullreset()
             self.titles.append("회사원")
