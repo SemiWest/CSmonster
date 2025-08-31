@@ -1,4 +1,6 @@
 from playsound import *
+import numpy as np
+
 font = None
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
@@ -56,6 +58,12 @@ def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=32, line_
     for i, line in enumerate(lines):
         surface.blit(font.render(line.strip(), True, color), (x, y + i * (font_size + line_spacing)))
 
+
+def apply_alpha_overlay(screen, rect, alpha=180, color=(0,0,0)):
+    x, y, w, h = rect
+    overlay = pygame.Surface((w, h), pygame.SRCALPHA)
+    overlay.fill((*color, alpha))  # color + alpha
+    screen.blit(overlay, (x, y))
 
 def load_title_image():
     """타이틀 이미지를 로드하는 함수"""

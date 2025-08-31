@@ -681,9 +681,7 @@ def display_skill_change(screen, newskill, player):
 
     while True:
         display_status(screen)
-        dark_overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
-        dark_overlay.fill((0, 0, 0, 180))  # 마지막 값(120)은 투명도, 0~255
-        screen.blit(dark_overlay, (0, 0))
+        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 222))
 
         draw_text(screen, "  잊어 버릴 기술을 선택하자.", stX, stY, YELLOW)
 
@@ -698,10 +696,10 @@ def display_skill_change(screen, newskill, player):
             # 현재 가지고 있는 색
 
             if i != len(skills_ordered)-1:
-                draw_text(screen, prefix, stX, stY-350 + i * 60, prefix_color)
-                draw_text(screen, f"  {skill['name']}", stX, stY-350 + i * 60, typecolor_dict[skill['type']])
-                draw_text(screen, f"{skill['type']}", stX + 500, stY-350 + i * 60, typecolor_dict[skill['type']])
-                draw_text(screen, f"위력: {skill['skW']}", stX + 600, stY-350 + i * 60, WHITE)
+                draw_text(screen, prefix, stX, stY-400 + i * 60, prefix_color)
+                draw_text(screen, f"  {skill['name']}", stX, stY-400 + i * 60, typecolor_dict[skill['type']])
+                draw_text(screen, f"{skill['type']}", stX + 500, stY-400 + i * 60, typecolor_dict[skill['type']])
+                draw_text(screen, f"위력: {skill['skW']}", stX + 600, stY-400 + i * 60, WHITE)
 
             else:
                 draw_text(screen, prefix, stX, stY + 40, prefix_color)
