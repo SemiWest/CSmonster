@@ -240,7 +240,7 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
                 user.Rank[B % 3] = max(-6,min(6, user.Rank[B % 3] + B//3 + 1))
         else:
             user.Rank[skill["skW"] % 3] = max(-6,min(6, user.Rank[skill["skW"] % 3] + skill["skW"]//3 + 1))
-        user.update()
+        user.update_battle()
         return False, 0, False
 
     return False, 0, False
@@ -1010,7 +1010,7 @@ def item_phase(screen):
             elif selected_item.fixed % 3 == 2:
                 draw_text(screen, f"  {player.name}의 속도가 {selected_item.fixed//3 + 1}랭크 증가했다!", stX, stY, WHITE)
 
-        player.update()
+        player.update_battle()
 
     elif selected_item.effect == "debuff":
         if isinstance(selected_item.fixed, tuple):
@@ -1037,7 +1037,7 @@ def item_phase(screen):
             elif selected_item.fixed % 3 == 2:
                 draw_text(screen, f"  {enemyCSmon.name}의 속도가 {-(selected_item.fixed//3 + 1)}랭크 감소했다!", stX, stY, WHITE)
 
-        enemyCSmon.update()
+        enemyCSmon.update_battle()
             
     pygame.display.flip()
     wait_for_key()

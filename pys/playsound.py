@@ -160,7 +160,7 @@ def wait_for_key():
                     return 'right'
                 elif event.key == pygame.K_TAB:
                     return 'tab'
-        pygame.time.wait(50)
+        pygame.time.wait(10)
 
 def option_select_sound():
     play_effect("../sound/Option_select.mp3")
