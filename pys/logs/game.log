@@ -1,0 +1,11 @@
+2025-08-31 17:53:49 - logging_setup - INFO - 로깅 시스템 초기화 완료: 레벨=DEBUG, 파일=활성화, 표준출력=비활성화
+2025-08-31 17:53:49 - __main__ - INFO - 게임 시작
+2025-08-31 17:53:49 - __main__ - DEBUG - 메인 메뉴 표시
+2025-08-31 17:53:49 - game_menu - DEBUG - 메인 메뉴 초기화 시작
+2025-08-31 17:54:01 - game_menu - INFO - 메뉴 선택: 졸업 모드
+2025-08-31 17:54:01 - __main__ - INFO - 모드 선택: 졸업 모드
+2025-08-31 17:54:01 - __main__ - INFO - 졸업 모드 시작
+2025-08-31 17:54:01 - ForGrd.graduationmode - INFO - 졸업 모드 게임 시작: 플레이어=넙죽이
+2025-08-31 17:54:07 - ForGrd.battleForGrd - INFO - 전투 시작: xistoh vs 알 수 없는 적
+2025-08-31 17:54:16 - ForGrd.battleForGrd - INFO - 전투 시작: xistoh vs 프밍기
+2025-08-31 17:54:25 - ForGrd.battleForGrd - INFO - 전투 시작: xistoh vs 이산구조
