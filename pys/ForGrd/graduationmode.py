@@ -359,8 +359,8 @@ def show_final_result(player, screen):
             y_offset += 8
             draw_text(screen, f"{current}", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
             y_offset += 40
-        draw_text(screen,   f"{player.clearedMonsters[i]}", SCREEN_WIDTH//2-450+(500*oneSemMonsters%2), y_offset, BLACK)
-        draw_text(screen,   f"{player.gpas[i][1]}",         SCREEN_WIDTH//2-50 +(500*oneSemMonsters%2), y_offset, gpaColor(player.gpas[i][1]), align='right')
+        draw_text(screen,   f"{player.clearedMonsters[i]}", SCREEN_WIDTH//2-450+(500*(oneSemMonsters%2)), y_offset, BLACK)
+        draw_text(screen,   f"{player.gpas[i][1]}",         SCREEN_WIDTH//2-50 +(500*(oneSemMonsters%2)), y_offset, gpaColor(player.gpas[i][1]), align='right')
         oneSemMonsters += 1
         if oneSemMonsters%2 == 0:
             y_offset += 40
@@ -376,17 +376,17 @@ def show_final_result(player, screen):
 
     draw_text(screen, "비고", SCREEN_WIDTH//2, y_offset, BLACK, size=32, align='center')
     y_offset += 40
-    draw_text(screen, f"이름: {player.name}", SCREEN_WIDTH//2-200, y_offset, BLACK)
+    draw_text(screen, f"이름: {player.name}", SCREEN_WIDTH//2-450, y_offset, BLACK)
     draw_text(screen, f"최종 레벨: {player.level}", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
-    draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2+200, y_offset, BLACK, align='right')
+    draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2+450, y_offset, BLACK, align='right')
     
     # 결과 저장
     success, message = save_game_log_csv("graduation_results.csv", player, player.current_semester)
     
     if success:
-        draw_text(screen, "✓ 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
+        draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
     else:
-        draw_text(screen, "✗ 저장 실패", SCREEN_WIDTH//2 - 72, SCREEN_HEIGHT - 120, RED)
+        draw_text(screen, "X 저장 실패", SCREEN_WIDTH//2 - 72, SCREEN_HEIGHT - 120, RED)
     
     draw_text(screen, "아무 키나 눌러 메인메뉴로...", SCREEN_WIDTH//2 - 160, SCREEN_HEIGHT - 60, BLACK)
     
