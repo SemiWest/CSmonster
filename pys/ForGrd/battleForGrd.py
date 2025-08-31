@@ -363,6 +363,28 @@ def display_status(screen, detail=False):
 
 def display_player_details(screen, player, x):
     """플레이어 상세 정보 출력"""
+
+    # [True, False, False, False, False, False] 형식
+    current_skill_boolean = [player.current_skills[t] > 0 for t in ["*", "CT", "DS", "PS", "SYS", "AI"]]
+
+    def get_color_by_level_skill(current_skill_boolean, type_index = 0):
+
+        type  = ["*", "CT", "DS", "PS", "SYS", "AI"][type_index]
+
+        if not current_skill_boolean[type_index]:
+            return GRAY
+        else:
+            if player.learned_skills[type] == 0:
+                return GRAY
+            elif player.learned_skills[type] < 2:
+                return WHITE
+            elif player.learned_skills[type] < 4:
+                return YELLOW
+            elif player.learned_skills[type] < 5:
+                return ORANGE
+            else:
+                return RED
+
     details = [
         (("이름", 0, WHITE), (f"{player.name}", 228, CYAN)),
         (("레벨", 0, WHITE), (f"{player.level}", 228, CYAN)),
@@ -376,12 +398,12 @@ def display_player_details(screen, player, x):
         (("현재 학기", 0, WHITE), (f"{player.current_semester}", 228, WHITE)),
         "",
         (("스킬 별 레벨", 0, WHITE), ("", 0, WHITE)),
-        (("  *   ", 0 , STARC), (f"Level {player.learned_skills['*']}", 228, GRAY if player.learned_skills["*"] == 0 else WHITE if player.learned_skills["*"] < 2 else YELLOW if player.learned_skills["*"] < 4 else ORANGE if player.learned_skills["*"] < 5 else RED)),
-        (("  CT  ", 0 , CTC), (f"Level {player.learned_skills['CT']}", 228, GRAY if player.learned_skills["CT"] == 0 else WHITE if player.learned_skills["CT"] < 2 else YELLOW if player.learned_skills["CT"] < 4 else ORANGE if player.learned_skills["CT"] < 5 else RED)),
-        (("  DS  ", 0 , DSC), (f"Level {player.learned_skills['DS']}", 228, GRAY if player.learned_skills["DS"] == 0 else WHITE if player.learned_skills["DS"] < 2 else YELLOW if player.learned_skills["DS"] < 4 else ORANGE if player.learned_skills["DS"] < 5 else RED)),
-        (("  PS  ", 0 , PSC), (f"Level {player.learned_skills['PS']}", 228, GRAY if player.learned_skills["PS"] == 0 else WHITE if player.learned_skills["PS"] < 2 else YELLOW if player.learned_skills["PS"] < 4 else ORANGE if player.learned_skills["PS"] < 5 else RED)),
-        (("  SYS ", 0 , SYSC), (f"Level {player.learned_skills['SYS']}", 228, GRAY if player.learned_skills["SYS"] == 0 else WHITE if player.learned_skills["SYS"] < 2 else YELLOW if player.learned_skills["SYS"] < 4 else ORANGE if player.learned_skills["SYS"] < 5 else RED)),
-        (("  AI  ", 0 , AIC), (f"Level {player.learned_skills['AI']}", 228, GRAY if player.learned_skills["AI"] == 0 else WHITE if player.learned_skills["AI"] < 2 else YELLOW if player.learned_skills["AI"] < 4 else ORANGE if player.learned_skills["AI"] < 5 else RED)),
+        (("  *   ", 0 , STARC if current_skill_boolean[0] else GRAY), (f"Level {player.learned_skills['*']}", 228, get_color_by_level_skill(current_skill_boolean, 0))),
+        (("  CT  ", 0 , CTC if current_skill_boolean[1] else GRAY), (f"Level {player.learned_skills['CT']}", 228, get_color_by_level_skill(current_skill_boolean, 1))),
+        (("  DS  ", 0 , DSC if current_skill_boolean[2] else GRAY), (f"Level {player.learned_skills['DS']}", 228, get_color_by_level_skill(current_skill_boolean, 2))),
+        (("  PS  ", 0 , PSC if current_skill_boolean[3] else GRAY), (f"Level {player.learned_skills['PS']}", 228, get_color_by_level_skill(current_skill_boolean, 3))),
+        (("  SYS ", 0 , SYSC if current_skill_boolean[4] else GRAY), (f"Level {player.learned_skills['SYS']}", 228, get_color_by_level_skill(current_skill_boolean, 4))),
+        (("  AI  ", 0 , AIC if current_skill_boolean[5] else GRAY), (f"Level {player.learned_skills['AI']}", 228, get_color_by_level_skill(current_skill_boolean, 5))),
     ]
     
     for i, detail_item in enumerate(details):
@@ -1027,9 +1049,11 @@ def select_reward_item(screen, items):
     while True:
 
         display_status(screen)
-        dark_overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
-        dark_overlay.fill((0, 0, 0, 180))  # 마지막 값(120)은 투명도, 0~255
-        screen.blit(dark_overlay, (0, 0))
+        # dark_overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+        # dark_overlay.fill((0, 0, 0, 180))  # 마지막 값(120)은 투명도, 0~255
+        # screen.blit(dark_overlay, (0, 0))
+
+        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 222))
 
         
         draw_text(screen, "  승리 보상! 아이템을 선택하자.", stX, stY, YELLOW)
@@ -1039,14 +1063,14 @@ def select_reward_item(screen, items):
 
             prefix = "> " if i == current_index else "  "
             # 이름만 색상 적용, 설명은 그대로 WHITE
-            draw_text(screen, f"{prefix}", stX, stY-350+i*100, WHITE)
-            draw_text(screen, f"{item.name}", stX+30, stY-350+i*100, name_color)
-            draw_text(screen, f"{item.gradeSymbol}{item.grade}", stX+30, stY-350+i*100+40, name_color, size=16)
+            draw_text(screen, f"{prefix}", stX, stY-400+i*100, WHITE)
+            draw_text(screen, f"{item.name}", stX+30, stY-400+i*100, name_color)
+            draw_text(screen, f"{item.gradeSymbol}{item.grade}", stX+30, stY-400+i*100+40, name_color, size=16)
             draw_wrapped_text(
                 screen,
                 item.description,
                 stX+300,
-                stY-350+i*100,
+                stY-400+i*100,
                 WHITE,
                 max_width= psX - sX + 300 # 원하는 최대 너비 지정
             )
@@ -1105,7 +1129,7 @@ def battle(getplayer, getenemy, screen=None):
             wait_for_key()
         if player.current_semester ==  "1-1":
             display_status(screen, detail=True)
-            draw_text(screen, f"  * 스킬과 아이템을 적절히 활용해 휼륭한 성적으로 졸업해보자!", stX, stY, WHITE)
+            draw_text(screen, f"  스킬과 아이템을 적절히 활용해 휼륭한 성적으로 졸업해보자!", stX, stY, WHITE)
             pygame.display.flip()
             wait_for_key()
         
