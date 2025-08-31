@@ -136,7 +136,7 @@ def semester_intro_screen(player, screen):
     if semester_name == "3-여름방학":
         player.thisSemesterMonsters = ["몰입캠프"]
         return
-    elif semester_name == "4-여름방학":
+    if semester_name == "4-여름방학":
         player.thisSemesterMonsters = random.choice([["코옵"],["개별연구"]])
         return
 
@@ -535,6 +535,8 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                         gpa[1] = "A-"
                     _add_cleared_entry(player, monster_name, player.current_semester, gpa)
                 player.thisSemesterGpas.append(gpa)
+                player.clearedMonsters.append(monster_name)
+                player.gpas.append(gpa)
                 need_skill_change = player.complete_monster(monster_name)
                 addSeonSus(player, enemy_monster)
 
@@ -542,7 +544,9 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                 if monster_name in player.clearedMonsters:
                     _remove_cleared_entry(player, monster_name)
                     _add_cleared_entry(player, monster_name, player.current_semester, gpa)
+                player.clearedMonsters.append(monster_name)
                 player.thisSemesterGpas.append(gpa)
+                player.gpas.append(gpa)
                 need_skill_change = player.complete_monster(monster_name)
                 addSeonSus(player, enemy_monster)
 
