@@ -344,6 +344,8 @@ def display_status(screen, detail=False):
 
     screen.blit(TEXT, (sX+8, sY+536))
 
+    draw_text(screen, "Enter를 눌러 확인", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, LIGHTGRAY, align='center')
+
 def display_player_details(screen, player, x):
     """플레이어 상세 정보 출력"""
     details = [
@@ -382,6 +384,8 @@ def select_action(screen):
     
     # 기본 옵션들
     options = ["스킬 사용", "아이템 사용", "도망가기"]
+    if player.current_semester == "새터":
+        options = ["스킬 사용"]
     
     # PNR 버튼 추가 (조건부)
     if player.can_use_pnr():
@@ -1074,6 +1078,16 @@ def battle(getplayer, getenemy, screen=None):
         draw_text(screen, f"  앗! 야생의 {enemyCSmon.name}이/가 나타났다!", stX, stY, WHITE)
         pygame.display.flip()
         wait_for_key()
+        if player.current_semester == "새터":
+            display_status(screen, detail=True)
+            draw_text(screen, f"  * 스킬을 사용해 적을 쓰러뜨리자!", stX, stY, WHITE)
+            pygame.display.flip()
+            wait_for_key()
+        if player.current_semester ==  "1-1":
+            display_status(screen, detail=True)
+            draw_text(screen, f"  * 스킬과 아이템을 적절히 활용해 휼륭한 성적으로 졸업해보자!", stX, stY, WHITE)
+            pygame.display.flip()
+            wait_for_key()
         
         while not battle_end:
             # 플레이어 턴
