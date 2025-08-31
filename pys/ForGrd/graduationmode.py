@@ -455,7 +455,7 @@ def _add_cleared_entry(player, monster_name, semester, gpa):
     player.clearedSemesters.append(semester)
     player.gpas.append(gpa)
 
-def game_start(screen, Me_name="넙죽이"):
+def game_start(screen, Me_name="넙죽이", debug_config=None):
     """새로운 졸업모드 메인 게임 로직"""
     # pygame 화면 초기화 강제 실행
     init_pygame_screen()
@@ -463,14 +463,30 @@ def game_start(screen, Me_name="넙죽이"):
     # 새로운 플레이어 생성
     player = Player(name=Me_name)
     
+    # 디버그 설정 초기화
+    if debug_config is None:
+        from typing import NamedTuple
+        class DebugConfig(NamedTuple):
+            debug: bool
+            damage: bool
+            skip: bool
+        debug_config = DebugConfig(debug=False, damage=True, skip=False)
+    
     # 이름 입력
     newname = get_text_input(screen, "이름을 입력하세요:")
     
     if newname is None:
         return
 
-    # cheat/admin/debug 키워드가 이름에 하나라도 포함되면 치트모드 활성화
+    # 디버그 설정을 플레이어에 연결
+    player.debug_config = debug_config
+    
+    # cheat/admin/debug 키워드가 이름에 하나라도 포함되면 치트모드 활성화 (기존 호환성)
     if any(k in newname.lower() for k in ("cheat", "admin", "debug")):
+        player.cheatmode = True
+    
+    # CLI 디버그 모드 활성화
+    if debug_config.debug:
         player.cheatmode = True
 
     player.name = newname

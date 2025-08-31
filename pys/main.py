@@ -3,18 +3,32 @@ import ForGrd.graduationmode as graduationmode
 import option
 import sys
 import argparse
+from typing import NamedTuple
 
 # 명령줄 인수 파서 생성
 parser = argparse.ArgumentParser(description="게임 실행 옵션")
 parser.add_argument('--debug', action='store_true', help="디버그 모드 활성화")
 parser.add_argument('--cheat', action='store_true', help="게임 시작 시 치트 모드 활성화")
+parser.add_argument('--damage', type=str, default='True', help="디버그 모드에서 데미지 적용 여부 (True/False)")
+parser.add_argument('--skip', action='store_true', help="Tab키로 현재 전투 스킵 활성화")
 
 # 인수 파싱
 args = parser.parse_args()
 
+# DebugConfig 데이터 클래스
+class DebugConfig(NamedTuple):
+    debug: bool
+    damage: bool
+    skip: bool
+
 # 파싱된 값으로 변수 설정
 debug_mode = args.debug
 cheat_mode_on_start = args.cheat # 게임 시작 시 치트 모드 활성화 여부
+damage_str = args.damage.lower() if args.damage else 'true'
+damage_bool = damage_str == 'true'
+
+# 디버그 설정 생성
+debug_config = DebugConfig(debug=debug_mode, damage=damage_bool, skip=args.skip)
 
 music_volume = 50
 music_on = True
@@ -49,10 +63,13 @@ pygame.mixer.Channel(1).set_volume(ESVolume / 100)  # 효과음 볼륨 설정
 while True:   
     clear_screen()
     sys.stdin.flush()
-    start, screen = main_menu()
+    result = main_menu()
+    if result == False:
+        break
+    start, screen = result
     if   start == "졸업 모드":
         stop_music()
-        Me = graduationmode.game_start(screen)
+        Me = graduationmode.game_start(screen, debug_config=debug_config)
 
     elif start == "기록 보기":
         from game_menu import show_records

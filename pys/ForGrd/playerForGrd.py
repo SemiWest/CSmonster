@@ -174,6 +174,7 @@ class Player:
 
         # 치트 모드 (개발자용)
         self.cheatmode = False  # 치트모드 기본값 추가
+        self.debug_config = None  # 디버그 설정 (나중에 설정됨)
     
     def playertype(self):
         """플레이어의 주력 스킬 타입 반환"""

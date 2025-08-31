@@ -2,6 +2,13 @@ from game_menu import *
 from ForGrd.playerForGrd import *
 from ForGrd.itemForGrd import get_item_color_by_grade
 
+def is_invulnerable(target):
+    """디버그 모드 무적 상태 확인 헬퍼 함수"""
+    dbg = getattr(target, "debug_config", None)
+    if dbg and dbg.debug:
+        return dbg.damage  # True => 무적, False => 데미지 받음
+    return getattr(target, "cheatmode", False)
+
 ''' 전역변수 설정 '''
 hap_num = 0
 item_num = 0
@@ -161,7 +168,7 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
             if counter_skill["effect_type"] == "Pdamage" or counter_skill["effect_type"] == "Sdamage":
                 damage, Mul= Damage(user, target, counter_skill)
                 damage = damage * skill["skW"]
-                if attackerType != "monster" or not target.cheatmode:
+                if attackerType != "monster" or not is_invulnerable(target):
                     target.nowhp = max(0, int(target.nowhp - damage))
                 if damage > target.HP//2: Damage_strong()
                 elif damage > 0: Damage_weak()
@@ -186,7 +193,7 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
             damage = random.randint(low, high)
 
         # 치트모드 무시 (몬스터 공격일 때만 적용)
-        if attackerType != "monster" or not target.cheatmode:
+        if attackerType != "monster" or not is_invulnerable(target):
             target.nowhp = max(0, int(target.nowhp - damage))
 
         if damage > 10:
@@ -198,7 +205,7 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
     # halve_hp 스킬 처리
     if skill["effect_type"] == "halve_hp":
         current_hp = target.nowhp
-        if attackerType != "monster" or not target.cheatmode:
+        if attackerType != "monster" or not is_invulnerable(target):
             target.nowhp = max(0, target.nowhp // 2)
         if target.nowhp > 10: Damage_strong()
         elif target.nowhp > 0: Damage_weak()
@@ -316,12 +323,20 @@ def display_status(screen, detail=False):
     for i, enemy_type in enumerate(enemy_types[:2]):  # 최대 2개만 표시
         display_type(screen, esY, esX+470+i*124, enemy_type)
     
-    if player.cheatmode:
-        # 상대 능력치 표시 (치트모드)
+    # 디버그/치트모드 시 상대 능력치 표시
+    dbg = getattr(player, "debug_config", None)
+    show_debug_overlay = player.cheatmode or (dbg and dbg.debug)
+    
+    if show_debug_overlay:
+        # 상대 능력치 표시 (치트/디버그모드)
         draw_text(screen, f"{getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))}/{getattr(enemyCSmon, 'HP', 100)}", esX+445, esY+100, WHITE, highlight=VIOLET)
         draw_text(screen, f"ATK {getattr(enemyCSmon, 'CATK', 10)}/{getattr(enemyCSmon, 'ATK', 10)}", esX+610, esY+16, WHITE, highlight=RED)
         draw_text(screen, f"DEF {getattr(enemyCSmon, 'CDEF', 10)}/{getattr(enemyCSmon, 'DEF', 10)}", esX+610, esY+56, WHITE, highlight=RED)
         draw_text(screen, f"SPD {getattr(enemyCSmon, 'CSPD', 10)}/{getattr(enemyCSmon, 'SPD', 10)}", esX+610, esY+96, WHITE, highlight=RED)
+        
+        # 디버그 워터마크 표시
+        if dbg and dbg.debug:
+            draw_text(screen, "DEBUG", 50, 50, YELLOW, size=24)
        
     
     # 플레이어 상태 (하단) - 직접 전투
@@ -411,6 +426,11 @@ def select_action(screen):
         key = wait_for_key()
         if key == 'enter':
             return current_index
+        elif key == 'tab':
+            # 디버그 스킵 기능
+            dbg = getattr(player, "debug_config", None)
+            if dbg and dbg.skip:
+                return -999  # 특별한 값으로 스킵 신호
         elif len(options) == 1:
             current_index = 0
         elif key == 'up' and (current_index > 1 and current_index < len(options)):
@@ -1093,7 +1113,16 @@ def battle(getplayer, getenemy, screen=None):
             # 플레이어 턴
             action = select_action(screen)
             
-            if action == 0:  # 스킬 사용
+            if action == -999:  # 디버그 스킵
+                # 스킵으로 즉시 승리 처리
+                Battle_win()
+                display_status(screen, detail=True)
+                draw_text(screen, f"  [DEBUG] 전투를 스킵했습니다!", stX, stY, YELLOW)
+                pygame.display.flip()
+                wait_for_key()
+                battle_end = True
+                return "승리"
+            elif action == 0:  # 스킬 사용
                 esc = skill_phase(screen)
                 if esc == -1:
                     continue

@@ -158,6 +158,8 @@ def wait_for_key():
                     return 'left'
                 elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                     return 'right'
+                elif event.key == pygame.K_TAB:
+                    return 'tab'
         pygame.time.wait(50)
 
 def option_select_sound():
