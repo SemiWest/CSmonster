@@ -434,7 +434,7 @@ cs320.skills = {
 cs341 = Monster(
     Num = 341, name="전산망개론", credit = 3,
     HP = 160, ATK = 87, DEF = 87, SPD = 30, 
-    type=["SYS"], SeonSu=[330],
+    type=["SYS"], SeonSu=[],
     image="../img/monsters/전산망개론.png",
     description="네트워크설명"
 )
