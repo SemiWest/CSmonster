@@ -589,7 +589,7 @@ madcamp = Monster(
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
     description="몰입캠프설명",
-    reward = "레벨업 +3 및 체력 완전 회복",
+    reward = "멘트 변동 예정",
     special=True
 )
 madcamp.skills = {
