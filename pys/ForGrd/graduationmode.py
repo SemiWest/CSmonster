@@ -159,6 +159,9 @@ def semester_intro_screen(player, screen):
             draw_text(screen, f"{monster_name}", SCREEN_WIDTH//2 + 500, SCREEN_HEIGHT//2 - 100 + i*40, BLUE, size=32, align='center')
             draw_text(screen, f"{player.gpas[i][0]}학점 {player.gpas[i][1]}", SCREEN_WIDTH//2 + 500 + 300, SCREEN_HEIGHT//2 - 100 + i*40, BLUE, size=32, align='right')
     draw_text(screen, "아무 키나 눌러 넘어가기...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, align='center')
+    if semester_name != "새터":
+        draw_text(screen, f"현재까지 받은 학사경고 횟수 {player.warning_count} / 3", SCREEN_WIDTH//2, SCREEN_HEIGHT - 120, align='center', color = RED, size=48)
+
     pygame.display.flip()
     wait_for_key()
 
@@ -174,6 +177,8 @@ def semester_intro_screen(player, screen):
             draw_text(screen, f"{monster_name}  ", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*80, BLACK, size=64, align='center')
             display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 + len(monster_name)*32+32, SCREEN_HEIGHT//2 - 68 + i*80, size=4)
     draw_text(screen, "아무 키나 눌러 시작...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, align='center')
+    if semester_name != "새터":
+        draw_text(screen, f"현재까지 받은 학사경고 횟수 {player.warning_count} / 3", SCREEN_WIDTH//2, SCREEN_HEIGHT - 120, align='center', color = RED, size=48)
     pygame.display.flip()
     wait_for_key()
 
@@ -344,8 +349,9 @@ def show_final_result(player, screen):
     y_offset += 60
     pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
     y_offset += 12
-    draw_text(screen,       f"과목명",                            SCREEN_WIDTH//2-450, y_offset)
-    draw_text(screen,       f"성적",                              SCREEN_WIDTH//2-50 , y_offset, align='right')
+    draw_text(screen,       f"학기",                            SCREEN_WIDTH//2-450 - 20, y_offset,  align='center')
+    draw_text(screen,       f"과목명",                            SCREEN_WIDTH//2-450 + 40, y_offset)
+    draw_text(screen,       f"성적",                              SCREEN_WIDTH//2-50 + 40, y_offset, align='right')
     draw_text(screen,       f"과목명",                            SCREEN_WIDTH//2+50 , y_offset)
     draw_text(screen,       f"성적",                              SCREEN_WIDTH//2+450, y_offset, align='right')
     current = None
@@ -356,23 +362,25 @@ def show_final_result(player, screen):
             oneSemMonsters = 0
             y_offset += 40
             pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
-            y_offset += 8
-            draw_text(screen, f"{current}", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
-            y_offset += 40
-        draw_text(screen,   f"{player.clearedMonsters[i]}", SCREEN_WIDTH//2-450+(500*(oneSemMonsters%2)), y_offset, BLACK)
-        draw_text(screen,   f"{player.gpas[i][1]}",         SCREEN_WIDTH//2-50 +(500*(oneSemMonsters%2)), y_offset, gpaColor(player.gpas[i][1]), align='right')
+            y_offset += 10
+            draw_text(screen, f"{current}", SCREEN_WIDTH//2 - 450 - 20, y_offset, BLACK, align='center')
+
+        draw_text(screen,   f"{player.clearedMonsters[i]}", SCREEN_WIDTH//2-450 + 40+(470*(oneSemMonsters%2)), y_offset, BLACK)
+        draw_text(screen,   f"{player.gpas[i][1]}",         SCREEN_WIDTH//2-50 + 40 +(470*(oneSemMonsters%2)), y_offset, gpaColor(player.gpas[i][1]), align='right')
         oneSemMonsters += 1
-        if oneSemMonsters%2 == 0:
-            y_offset += 40
-    
+
+    y_offset += 40    
     pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
 
     cum_gpa = player.calcGPA(2)
-    draw_text(screen,       f"최종 GPA", SCREEN_WIDTH//2-200, y_offset + 40)
-    draw_text(screen,       f"{cum_gpa}", SCREEN_WIDTH//2+200, y_offset + 40, gpaColor(cum_gpa), align='right')
-    
-    pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset + 80), (SCREEN_WIDTH//2+500, y_offset + 80), 2)
-    y_offset += 100
+    y_offset += 60 
+    pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
+    y_offset += 10
+    draw_text(screen,       f"최종 GPA", SCREEN_WIDTH//2-200, y_offset)
+    draw_text(screen,       f"{cum_gpa}", SCREEN_WIDTH//2+200, y_offset, gpaColor(cum_gpa), align='right')
+    y_offset += 40
+    pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
+    y_offset += 10
 
     draw_text(screen, "비고", SCREEN_WIDTH//2, y_offset, BLACK, size=32, align='center')
     y_offset += 40
