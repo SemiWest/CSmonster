@@ -46,7 +46,7 @@ def NumToName(mon_num):
         return "error"
 
 class Monster:
-    def __init__(self, Num, name, credit, HP, ATK, DEF, SPD, type=["CT"], SeonSu = [], image="../img/monsters/데이타구조.png", description="", reward="", special = False):
+    def __init__(self, Num, name, credit, HP, ATK, DEF, SPD, type=["CT"], SeonSu = [], image="../img/monsters/데이타구조.png", description="", reward="", special = False, re = False):
         self.reward = reward
         self.Num = Num  # 몬스터 번호
         self.name = name
@@ -67,6 +67,7 @@ class Monster:
         self.Rank = [0]*3
 
         self.special = special  # 특수 몬스터 여부 (예: 코옵, 몰입캠프, 개별연구)
+        self.re = re # 재수강 여부
 
         self.grade = "100번대"
         self.description = description
