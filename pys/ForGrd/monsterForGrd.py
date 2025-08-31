@@ -164,7 +164,7 @@ cs101.skills = {
         effect_type="Sdamage", 
         type="DS",
         skW=30,
-        priority=4, 
+        priority=1, 
         description="새내기의 시간표를 혼란스럽게 만든다.")
     
 }

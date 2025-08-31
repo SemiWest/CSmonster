@@ -1,6 +1,9 @@
 from game_menu import *
 from ForGrd.playerForGrd import *
 from ForGrd.itemForGrd import get_item_color_by_grade
+import logging
+
+logger = logging.getLogger(__name__)
 
 def is_invulnerable(target):
     """디버그 모드 무적 상태 확인 헬퍼 함수"""
@@ -1122,6 +1125,10 @@ def battle(getplayer, getenemy, screen=None):
     enemy = getenemy
     battle_end = False
     startBattleHp = player.nowhp
+    
+    if logger.isEnabledFor(logging.INFO):
+        enemy_name = getattr(enemyCSmon if isinstance(enemy, Monster) else (enemy.nowCSmon if hasattr(enemy, 'nowCSmon') else enemy), 'name', '알 수 없는 적')
+        logger.info(f"전투 시작: {player.name} vs {enemy_name}")
     
     # 적이 Monster 객체인 경우
     if isinstance(enemy, Monster):

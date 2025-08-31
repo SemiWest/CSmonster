@@ -1,5 +1,8 @@
 from playsound import *
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 font = None
 SCREEN_WIDTH = 1920
@@ -84,6 +87,8 @@ def create_flash_effect(surface, intensity):
 
 def main_menu():
     def menu_logic():
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("메인 메뉴 초기화 시작")
         init_pygame_screen()
         main_menu_reload = True
         clock = pygame.time.Clock()
@@ -209,6 +214,8 @@ def main_menu():
                     return False
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:  # Enter 키
+                        if logger.isEnabledFor(logging.INFO):
+                            logger.info(f"메뉴 선택: {options[current_index]}")
                         option_select_sound()
                         main_menu_reload = True
                         return options[current_index], screen
