@@ -1,8 +1,11 @@
 __pycache__/
 *.py[cod]
 *$py.class
+logs/
+*.log
 
 # macOS
 .DS_Store
 **/.DS_Store
 CLAUDE.md
+/.claude/

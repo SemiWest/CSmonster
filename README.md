@@ -96,3 +96,47 @@ When using `--log-file`, logs automatically rotate:
 ### Performance
 
 Logging uses `isEnabledFor()` checks to avoid performance impact when logging is disabled or when messages are below the configured level.
+
+## Window Resizing & Fullscreen
+
+The game supports dynamic window resizing and fullscreen mode while preserving the original 16:9 aspect ratio and pixel-perfect display.
+
+### Features
+
+- **Window Resizing**: Drag window edges to resize. The game content automatically scales and centers.
+- **Aspect Ratio Lock**: Game maintains 16:9 ratio with letterboxing/pillarboxing when needed.
+- **Fullscreen Toggle**: Press **F11** to toggle fullscreen mode.
+- **Pixel Perfect**: Integer scaling provides crisp pixel art; fractional scaling uses smooth scaling.
+- **No Distortion**: UI elements never stretch or distort regardless of window size.
+
+### Controls
+
+- **Mouse**: Drag window edges or corners to resize
+- **F11**: Toggle fullscreen mode (preserves last windowed size)
+
+### Technical Details
+
+- **Logical Resolution**: Fixed 1920×1080 canvas (all game code unchanged)
+- **Real Window**: Dynamically resizable, scales the logical canvas to fit
+- **Scaling Modes**:
+  - Integer scaling (2x, 3x, etc.): Uses nearest-neighbor for crisp pixels
+  - Fractional scaling: Uses smooth scaling to prevent shimmer
+- **Letterboxing**: Black bars fill unused space when aspect ratios don't match
+
+### Examples
+
+```bash
+# Start in windowed mode (resizable)
+python main.py
+
+# Game window can be:
+# - Resized by dragging edges
+# - Made fullscreen with F11
+# - Returned to windowed with F11 again
+```
+
+### Compatibility
+
+- **Windows**: Full resize and fullscreen support
+- **macOS**: Full resize and fullscreen support (F11 may require System Preferences adjustment)
+- **Cross-Platform**: All input coordinates remain logical 1920×1080 regardless of actual window size

@@ -4,7 +4,8 @@
       "Bash(python:*)",
       "Bash(timeout:*)",
       "Bash(gtimeout:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []
