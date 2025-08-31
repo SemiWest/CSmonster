@@ -132,7 +132,7 @@ Nonemonster = Monster(
 # 프밍기	전산이론	팽도리
 cs101 = Monster(
     Num = 101, name="프밍기", credit= 3,
-    HP = 53, ATK = 955, DEF = 54, SPD = 40, 
+    HP = 53, ATK = 55, DEF = 54, SPD = 40, 
     type=["CT"], SeonSu=[206, 204, 230], 
     image="../img/monsters/프밍기.png", 
     description="카이스트 입학 후 가장 먼저 듣게 되는 전산과 기필 과목이다. 시간표 브레이커로 유명하다."
@@ -590,7 +590,7 @@ madcamp = Monster(
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
     description="몰입캠프설명",
-    reward = "레벨업 +3 및 체력 완전 회복",
+    reward = "멘트 변동 예정",
     special=True
 )
 madcamp.skills = {
