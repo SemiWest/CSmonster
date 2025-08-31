@@ -533,20 +533,16 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                     _remove_cleared_entry(player, monster_name)
                     if gpa[1] == "A+" or gpa[1] == "A0":
                         gpa[1] = "A-"
-                    _add_cleared_entry(player, monster_name, player.current_semester, gpa)
+                _add_cleared_entry(player, monster_name, player.current_semester, gpa)
                 player.thisSemesterGpas.append(gpa)
-                player.clearedMonsters.append(monster_name)
-                player.gpas.append(gpa)
                 need_skill_change = player.complete_monster(monster_name)
                 addSeonSus(player, enemy_monster)
 
             elif battle_result == 2:  # P (패스)
                 if monster_name in player.clearedMonsters:
                     _remove_cleared_entry(player, monster_name)
-                    _add_cleared_entry(player, monster_name, player.current_semester, gpa)
-                player.clearedMonsters.append(monster_name)
+                _add_cleared_entry(player, monster_name, player.current_semester, gpa)
                 player.thisSemesterGpas.append(gpa)
-                player.gpas.append(gpa)
                 need_skill_change = player.complete_monster(monster_name)
                 addSeonSus(player, enemy_monster)
 
@@ -566,9 +562,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
             elif battle_result == 0:  # 패배
                 player.thisSemesterGpas.append(gpa)
                 player.canBeMetMonsters.append(monster_name)
-                player.clearedMonsters.append(monster_name)
-                player.clearedSemesters.append(player.current_semester)
-                player.gpas.append(gpa)
+                _add_cleared_entry(player, monster_name, player.current_semester, gpa)
                 player.update_fullreset()
 
             player.update()
