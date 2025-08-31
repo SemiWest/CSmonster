@@ -1159,12 +1159,12 @@ def battle(getplayer, getenemy, screen=None):
             pygame.display.flip()
             wait_for_key()
 
-            if enemyCSmon.name == "코옵":
+            if enemyCSmon.Num == "777":     # 몰캠
                 pass
-            elif enemyCSmon.name == "몰입캠프":
+            elif enemyCSmon.Num == "888":   # 코옵
                 pass
-            elif enemyCSmon.name == "개별연구": 
-                pass        
+            elif enemyCSmon.Num == "999":   # 개별연구
+                pass
 
         while not battle_end:
             # 플레이어 턴
