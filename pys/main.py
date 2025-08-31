@@ -19,6 +19,7 @@ parser.add_argument('--log-file', type=str, default='logs/game.log', help="로�
 parser.add_argument('--log-stdout', action='store_true', help="표준 출력으로 로그 출력")
 parser.add_argument('--no-log', action='store_true', help="로깅 완전히 비활성화")
 
+
 # 인수 파싱
 args = parser.parse_args()
 
