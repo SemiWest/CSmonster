@@ -46,7 +46,7 @@ def NumToName(mon_num):
         return "error"
 
 class Monster:
-    def __init__(self, Num, name, credit, HP, ATK, DEF, SPD, type=["CT"], SeonSu = [], image="../img/monsters/데이타구조.png", description="", reward=""):
+    def __init__(self, Num, name, credit, HP, ATK, DEF, SPD, type=["CT"], SeonSu = [], image="../img/monsters/데이타구조.png", description="", reward="", special = False):
         self.reward = reward
         self.Num = Num  # 몬스터 번호
         self.name = name
@@ -65,6 +65,8 @@ class Monster:
         self.SP = SPD
 
         self.Rank = [0]*3
+
+        self.special = special  # 특수 몬스터 여부 (예: 코옵, 몰입캠프, 개별연구)
 
         self.grade = "100번대"
         self.description = description
@@ -567,7 +569,8 @@ coop = Monster(
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
     description="코옵설명",
-    reward = "기업인의 길 해금"
+    reward = "기업인의 길 해금",
+    special=True
 )
 coop.skills = {
     '코옵 공격': Monster.Skill(
@@ -585,7 +588,8 @@ madcamp = Monster(
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
     description="몰입캠프설명",
-    reward = "레벨업 +3 및 체력 완전 회복"
+    reward = "레벨업 +3 및 체력 완전 회복",
+    special=True
 )
 madcamp.skills = {
     '딥러닝 공격': Monster.Skill(
@@ -603,7 +607,8 @@ study = Monster(
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
     description="개별연구설명",
-    reward = "연구자의 길 해금"
+    reward = "연구자의 길 해금",
+    special=True
 )
 study.skills = {
     '연구 공격': Monster.Skill(

@@ -1134,11 +1134,14 @@ def battle(getplayer, getenemy, screen=None):
         global hap_num, battle_end, item_num
         hap_num = 1
         item_num = 0
-        
-        display_status(screen, detail=True)
-        draw_text(screen, f"  앗! 야생의 {enemyCSmon.name}이/가 나타났다!", stX, stY, WHITE)
-        pygame.display.flip()
-        wait_for_key()
+
+        # 특수몹이 아닌 경우에만 등장 메시지 출력
+        if not enemyCSmon.special:
+            display_status(screen, detail=True)
+            draw_text(screen, f"  앗! 야생의 {enemyCSmon.name}이/가 나타났다!", stX, stY, WHITE)
+            pygame.display.flip()
+            wait_for_key()
+
         if player.current_semester == "새터":
             display_status(screen, detail=True)
             draw_text(screen, f"  * 스킬을 사용해 적을 쓰러뜨리자!", stX, stY, WHITE)
@@ -1149,7 +1152,20 @@ def battle(getplayer, getenemy, screen=None):
             draw_text(screen, f"  스킬과 아이템을 적절히 활용해 휼륭한 성적으로 졸업해보자!", stX, stY, WHITE)
             pygame.display.flip()
             wait_for_key()
-        
+
+        if enemyCSmon.special:
+            display_status(screen, detail=True)
+            draw_text(screen, f"  어라, 야생의 {enemyCSmon.name}이/가 나타났다!", stX, stY, WHITE)
+            pygame.display.flip()
+            wait_for_key()
+
+            if enemyCSmon.name == "코옵":
+                pass
+            elif enemyCSmon.name == "몰입캠프":
+                pass
+            elif enemyCSmon.name == "개별연구": 
+                pass        
+
         while not battle_end:
             # 플레이어 턴
             action = select_action(screen)
