@@ -102,6 +102,7 @@ def semester_intro_screen(player, screen):
             draw_text(screen, line, SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100 + i*40, WHITE, align='center')
     else:    
         draw_text(screen, description, SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, WHITE, align='center')
+    draw_text(screen, "아무 키나 눌러 넘어가기...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, GRAY, align='center')
     pygame.display.flip()
     wait_for_key()
 
@@ -130,6 +131,7 @@ def semester_intro_screen(player, screen):
             elif key == 'down' and selected < len(options)-1:
                 selected += 1
                 option_change_sound()
+            draw_text(screen, "방향키로 조작, Enter로 선택", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, GRAY, align='center')
 
     if semester_name == "3-여름방학":
         player.thisSemesterMonsters = ["몰입캠프"]
@@ -177,14 +179,15 @@ def semester_intro_screen(player, screen):
 
 def semester_result_screen(player, screen):
     """학기 결과 화면"""
+    mute_music()
     screen.fill(WHITE)
-    mute_music(0.1)
-    Report()
     if monsters[player.thisSemesterMonsters[0]].type[0] == "EVENT":
         if player.thisSemesterGpas[0][1] == "성공!":
+            Report()
             draw_text(screen, f"{player.thisSemesterMonsters[0]} 이벤트에 성공하였습니다!", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
             draw_text(screen, f"{monsters[player.thisSemesterMonsters[0]].reward}", SCREEN_WIDTH//2, 200, BLUE, align='center')
         else:
+            Lose()
             draw_text(screen, f"{monsters[player.thisSemesterMonsters[0]].name} 이벤트에 실패하였습니다...", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
         
     else: 
@@ -234,6 +237,10 @@ def semester_result_screen(player, screen):
 
         # 비고 로직
         y_offset_before = y_offset
+        if player.current_semester == "새터":
+            draw_text(screen, f"새터를 무사히 통과해 체력을 모두 회복하였습니다.", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
+            player.current_hp = player.update_fullreset()
+            y_offset += 40
         if player.mylevelup != None:
             draw_text(screen, f"레벨 {player.mylevelup}로 레벨업했습니다!", SCREEN_WIDTH//2, y_offset, GREEN, align='center')
             y_offset += 40
@@ -248,19 +255,19 @@ def semester_result_screen(player, screen):
                     elif nowSkillLevel>1:
                         draw_text(screen, f"{PLAYER_SKILLS[subjects[i]][nowSkillLevel-2]['name']} -> {PLAYER_SKILLS[subjects[i]][nowSkillLevel-1]['name']}", SCREEN_WIDTH//2, y_offset + 40, typecolor_dict[subjects[i]], align='center')
                     y_offset += 80
+        
         if sem_gpa_num is None:
             if all(gpa[1] != "P" for gpa in player.thisSemesterGpas):
+                Lose()
                 draw_text(screen, "이수 학점 미달로 장짤을 당했습니다...", SCREEN_WIDTH//2, y_offset, RED, align='center')
                 draw_text(screen, "학사 경고까지 받았습니다...", SCREEN_WIDTH//2, y_offset + 40, RED, align='center')
                 player.jangzal_count += 1
                 player.warning_count += 1
                 y_offset += 80
+            else: Report()
         elif sem_gpa_num is not None:
-            if sem_gpa_num >= 4.3:
-                draw_text(screen, "축하합니다! 이번 학기 딘즈를 받았습니다!", SCREEN_WIDTH//2, y_offset, GREEN, align='center')
-                player.deans_count += 1
-                y_offset += 40
-            elif sem_gpa_num < 2.7:
+            if sem_gpa_num < 2.7:
+                Lose()
                 draw_text(screen, "장짤을 당했습니다...", SCREEN_WIDTH//2, y_offset, RED, align='center')
                 player.jangzal_count += 1
                 y_offset += 40
@@ -268,8 +275,15 @@ def semester_result_screen(player, screen):
                     player.warning_count += 1
                     draw_text(screen, "학사 경고까지 받았습니다...", SCREEN_WIDTH//2, y_offset, RED, align='center')
                     y_offset += 40
+            else: Report()
+            if sem_gpa_num >= 4.3:
+                draw_text(screen, "축하합니다! 이번 학기 딘즈를 받았습니다!", SCREEN_WIDTH//2, y_offset, GREEN, align='center')
+                player.deans_count += 1
+                y_offset += 40
         if y_offset == y_offset_before:
             draw_text(screen, "없음", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
+
+    draw_text(screen, "아무 키나 눌러 넘어가기...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, BLACK, align='center')
 
     pygame.display.flip()
     wait_for_key()
@@ -287,8 +301,8 @@ def show_final_result(player, screen):
         pygame.time.wait(2000)
         # '프밍기 패배' 엔딩 메시지 추가
         if player.ending_type == "프밍기 패배":
-            draw_text(screen, "당신은 프밍기 시험에 실패했습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
-            draw_text(screen, "전산과에 오면 안될 상이라는 운명입니다...", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+140, BLACK, align='center')
+            draw_text(screen, "당신은 프밍기 학인시를 처참하게 실패했습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
+            draw_text(screen, "전산과로의 진학을 포기하였습니다...", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+140, BLACK, align='center')
         elif player.warning_count >= 3:
             draw_text(screen, "학사 경고 3회로 제적되었습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
     else:

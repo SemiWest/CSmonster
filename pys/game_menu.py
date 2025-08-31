@@ -191,10 +191,9 @@ def main_menu():
                     draw_text(screen, f"> {option}", x, y, WHITE, BLACK)
                 else:
                     draw_text(screen, f"  {option}", x, y, BLACK)  # 일반 텍스트는 검은색
-            
+            draw_text(screen, "방향키로 조작, Enter로 선택 및 확인, Esc|q|Backspace로 종료 및 취소", SCREEN_WIDTH//2, SCREEN_HEIGHT - 100, GRAY, align='center')
             pygame.display.flip()
 
-            
             # 이벤트 처리
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
