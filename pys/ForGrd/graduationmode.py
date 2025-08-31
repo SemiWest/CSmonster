@@ -1,6 +1,9 @@
 import csv
 from ForGrd.battleForGrd import *
 import copy
+import logging
+
+logger = logging.getLogger(__name__)
 
 def addSeonSus(player, monster):
     for mon_num in monster.SeonSu:
@@ -457,6 +460,9 @@ def _add_cleared_entry(player, monster_name, semester, gpa):
 
 def game_start(screen, Me_name="넙죽이", debug_config=None):
     """새로운 졸업모드 메인 게임 로직"""
+    if logger.isEnabledFor(logging.INFO):
+        logger.info(f"졸업 모드 게임 시작: 플레이어={Me_name}")
+    
     # pygame 화면 초기화 강제 실행
     init_pygame_screen()
 
