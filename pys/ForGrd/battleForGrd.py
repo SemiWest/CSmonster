@@ -11,6 +11,9 @@ enemyCSmon = None
 battle_end = False
 startBattleHp = 0
 BASIC_PNR_SUCCESS_RATE = 0.7
+# 난이도 조절을 위한 전역 변수
+# 1~100 사이의 값으로 설정. 값이 높을수록 더 지능적인 선택을 함.
+INTELLIGENCE_LEVEL = 70
 
 # 아이템 보상 확률 차등 설정
 ITEM_DROP_RATES = {
@@ -57,6 +60,67 @@ def Damage(target, attacker, skilldict):
     multiplier = comp(skilldict["type"], target.type[0])
     Jasok = 1.5 if attacker.type[0] == skilldict["type"] else 1.0
     return int(multiplier * (basedmg*skilldict["skW"] + 2) * Jasok * random.uniform(0.85, 1.00)), multiplier
+
+import random
+
+# 가정: Enemy와 Player 객체가 각각 `nowhp`, `HP` 등의 속성을 가지고 있음
+# player_used_skill: 플레이어가 최근에 사용한 스킬. (예: "Pdamage")
+
+def get_best_enemy_skill(enemy, player, selected_skill):
+    # selected_skill 객체가 딕셔너리 형태가 아닐 경우를 대비해 effect_type을 추출
+    if isinstance(selected_skill, dict):
+        player_skill_effect_type = selected_skill.get("effect_type")
+    else:
+        player_skill_effect_type = getattr(selected_skill, "effect_type", None)
+
+    enemy_skills = getattr(enemy, 'skills', {})
+    if not enemy_skills:
+        return None
+
+    skill_scores = {}
+
+    # 몬스터의 스킬 딕셔너리에서 스킬 객체들을 순회
+    for skill_name, skill_data in enemy_skills.items():
+        score = 0
+        
+        # Skill 객체의 속성에 직접 접근
+        skill_type = skill_data.effect_type
+        
+        # 1. 자신의 현재 HP를 기반으로 점수 계산
+        if enemy.nowhp < enemy.HP * 0.3 and skill_type == "heal":
+            score += 50
+            
+        # 2. 상대방의 HP를 기반으로 점수 계산
+        if player.nowhp < player.HP * 0.5 and skill_type in ["Pdamage", "Sdamage", "halve_hp"]:
+            score += 30
+        
+        # 3. 플레이어 스킬에 따른 전략적 대응 점수 계산
+        if player_skill_effect_type in ["Pdamage", "Sdamage"] and skill_type == "reflect":
+            score += 40
+
+        # 4. 자신의 스탯 버프 필요성에 따라 점수 계산
+        if skill_type == "buff":
+            if enemy.Rank[0] < 0:
+                score += 20
+            if enemy.Rank[1] < 0:
+                score += 15
+
+        skill_scores[skill_name] = score + 10 # 기본 점수 추가
+        
+    total_score = sum(skill_scores.values())
+    
+    if total_score == 0:
+        return random.choice(list(enemy_skills.values()))
+
+    # 지능 지수에 따라 무작위 또는 점수 기반 선택
+    if random.randint(1, 100) > INTELLIGENCE_LEVEL:
+        return random.choice(list(enemy_skills.values()))
+    else:
+        skill_list = list(skill_scores.keys())
+        probabilities = [score / total_score for score in skill_scores.values()]
+        
+        selected_skill_name = random.choices(skill_list, weights=probabilities, k=1)[0]
+        return enemy_skills[selected_skill_name]
 
 def use_skill(attackerType, player, monster, playerskill, monsterskill):
     if playerskill is None:
@@ -111,8 +175,8 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill):
         damage, Mul = Damage(target, user, skill)
 
         hp = max(1, getattr(target, "HP", 1))
-        low = (2 * hp) // 5   # 전체 HP의 2/5
-        cap = (2 * hp) // 3   # 전체 HP의 2/3
+        low = (6 * hp) // 13   # 전체 HP의 6/13
+        cap = (9 * hp) // 13   # 전체 HP의 9/13
 
         # 기준: 원래 데미지가 1/2 HP 초과인 경우만 보정
         if damage > hp // 2:
@@ -502,16 +566,24 @@ def skill_phase(screen):
     selected_skill = select_player_skill(screen)
     if selected_skill == -1:
         return -1
-    # 적 스킬 선택 (랜덤)
-    enemy_skills = getattr(enemyCSmon, 'skills', {})
-    if enemy_skills:
-        enemy_skill = random.choice(list(enemy_skills.values()))
+    
+    # 지능형 알고리즘을 사용한 적 스킬 선택
+    enemy_skill = get_best_enemy_skill(enemyCSmon, player, selected_skill)
+
+    # 스킬 우선순위에 따른 턴 진행
     if selected_skill["priority"] > enemy_skill.priority or (selected_skill["priority"] == enemy_skill.priority and player.CSPD >= enemyCSmon.CSPD):
+        # 플레이어 스킬 사용
         stop = player_skill_phase(screen, selected_skill, enemy_skill)
+        
+        # 몬스터가 살아있고, 턴이 중단되지 않았다면 몬스터 스킬 사용
         if enemyCSmon.is_alive() and not stop:
             enemy_attack_phase(screen, selected_skill, enemy_skill)
+            
     else:
+        # 몬스터 스킬 사용
         stop = enemy_attack_phase(screen, selected_skill, enemy_skill)
+        
+        # 플레이어가 살아있고, 턴이 중단되지 않았다면 플레이어 스킬 사용
         if player.is_alive() and not stop:
             player_skill_phase(screen, selected_skill, enemy_skill)
 
