@@ -1613,6 +1613,8 @@ def battle(getplayer, getenemy, screen=None):
         if enemy.type[0] == "EVENT":
             return 4, (0, "성공!")
         if enemy.name in player.clearedMonsters:
+            if gpa[1] == "A+" or gpa[1] == "A0":
+                gpa = (enemy.credit, "A-") 
             return 1, gpa
         return 1, gpa
     
