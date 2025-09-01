@@ -1132,11 +1132,11 @@ def get_random_reward_items(num_items):
     
     droppable_items = []
     for i in range(100):
-        if i<40:
+        if i<50:
             droppable_items.append(random.choice(list(item for item in items.values() if item.grade == "노말")))
-        elif i<70:
+        elif i<80:
             droppable_items.append(random.choice(list(item for item in items.values() if item.grade == "레어")))
-        elif i<90:
+        elif i<95:
             droppable_items.append(random.choice(list(item for item in items.values() if item.grade == "에픽")))
         else:
             droppable_items.append(random.choice(list(item for item in items.values() if item.grade == "레전더리")))

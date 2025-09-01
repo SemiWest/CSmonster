@@ -58,7 +58,7 @@ GPT = Items(
 
 ProfSoul = Items(
     name="교수의 영혼",
-    description="교수님의 영혼을 깃들게 해 공격력을 최대로 올린다.",
+    description="교수님의 영혼이 강림했다. 공격력을 최대로 올린다.",
     effect="buff",
     grade="레전더리",
     fixed=15,
@@ -66,7 +66,7 @@ ProfSoul = Items(
 
 PGSSoul = Items(
     name="원생의 영혼",
-    description="대학원생의 영혼을 깃들게 해 방어력을 최대로 올린다.",
+    description="대학원생?의 영혼을 깃들게 해 방어력을 최대로 올린다.",
     effect="buff",
     grade="레전더리",
     fixed=16,
@@ -136,7 +136,7 @@ Virus = Items(
 
 Alcohol = Items(
     name="알코올",
-    description="기분이 좋아지는 미지의 초록 병. 스피드를 1랭크 올린다.",
+    description="기분이 좋아지는 미지의 초록 병. 속도를 1랭크 올린다.",
     effect="buff",
     grade="노말",
     fixed = 2,

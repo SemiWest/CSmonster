@@ -48,26 +48,26 @@ PLAYER_SKILLS = {
     "PS": [
         {"name": "논리왕", "effect_type": "Sdamage", "skW": round(45*DIFFICULTY_MULTIPLIER/5)*5, "type": "PS", "description": "상대를 논리로 누른다", "level": 1, "priority": 0, "animation": "none"},
         {"name": "Master Theorem", "effect_type": "Sdamage", "skW": round(55*DIFFICULTY_MULTIPLIER/5)*5, "type": "PS", "description": "상대의 복잡도를 분석한다", "level": 2, "priority": 1, "animation": "none"},
-        {"name": "PNP", "effect_type": "Sdamage", "skW": round(75*DIFFICULTY_MULTIPLIER/5)*5, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 3, "priority": 3, "animation": "none"},
+        {"name": "PNP", "effect_type": "Sdamage", "skW": round(75*DIFFICULTY_MULTIPLIER/5)*5, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 3, "priority": 1, "animation": "none"},
     ],
     "CT": [
         {"name": "증명", "effect_type": "Sdamage", "skW": round(40*DIFFICULTY_MULTIPLIER/5)*5, "type": "CT", "description": "상대는 약함을 증명해보자.", "level": 1, "priority": 0, "animation": "none"},
-        {"name": "이산화", "effect_type": "Sdamage", "skW": round(50*DIFFICULTY_MULTIPLIER/5)*5, "type": "CT", "description": "상대를 이산화해 분해해버린다", "level": 2, "priority": 1, "animation": "none"},
-        {"name": "RUST", "effect_type": "Sdamage", "skW": round(65*DIFFICULTY_MULTIPLIER/5)*5, "type": "CT", "description": "순수 함수를 배웠다. 어렵다.", "level": 3, "priority": 3, "animation": "none"},
-        {"name": "팬파인애플애플팬", "effect_type": "Sdamage", "skW": round(80*DIFFICULTY_MULTIPLIER/5)*5, "type": "CT", "description": "학부장을 호출한다", "level": 4, "priority": 4, "animation": "none"}
+        {"name": "이산화", "effect_type": "Sdamage", "skW": round(50*DIFFICULTY_MULTIPLIER/5)*5, "type": "CT", "description": "상대를 이산화해 분해해버린다", "level": 2, "priority": 0, "animation": "none"},
+        {"name": "RUST", "effect_type": "Sdamage", "skW": round(65*DIFFICULTY_MULTIPLIER/5)*5, "type": "CT", "description": "순수 함수를 배웠다. 어렵다.", "level": 3, "priority": 1, "animation": "none"},
+        {"name": "팬파인애플애플팬", "effect_type": "Sdamage", "skW": round(80*DIFFICULTY_MULTIPLIER/5)*5, "type": "CT", "description": "학부장을 호출한다", "level": 4, "priority": 2, "animation": "none"}
     ],
     "SYS": [
         {"name": "스택오버플로우", "effect_type": "Sdamage", "skW": round(45*DIFFICULTY_MULTIPLIER/5)*5, "type": "SYS", "description": "상대의 머리를 과부화시킨다", "level": 1, "priority": 1, "animation": "none"},
-        {"name": "CTRL^C", "effect_type": "Sdamage", "skW": round(50*DIFFICULTY_MULTIPLIER/5)*5, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2, "priority": 3, "animation": "none"},
-        {"name": "DDOS", "effect_type": "Sdamage", "skW": round(60*DIFFICULTY_MULTIPLIER/5)*5, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보낸다", "level": 3, "priority": 2, "animation": "none"},
-        {"name": "핀토스", "effect_type": "Sdamage", "skW": round(75*DIFFICULTY_MULTIPLIER/5)*5, "type": "SYS", "description": "핀토스를 끝낸 자. 어떤 과제가 와도 이겨낼 수 있다.", "level": 4, "priority": 4, "animation": "none"},
+        {"name": "CTRL^C", "effect_type": "Sdamage", "skW": round(50*DIFFICULTY_MULTIPLIER/5)*5, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2, "priority": 0, "animation": "none"},
+        {"name": "DDOS", "effect_type": "Sdamage", "skW": round(60*DIFFICULTY_MULTIPLIER/5)*5, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보낸다", "level": 3, "priority": 3, "animation": "none"},
+        {"name": "핀토스", "effect_type": "Sdamage", "skW": round(75*DIFFICULTY_MULTIPLIER/5)*5, "type": "SYS", "description": "핀토스를 끝낸 자. 어떤 과제가 와도 이겨낼 수 있다.", "level": 4, "priority": 2, "animation": "none"},
     ],
     "DS": [
         {"name": "OOP", "effect_type": "Sdamage", "skW": round(45*DIFFICULTY_MULTIPLIER/5)*5, "type": "DS", "description": "상대를 객체화시킨다. 상대 메서드의 취약점을 파악해보자", "level": 1, "priority": 1, "animation": "none"},
-        {"name": "SQL 인젝션", "effect_type": "Sdamage", "skW": round(70*DIFFICULTY_MULTIPLIER/5)*5, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 2, "priority": 3, "animation": "none"}
+        {"name": "SQL 인젝션", "effect_type": "Sdamage", "skW": round(70*DIFFICULTY_MULTIPLIER/5)*5, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 2, "priority": 2, "animation": "none"}
     ],
     "AI": [
-        {"name": "오버피팅", "effect_type": "Sdamage", "skW": round(70*DIFFICULTY_MULTIPLIER/5)*5, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 1, "priority": 3, "animation": "none"},
+        {"name": "오버피팅", "effect_type": "Sdamage", "skW": round(70*DIFFICULTY_MULTIPLIER/5)*5, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 1, "priority": 2, "animation": "none"},
         {"name": "샘 올트먼", "effect_type": "Sdamage", "skW": round(80*DIFFICULTY_MULTIPLIER/5)*5, "type": "AI", "description": "상대에게 특화된 GPT를 만든다", "level": 2, "priority": 4, "animation": "none"}
        ]
     }

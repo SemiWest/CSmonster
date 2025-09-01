@@ -2,8 +2,594 @@ import csv
 from ForGrd.battleForGrd import *
 import copy
 import logging
+import os, datetime, pygame, hashlib, time, pygame
+from catbox import CatboxUploader
+import qrcode
+from typing import Optional
+import requests
+import json
+import os
 
 logger = logging.getLogger(__name__)
+
+NOTION_TOKEN = "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"
+DATABASE_ID = "261e339f1ae5802ca71acd96446868d5"
+
+headers = {
+    "Authorization": f"Bearer {NOTION_TOKEN}",
+    "Content-Type": "application/json",
+    "Notion-Version": "2022-06-28", # 최신 버전을 확인하고 사용
+}
+
+def save_cropped_and_return_path(screen, player_name, crop_w, crop_h, top_margin, out_dir, prefix):
+    """
+    화면을 크롭하여 파일로 저장하고, 저장된 파일 경로만 반환합니다.
+    """
+    os.makedirs(out_dir, exist_ok=True)
+    
+    sw, sh = screen.get_size()
+    left = max(0, (sw - crop_w) // 2)
+    top = max(0, top_margin)
+    if left + crop_w > sw:
+        left = max(0, sw - crop_w)
+    if top + crop_h > sh:
+        top = max(0, sh - crop_h)
+
+    rect = pygame.Rect(left, top, crop_w, crop_h)
+    cropped = screen.subsurface(rect)
+
+    name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    path = os.path.join(out_dir, f"{prefix}_{name_hash}_{ts}.png")
+
+    pygame.image.save(cropped, path)
+    print(f"Debug: 임시 이미지 저장 완료: {path}")
+    return path
+
+def combine_for_share(background_path, transcript_path, deans_list_path, player_name, out_dir="results/combined_images"):
+    """
+    졸업 성적표와 딘즈 리스트 이미지를 하나의 배경 이미지에 합성하여 저장합니다.
+    """
+    os.makedirs(out_dir, exist_ok=True)
+    
+    # 이미지 로드
+    try:
+        bg_image = pygame.image.load(background_path)
+        transcript_img = pygame.image.load(transcript_path)
+        deans_list_img = pygame.image.load(deans_list_path)
+    except pygame.error as e:
+        print(f"Debug: 이미지 로드 오류 - {e}")
+        return None
+
+    # 이미지 비율 조정 (리사이즈)
+    transcript_resized = pygame.transform.smoothscale(transcript_img, (800, 640))
+    deans_list_resized = pygame.transform.smoothscale(deans_list_img, (560, 793))
+
+    # 배경 이미지에 합성
+    # background 이미지의 크기 (1080x1920)
+    bg_width, bg_height = bg_image.get_size()
+
+    # 가로 중앙 정렬
+    transcript_x = (bg_width - transcript_resized.get_width()) // 2
+    deans_list_x = (bg_width - deans_list_resized.get_width()) // 2
+    
+    # 세로 위치 계산
+    deans_list_y = 291  # 윗 끝부분 마진 291
+    transcript_y = bg_height - transcript_resized.get_height() - 135 # 아래 끝부분 마진 135
+
+    # 합성
+    bg_image.blit(deans_list_resized, (deans_list_x, deans_list_y))
+    bg_image.blit(transcript_resized, (transcript_x, transcript_y))
+
+    # 최종 이미지 저장
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
+    final_filename = f"combined_{name_hash}_{ts}.png"
+    final_path = os.path.join(out_dir, final_filename)
+    
+    pygame.image.save(bg_image, final_path)
+    print(f"Debug: 합성 이미지 저장 완료: {final_path}")
+    
+    return final_path
+
+def save_game_log_to_notion(player):
+    """
+    게임 결과를 Notion 데이터베이스에 저장합니다.
+    player 객체에서 필요한 정보를 추출하여 Notion API에 전송합니다.
+    """
+    url = "https://api.notion.com/v1/pages"
+
+    # player 객체로부터 데이터 추출
+    gpa = player.calcGPA(2)
+    now = datetime.datetime.now().isoformat()
+    
+    # Notion 데이터베이스의 속성명에 맞게 데이터 구성
+    data = {
+        "parent": {"database_id": DATABASE_ID},
+        "properties": {
+            "날짜": {
+                "date": {
+                    "start": now
+                }
+            },
+            "이름": {
+                "title": [
+                    {
+                        "text": {
+                            "content": player.name
+                        }
+                    }
+                ]
+            },
+            "최종 GPA": {
+                "number": float(gpa) if gpa and str(gpa).replace('.', '').isdigit() else 0.0
+            },
+            "최종 레벨": {
+                "number": player.level
+            },
+            "딘즈 횟수": {
+                "number": player.deans_count
+            },
+            "장짤 횟수": {
+                "number": player.jangzal_count
+            },
+            "학사경고 횟수": {
+                "number": player.warning_count
+            },
+            "최종 학기": {
+                "rich_text": [
+                    {
+                        "text": {
+                            "content": player.current_semester
+                        }
+                    }
+                ]
+            },
+            "엔딩 타입": {
+                "rich_text": [
+                    {
+                        "text": {
+                            "content": player.ending_type
+                        }
+                    }
+                ]
+            },
+        }
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status() # HTTP 오류가 발생하면 예외 발생
+        print("Debug: 저장 성공: 게임 기록이 Notion에 저장되었습니다.")
+        return True
+    except requests.exceptions.RequestException as e:
+        print(f"Debug: 저장 오류: Notion API 호출 실패 - {e}")
+        return False
+    
+def get_leaderboard_from_notion():
+    """
+    Notion 데이터베이스에서 모든 기록을 '끝까지' 가져옵니다. (페이지네이션 지원)
+    반환값 형식은 기존과 동일: list[dict]
+    """
+    if not all([NOTION_TOKEN, DATABASE_ID]):
+        print("Debug: [Warning!] Notion 토큰 또는 DB ID가 설정되지 않았습니다.")
+        return []
+
+    url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
+
+    # 한 번에 100개씩 가져오되, has_more/next_cursor로 반복
+    payload = {
+        "page_size": 100,
+        # 필요하면 정렬 추가 (예: 날짜 내림차순)
+        # "sorts": [{"property": "날짜", "direction": "descending"}]
+    }
+
+    results_all = []
+    next_cursor = None
+    has_more = True
+
+    try:
+        while has_more:
+            if next_cursor:
+                payload["start_cursor"] = next_cursor
+            response = requests.post(url, headers=headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
+
+            pages = data.get("results", [])
+            for page in pages:
+                props = page.get("properties", {})
+
+                # 안전한 추출 유틸
+                def safe_title(p):
+                    arr = p.get("title", [])
+                    if arr and "text" in arr[0]:
+                        return arr[0]["text"].get("content", "")
+                    # 다른 경우도 대비(예: plain_text)
+                    if arr and "plain_text" in arr[0]:
+                        return arr[0].get("plain_text", "")
+                    return ""
+
+                def safe_rich_text(p):
+                    arr = p.get("rich_text", [])
+                    if arr:
+                        t = arr[0].get("text", {})
+                        return t.get("content", "") or arr[0].get("plain_text", "")
+                    return ""
+
+                record_date = props.get("날짜", {}).get("date", {}).get("start", "")
+                name = safe_title(props.get("이름", {}))
+                gpa = props.get("최종 GPA", {}).get("number", 0.0)
+                level = props.get("최종 레벨", {}).get("number", 0)
+                deans_count = props.get("딘즈 횟수", {}).get("number", 0)
+                jangzal_count = props.get("장짤 횟수", {}).get("number", 0)
+                warning_count = props.get("학사경고 횟수", {}).get("number", 0)
+                semester = safe_rich_text(props.get("최종 학기", {}))
+                ending_type = safe_rich_text(props.get("엔딩 타입", {}))
+
+                results_all.append({
+                    '날짜': record_date,
+                    'name': name,
+                    'gpa': float(gpa) if gpa is not None else 0.0,
+                    'level': level,
+                    'deans_count': deans_count,
+                    'jangzal_count': jangzal_count,
+                    'warning_count': warning_count,
+                    'semester': semester,
+                    'ending_type': ending_type,
+                })
+
+            has_more = data.get("has_more", False)
+            next_cursor = data.get("next_cursor", None)
+
+        return results_all
+
+    except requests.exceptions.RequestException as e:
+        print(f"Debug: 조회 오류: Notion API 순위 조회 실패 - {e}")
+        return []
+
+def update_and_save_csv(notion_records, filename="deans_list.csv", out_dir="results/deans"):
+    """
+    Notion 기록을 가져와 기존 CSV와 병합하고 새로운 기록을 식별하여 저장합니다.
+    """
+    os.makedirs(out_dir, exist_ok=True)
+    filepath = os.path.join(out_dir, filename)
+    
+    existing_records = []
+    if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+        with open(filepath, 'r', newline='', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            existing_records = [row for row in reader]
+
+    existing_identifiers = set()
+    for row in existing_records:
+        identifier = (row.get('날짜', ''), row.get('이름', ''), str(row.get('최종 GPA', '')))
+        existing_identifiers.add(identifier)
+
+    new_records_to_add = []
+    for record in notion_records:
+        identifier = (record.get('날짜', ''), record.get('이름', ''), str(record.get('최종 GPA', '')))
+        if identifier not in existing_identifiers:
+            new_records_to_add.append(record)
+
+    if not new_records_to_add:
+        print("Debug: CSV에 추가할 새로운 기록이 없습니다.")
+        return True, "CSV 파일이 최신 상태입니다."
+
+    write_header = not os.path.exists(filepath) or os.path.getsize(filepath) == 0
+    with open(filepath, 'a', newline='', encoding='utf-8') as file:
+        fieldnames = list(notion_records[0].keys()) if notion_records else []
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        
+        if write_header:
+            writer.writeheader()
+        
+        writer.writerows(new_records_to_add)
+
+    print(f"Debug: CSV 파일이 업데이트되었습니다. 새로운 기록 {len(new_records_to_add)}개 추가.")
+    return True, f"게임 결과가 {filename}에 저장되었습니다."
+
+def show_deans_list(player, screen, leaderboard):
+    """
+    Deans List를 화면에 표시합니다.
+    - 상위 10위 표기 (1~3등: 금/은/동 텍스트 색)
+    - 플레이어 기록을 현재 순위표에 반영(없으면 추가 / 있으면 최신 GPA로 업데이트)
+    - 플레이어가 10위권에 들면 축하 메시지(1~3등은 강렬 버전)
+    - 플레이어가 10위 밖이지만 꼴찌 3명(불명예)도 아니면, 상/하 섹션 사이에 플레이어 등수/점수 표기
+    - 불명예의 전당: GPA==0 이거나 정렬상 뒤에서 3명 안에 포함 시 붉은색으로 표기
+    """
+    # 내부 유틸: 상위 랭크 색상 (Gold/Silver/Bronze)
+    def _rank_color_for_top(rank: int):
+        if rank == 1:
+            return (255, 215, 0)   # Gold
+        elif rank == 2:
+            return (192, 192, 192) # Silver
+        elif rank == 3:
+            return (205, 127, 50)  # Bronze
+        return BLACK
+
+    def _gpa_color_default(gpa_value: float):
+        try:
+            return gpaColor(f"{gpa_value:.2f}")
+        except Exception:
+            return BLACK
+
+    screen.fill(WHITE)
+    draw_text(screen, "명예의 전당: Deans List", SCREEN_WIDTH // 2, 80, BLACK, size=48, align='center')
+    draw_text(screen, "최종 GPA 기준", SCREEN_WIDTH // 2, 140, GRAY, size=24, align='center')
+
+    y_offset = 200
+
+    # 0) 플레이어 GPA/이름 확보
+    player_name = getattr(player, 'name', None)
+    try:
+        player_gpa = float(player.calcGPA(2))
+    except Exception:
+        player_gpa = 0.0
+
+    # 1) 플레이어 기록을 순위표에 반영(동명이인/미세 오차 고려)
+    combined = []
+    found = False
+    for e in leaderboard:
+        name = e.get('name')
+        gpa  = float(e.get('gpa', 0.0))
+        if not found and name == player_name and abs(gpa - player_gpa) < 1e-6:
+            found = True
+            combined.append({'name': name, 'gpa': player_gpa})
+        else:
+            combined.append({'name': name, 'gpa': gpa})
+    if not found and player_name is not None:
+        combined.append({'name': player_name, 'gpa': player_gpa})
+
+    # 2) 정렬: 4.3 GPA를 최우선으로, 그 외는 GPA 내림차순, 동점 시 이름 오름차순
+    combined.sort(key=lambda x: (x['gpa'] != 4.3, -x['gpa'], x['name']))
+
+    # 3) 플레이어 순위 찾기 (1-indexed)
+    player_rank = None
+    player_entry = None
+    for i, e in enumerate(combined, start=1):
+        if e['name'] == player_name and abs(e['gpa'] - player_gpa) < 1e-6:
+            player_rank = i
+            player_entry = e
+            break
+
+    # 4) 상위 10위 출력
+    top_k = min(10, len(combined))
+    for i in range(top_k):
+        e = combined[i]
+        rank = i + 1
+        rank_color = _rank_color_for_top(rank)
+        
+        # 1-3위는 정해진 색상, 그 외는 검정색
+        name_color = rank_color if rank <= 3 else BLACK
+        gpa_color  = rank_color if rank <= 3 else _gpa_color_default(e['gpa'])
+
+        # 플레이어가 10위권에 들면 볼드체
+        is_player_in_top10 = (player_entry and e['name'] == player_entry['name'] and abs(e['gpa'] - player_entry['gpa']) < 1e-6)
+        is_bold = is_player_in_top10
+        name_font_size = 36 if is_bold else 32
+        
+        draw_text(screen, f"{rank}.",            SCREEN_WIDTH//2 - 250, y_offset + i * 40, rank_color, size=32)
+        draw_text(screen, e['name'],              SCREEN_WIDTH//2 - 180, y_offset + i * 40, name_color, size=name_font_size, bold=is_bold)
+        draw_text(screen, f"{e['gpa']:.2f}",      SCREEN_WIDTH//2 + 200, y_offset + i * 40, gpa_color,  size=32, align='right')
+
+    # 5) 플레이어 축하/안내 메시지 또는 중간 표기
+    after_top_y = y_offset + top_k * 40
+    message_lines = []
+    if player_rank is not None and player_rank <= 10:
+        # 10위권 진입 축하 메시지
+        if player_rank == 1:
+            message_lines.append(("전설의 1위!\n새로운 딘즈 리스트 정상에 올랐습니다!", (255, 215, 0)))
+        elif player_rank == 2:
+            message_lines.append(("2위 달성!\n환상적인 성적입니다!", (192, 192, 192)))
+        elif player_rank == 3:
+            message_lines.append(("3위 입성!\n탑 티어에 합류했습니다!", (205, 127, 50)))
+        else:
+            message_lines.append(("축하합니다!\n새로운 딘즈 리스트 Top 10에 올랐습니다!", GREEN))
+    elif player_entry is not None:
+        # 10위 밖이고, 불명예 섹션도 아니라면 중간에 본인만 표시
+        bottom_count = min(3, len(combined))
+        bottom_start_rank = len(combined) - bottom_count + 1
+        is_in_disgrace_by_rank = (player_rank is not None and player_rank >= bottom_start_rank)
+        is_in_disgrace_by_zero = (player_entry['gpa'] == 0)
+        if not (is_in_disgrace_by_rank or is_in_disgrace_by_zero):
+            y_mid = after_top_y + 28
+            draw_text(screen, "----------------------------------", SCREEN_WIDTH//2, y_mid, GRAY, size=24, align='center')
+            y_mid += 28
+            draw_text(screen, f"{player_rank}.",            SCREEN_WIDTH//2 - 250, y_mid, BLUE, size=32)
+            draw_text(screen, player_entry['name'],         SCREEN_WIDTH//2 - 180, y_mid, BLUE, size=32)
+            draw_text(screen, f"{player_entry['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_mid, BLUE, size=32, align='right')
+            after_top_y = y_mid + 28 # 아래 계산을 위해 위치 갱신
+
+    # 축하/안내 메시지 렌더링 (있다면)
+    if message_lines:
+        y_msg = after_top_y + 28
+        for text, color in message_lines:
+            for line in text.splitlines():  # 줄바꿈 처리
+                draw_text(screen, line, SCREEN_WIDTH//2, y_msg, color, size=28, align='center')
+                y_msg += 36  # 줄 간격
+        after_top_y = y_msg
+
+    # 6) 불명예의 전당 (꼴찌 3 + GPA==0인 플레이어 포함 규칙)
+    if len(combined) > 0:
+        bottom_count = min(3, len(combined))
+        disgrace_entries = combined[-bottom_count:]
+
+        # 플레이어가 GPA==0 이지만 꼴찌 3명에 없다면 추가로 표기
+        need_append_player_zero = False
+        if player_entry is not None and player_entry['gpa'] == 0:
+            if player_entry not in disgrace_entries:
+                need_append_player_zero = True
+
+        y_bottom = after_top_y + 28
+        draw_text(screen, "----- 불명예의 전당 -----", SCREEN_WIDTH//2, y_bottom, RED, size=28, align='center')
+        y_bottom += 28
+
+        # 불명예 랭크 표기
+        disgrace_rank_start = len(combined) - len(disgrace_entries) + 1
+        for i, e in enumerate(disgrace_entries):
+            rank = disgrace_rank_start + i
+            draw_text(screen, f"{rank}.",       SCREEN_WIDTH//2 - 250, y_bottom + i * 40, RED, size=32)
+            draw_text(screen, e['name'],         SCREEN_WIDTH//2 - 180, y_bottom + i * 40, RED, size=32)
+            draw_text(screen, f"{e['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_bottom + i * 40, RED, size=32, align='right')
+
+        if need_append_player_zero:
+            # 플레이어 실제 순위를 붉은색으로 추가 표기
+            y_extra = y_bottom + bottom_count * 40 + 20
+            draw_text(screen, f"(특별) {player_rank}.",            SCREEN_WIDTH//2 - 250, y_extra, RED, size=28)
+            draw_text(screen, player_entry['name'],                   SCREEN_WIDTH//2 - 180, y_extra, RED, size=28)
+            draw_text(screen, f"{player_entry['gpa']:.2f}",          SCREEN_WIDTH//2 + 200, y_extra, RED, size=28, align='right')
+
+    # 하단 안내
+    draw_text(screen, "아무 키나 눌러 메인 메뉴로 돌아갑니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT - 80, GRAY, size=24, align='center')
+
+    pygame.display.flip()
+    wait_for_key()
+
+
+
+def save_cropped_center(screen, player_name, crop_w=1200, crop_h=800, top_margin=60,
+                        final_name=None, out_dir="results_screenshots", prefix="crop"):
+    os.makedirs(out_dir, exist_ok=True)
+
+    sw, sh = screen.get_size()  # 화면 해상도
+    # 가로: 가운데 정렬
+    left = max(0, (sw - crop_w) // 2)
+    # 세로: 위에서 60px 지점부터 시작
+    top = max(0, top_margin)
+
+    # 화면 밖으로 나가지 않게 보정
+    if left + crop_w > sw:
+        left = max(0, sw - crop_w)
+    if top + crop_h > sh:
+        top = max(0, sh - crop_h)
+
+    rect = pygame.Rect(left, top, crop_w, crop_h)
+    cropped = screen.subsurface(rect)  # 일부분만 잘라오기
+
+    if final_name:
+        path = os.path.join(out_dir, final_name)
+    else:
+        # 파일명: 사용자 이름 해시 + 타임스탬프
+        name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
+        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        path = os.path.join(out_dir, f"{prefix}_{name_hash}_{ts}.png")
+
+    pygame.image.save(cropped, path)
+    print(f"[Saved] {path} @ {rect}")
+    return path
+
+# -----------------------------
+# 2) Catbox 업로드 (영구 or Litterbox 임시)
+#    - userhash가 있으면 계정 업로드
+#    - temporary=True면 Litterbox(1h/12h/24h/72h)
+# -----------------------------
+def upload_to_catbox(file_path, userhash=None, temporary=False, temp_time="24h"):
+    uploader = CatboxUploader(userhash=userhash) if userhash else CatboxUploader()
+    if temporary:
+        # Litterbox (임시 업로드)
+        url = uploader.upload_to_litterbox(file_path, time=temp_time)
+    else:
+        # 일반(영구) 업로드
+        url = uploader.upload_file(file_path)
+
+    if not (isinstance(url, str) and url.startswith("http")):
+        raise RuntimeError(f"Catbox 업로드 응답이 URL이 아님: {url}")
+    print(f"[Uploaded] {url}")
+    return url
+
+def make_qr(url, out_path="qr.png", target_px=300, border=4):
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,  # 임시값
+        border=border,
+    )
+    qr.add_data(url)
+    qr.make(fit=True)
+
+    modules = qr.modules_count + border*2
+    box_size = max(1, target_px // modules)  # 목표 픽셀에 맞춰 박스크기 재계산
+    qr.box_size = box_size
+
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(out_path)
+    return out_path
+def _cleanup_old_files(dir_path: str, older_than_hours: int = 24) -> None:
+    if not dir_path or not os.path.isdir(dir_path):
+        return
+    cutoff = time.time() - older_than_hours * 3600
+    for name in os.listdir(dir_path):
+        path = os.path.join(dir_path, name)
+        try:
+            if os.path.isfile(path) and os.path.getmtime(path) < cutoff:
+                os.remove(path)
+        except Exception:
+            # 조용히 무시(권한/사용중 파일 등)
+            pass
+
+def export_screen_to_catbox_qr(
+    screen,
+    player_name: str,
+    crop_w: int = 1000,
+    crop_h: int = 800,
+    top_margin: int = 60,
+    userhash: Optional[str] = None,
+    temporary: bool = False,
+    temp_time: str = "24h",
+    out_dir: str = "screenshots",     # 스크린샷 폴더
+    prefix: str = "transcript",
+    qr_out_dir: str = "qrcodes",      # QR 전용 폴더 (screenshots와 분리)
+    keep_hours: int = 24,             # 24시간 지난 파일은 삭제
+):
+    # 0) 디렉토리 준비 및 정리
+    os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(qr_out_dir, exist_ok=True)
+    _cleanup_old_files(out_dir, older_than_hours=keep_hours)
+    _cleanup_old_files(qr_out_dir, older_than_hours=keep_hours)
+
+    # 1) 화면 동기화
+    pygame.display.flip()
+
+    # 2) 공통 식별자(타임스탬프 + 이름 해시) — 스크린샷/QR 둘 다 동일 타임스탬프 사용
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
+
+    # 3) 크롭 저장 (파일명: prefix_namehash_ts.png)
+    #    save_cropped_center 내부에서 파일명을 만들고 싶다면, 동일 규칙으로 수정하세요.
+    #    여기서는 out_dir/prefix_namehash_ts.png 로 저장되었다고 가정해 경로를 강제 지정합니다.
+    #    (save_cropped_center 가 반환하는 경로 대신, 아래와 같이 직접 저장하고 싶다면
+    #     subsurface + pygame.image.save 로 구현해도 됩니다.)
+    cropped_path = save_cropped_center(
+        screen,
+        player_name,
+        crop_w=crop_w,
+        crop_h=crop_h,
+        top_margin=top_margin,
+        final_name=f"{prefix}_{name_hash}_{ts}.png",
+        out_dir=out_dir,
+        prefix=prefix,
+    )
+
+    # 4) Catbox 업로드 (영구/임시)
+    url = upload_to_catbox(
+        cropped_path,
+        userhash=userhash,
+        temporary=temporary,
+        temp_time=temp_time,
+    )
+
+    # 5) QR 저장 (파일명: prefix_namehash_urlhash_ts.png, 저장 위치는 qr_out_dir)
+    url_hash = hashlib.sha256(url.encode()).hexdigest()[:8]
+    qr_name = f"{prefix}_{name_hash}_{url_hash}_{ts}.png"
+    qr_path = os.path.join(qr_out_dir, qr_name)
+    make_qr(url, out_path=qr_path)
+
+    return {
+        "image_path": cropped_path,  # screenshots/prefix_namehash_ts.png
+        "url": url,                  # catbox URL
+        "qr_path": qr_path,          # qrcodes/prefix_namehash_urlhash_ts.png
+    }
 
 def addSeonSus(player, monster):
     for mon_num in monster.SeonSu:
@@ -22,8 +608,14 @@ def save_game_log_csv(filename, player):
     # 절대 경로 생성
     base_dir = os.path.dirname(os.path.abspath(__file__))
     filepath = os.path.join(base_dir, filename)
+
+    # 파일이 저장될 디렉토리 경로
+    dir_path = os.path.dirname(filepath)
     
-    # 파일이 없으면 헤더 작성 필요
+    # 디렉토리가 없으면 생성 (재귀적으로 생성)
+    os.makedirs(dir_path, exist_ok=True)
+    
+    # 파일이 없거나 비어 있으면 헤더 작성
     write_header = not os.path.exists(filepath) or os.path.getsize(filepath) == 0
     
     # CSV 파일에 게임 결과 저장
@@ -41,9 +633,7 @@ def save_game_log_csv(filename, player):
         # 게임 결과 데이터 저장
         import datetime
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        # 최종 스킬들 스킬타입, 스킬레벨
         skillresult = []
-        # current_skills 에서 레벨이 0이상인 스킬들 key와 value를 skillresult에 추가
         for skill, level in player.learned_skills.items():
             if level > 0:
                 skillresult.append(skill)
@@ -404,8 +994,8 @@ def show_final_result(player, screen):
     draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2+450, y_offset, BLACK, align='right')
     
     # 결과 저장
-    success, message = save_game_log_csv("graduation_results.csv", player)
-    
+    success, message = save_game_log_csv("../results/graduation/graduation_results.csv", player)
+    success_notion = save_game_log_to_notion(player)
     if success:
         draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
     else:
@@ -413,6 +1003,99 @@ def show_final_result(player, screen):
     
     draw_text(screen, "아무 키나 눌러 메인메뉴로...", SCREEN_WIDTH//2 - 160, SCREEN_HEIGHT - 60, BLACK)
     
+    # Notion에서 모든 기록을 가져와 CSV 업데이트 및 순위표 생성
+    notion_records = get_leaderboard_from_notion()
+    if notion_records:
+        update_and_save_csv(notion_records)
+    
+    # GPA를 기준으로 내림차순 정렬된 순위표
+    leaderboard = sorted(notion_records, key=lambda x: x['gpa'], reverse=True)
+
+    
+    pygame.display.flip()
+    # 1. 졸업 성적표 이미지 저장 (QR/업로드 없이 로컬에만 임시 저장)
+    transcript_path = save_cropped_and_return_path(
+        screen,
+        player.name,
+        crop_w=1000, crop_h=800, top_margin=60,
+        out_dir="results/screenshots/temp_images",
+        prefix="transcript"
+    )
+    wait_for_key()
+
+    # 2. 딘즈 리스트 화면 표시
+    show_deans_list(player, screen, leaderboard)
+    
+    # 3. 딘즈 리스트 화면 이미지 저장 (QR/업로드 없이 로컬에만 임시 저장)
+    deans_list_path = save_cropped_and_return_path(
+        screen,
+        player.name,
+        crop_w=600, crop_h=880, top_margin=60,
+        out_dir="results/screenshots/temp_images",
+        prefix="deans_list"
+    )
+    
+    # 4. 두 이미지를 배경에 합성하여 최종 이미지 생성
+    background_image_path = "../img/instagram_background.png"
+    final_combined_path = combine_for_share(background_image_path, transcript_path, deans_list_path, player.name)
+    print(final_combined_path)
+
+    # 5. 합성에 사용된 임시 이미지 파일 삭제
+    try:
+        os.remove(transcript_path)
+        os.remove(deans_list_path)
+        print("Debug: 임시 이미지 파일 삭제 완료.")
+    except OSError as e:
+        print(f"Debug: 임시 파일 삭제 실패: {e.filename}")
+
+    # 6. 최종 합성 이미지를 Catbox에 업로드하고 QR 코드 생성
+    result = export_screen_to_catbox_qr(
+        screen=screen, # screen 인자는 필요하지만, 합성은 이미 완료됨.
+        player_name=player.name,
+        crop_w=100, crop_h=100, # 최종 이미지를 저장할 때는 크롭이 필요 없으므로, 더미 값을 넣습니다.
+        top_margin=0,
+        out_dir="results/screenshots/final_combined", # 최종 이미지 전용 폴더
+        prefix="final_share",
+        qr_out_dir="results/qrcodes/final_share", # 최종 QR 전용 폴더
+        keep_hours=24,
+        # combine_for_share에서 생성한 최종 이미지 경로를 직접 넘겨 업로드
+        # 이 부분은 export_screen_to_catbox_qr 함수를 약간 수정해야 함
+        # 편의를 위해 upload_to_catbox를 직접 호출하는 방식 추천
+    )
+    # 위 방식이 복잡하므로, 아래와 같이 변경합니다.
+    
+    # 6. 최종 합성 이미지를 Catbox에 업로드하고 QR 코드 생성
+    upload_url = upload_to_catbox(final_combined_path, temporary=False)
+    if upload_url:
+        qr_path = make_qr(upload_url)
+        print(f"Debug: 최종 합성 이미지의 QR 코드 경로: {qr_path}")
+    else:
+        qr_path = None # 업로드 실패 시 QR 경로 없음
+
+    # 7. QR 링크 화면 표시
+    screen.fill(WHITE)
+    draw_text(screen, "! 졸업 결과 공유하기 !", SCREEN_WIDTH//2, 120, BLACK, size=48, align='center')
+
+    # QR 이미지 불러오기 (새로 생성된 QR 경로 사용)
+    try:
+        if qr_path:
+            qr_image = pygame.image.load(qr_path)
+            # --- 이 부분에 .convert() 또는 .convert_alpha() 추가 ---
+            qr_image = qr_image.convert() 
+            # --------------------------------------------------------
+            qr_image = pygame.transform.smoothscale(qr_image, (300, 300))
+            qr_rect = qr_image.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2 + 40))
+            screen.blit(qr_image, qr_rect)
+        else:
+            draw_text(screen, "QR 코드 생성에 실패했습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, RED, align='center')
+    except Exception as e:
+        draw_text(screen, f"QR 불러오기 실패: {e}", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, RED, align='center')
+    
+    draw_text(screen, "위 QR을 스캔하면 결과 이미지를 얻을 수 있습니다.", SCREEN_WIDTH//2, 320, BLACK, size=28, align='center')
+    draw_text(screen, "인스타 스토리에 @in.cs.tagram과 @kaist_kamf를 태그해서 공유해보세요!", SCREEN_WIDTH//2, 370, BLACK, size=28, align='center')
+    # 추가 설명
+    draw_text(screen, "아무 키나 눌러 메인 메뉴로 돌아갑니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT - 80, GRAY, size=24, align='center')
+
     pygame.display.flip()
     wait_for_key()
 
