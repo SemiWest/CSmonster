@@ -247,7 +247,7 @@ def show_records():
     import os
     import csv
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    filepath = os.path.join(base_dir, "game_log.csv")
+    filepath = os.path.join(base_dir, "ForGrd/graduation_results.csv")
     
     if not os.path.isfile(filepath):
         # 기록이 없는 경우
@@ -264,8 +264,7 @@ def show_records():
         reader = csv.reader(file)
         header = next(reader)  # 헤더 스킵
         for row in reader:
-            if len(row) > 2 and row[2] == "클리어":
-                clear_records.append(row)
+            clear_records.append(row)
     
     if not clear_records:
         screen.fill(WHITE)
@@ -287,18 +286,17 @@ def show_records():
         record = clear_records[current_page]
         draw_text(screen, f"{current_page + 1}. {record[0]}", 50, y_pos, BLACK)
         y_pos += 40
-        draw_text(screen, f"    플레이 난이도 {record[1]} | 졸업 GPA {record[3]} | 총 전투 횟수 {record[4]}", 50, y_pos, BLACK)
+        draw_text(screen, f"    이름 {record[1]} | 졸업 GPA {record[2]} | 레벨 {record[3]}", 50, y_pos, BLACK)
         y_pos += 40
-        draw_text(screen, "    잡은 전산몬스터", 50, y_pos, BLACK)
+        draw_text(screen, f"    딘즈 {record[4]}회 | 장짤 {record[5]}회 | 학사경고 {record[6]}회", 50, y_pos, BLACK)
         y_pos += 40
-        
-        # 잡은 몬스터 표시
-        for i in range(5, len(record), 3):
-            if i+2 < len(record) and record[i] != "빈 슬롯":
-                monster_text = f"       {record[i]} lv {record[i+1]}  잡은 스테이지: {record[i+2]}"
-                draw_text(screen, monster_text, 50, y_pos, BLACK)
-                y_pos += 40
-        
+        draw_text(screen, f"    최종 학기 {record[7]} | 엔딩 타입 {record[8]}", 50, y_pos, BLACK)
+        y_pos += 40
+        skills = []
+        for i in range(9, len(record), 2):
+            if record[i]:
+                skills.append(f"{record[i]}타입 스킬 레벨 {record[i+1]}, ")
+        draw_text(screen, f"    스킬: " + ", ".join(skills), 50, y_pos, BLACK)      
         y_pos += 40
         if current_page < len(clear_records) - 1:
             draw_text(screen, "아무 키나 눌러 다음 페이지로 (q키: 종료)", 50, y_pos, GRAY)
@@ -328,93 +326,38 @@ def show_credits():
     screen.fill(WHITE)
     
     y_center = SCREEN_HEIGHT // 2 - (210+120*4-40)/2
-    LeftAlign = SCREEN_WIDTH*3 //8
-    RightAlign = SCREEN_WIDTH*5 //8
 
     draw_text(screen, "배급", SCREEN_WIDTH // 2 - (32*4)/2, y_center, BLACK, highlight=False, size=64)
     y_center += 70
-    startingpoint = SCREEN_WIDTH // 2 - (32*19)/2
-    draw_text(screen, "전산학부 ", startingpoint, y_center, BLUE, highlight=False, size=64)
-    startingpoint += 32*9
-    draw_text(screen, "집행위원회", startingpoint, y_center, SOCBLUE, highlight=False, size=64)
-    y_center += 140
-
-    ystart = y_center
-    draw_text(screen, "개발", LeftAlign - (16*4)/2, y_center, BLACK)
-    y_center += 40
-    draw_text(screen, "이준서", LeftAlign - (16*6)/2, y_center, MYMINT)
+    startingpoint = SCREEN_WIDTH // 2
+    draw_text(screen, "전산학부           ", startingpoint, y_center, BLUE, highlight=False, size=64, align='center')
+    draw_text(screen, "         집행위원회", startingpoint, y_center, SOCBLUE, highlight=False, size=64, align='center')
+    
+    y_center = SCREEN_HEIGHT // 2 - 80
+    draw_text(screen, "김민범", startingpoint-450, y_center, MINBEOM, align='center', size=64)
+    draw_text(screen, "박지민", startingpoint-150, y_center, JIMIN, align='center', size=64)
+    draw_text(screen, "이승민", startingpoint+150, y_center, SEUNGMIN, align='center', size=64)
+    draw_text(screen, "이준서", startingpoint+450, y_center, MYMINT, align='center', size=64)
+    y_center += 96
+    draw_text(screen, "조원준", startingpoint-450, y_center, WONJUN, align='center', size=64)
+    draw_text(screen, "정민호", startingpoint-150, y_center, MINHO, align='center', size=64)
+    draw_text(screen, "탁한진", startingpoint+150, y_center, TAK, align='center', size=64)
+    draw_text(screen, "황윤정", startingpoint+450, y_center, YUNJEONG, align='center', size=64)
+    y_center += 200
+    draw_text(screen, "Special Thanks", startingpoint, y_center, BLACK, align='center', size=64)
     y_center += 80
-
-    draw_text(screen, "기획", LeftAlign - (16*4)/2, y_center, BLACK)
-    y_center += 40
-    startingpoint = LeftAlign - (16*20)/2
-    draw_text(screen, "이준서", startingpoint, y_center, MYMINT)
-    startingpoint += 16*7
-    draw_text(screen, "조원준", startingpoint, y_center, WONJUN)
-    startingpoint+= 16*7
-    draw_text(screen, "박지민", startingpoint, y_center, JIMIN)
-    y_center += 80
-
-    draw_text(screen, "시나리오", LeftAlign - (16*8)/2, y_center, BLACK)
-    y_center += 40
-    startingpoint = LeftAlign - (16*13)/2
-    draw_text(screen, "박지민" , startingpoint, y_center, JIMIN)
-    startingpoint += 16*7
-    draw_text(screen, "조원준", startingpoint, y_center, WONJUN)
-    y_center += 80
-
-    draw_text(screen, "밸런싱", LeftAlign - (16*6)/2, y_center, BLACK)
-    y_center += 40
-    draw_text(screen, "조원준", LeftAlign - (16*6)/2, y_center, WONJUN)
-    y_center += 80
-
-    y_center = ystart
-
-    draw_text(screen, "음악", RightAlign - (16*4)/2, y_center, BLACK)
-    y_center += 40
-    draw_text(screen, "이준서", RightAlign - (16*6)/2, y_center, MYMINT)
-    y_center += 80
-
-    draw_text(screen, "디자인", RightAlign - (16*6)/2, y_center, BLACK)
-    y_center += 40
-    startingpoint = RightAlign - (16*20)/2
-    draw_text(screen, "김민범", startingpoint, y_center, MINBEOM)
-    startingpoint += 16*7
-    draw_text(screen, "황윤정", startingpoint, y_center, YUNJEONG)
-    startingpoint += 16*7
-    draw_text(screen, "이준서", startingpoint, y_center, MYMINT)
-    y_center += 80
-
-    draw_text(screen, "QA", RightAlign - (16*2)/2, y_center, BLACK)
-    y_center += 40
-    startingpoint = RightAlign - (16*20)/2
-    draw_text(screen, "탁한진", startingpoint, y_center, TAK)
-    startingpoint += 16*7
-    draw_text(screen, "이승민", startingpoint, y_center, SEUNGMIN)
-    startingpoint += 16*7
-    draw_text(screen, "정민호", startingpoint, y_center, MINHO)
-    y_center += 80
-
-    draw_text(screen, "Special Thanks", RightAlign - (16*14)/2, y_center, BLACK)
-    y_center += 40
-    startingpoint = RightAlign - (16*16)/2
+    startingpoint = startingpoint - (16*16)/2
     draw_text(screen, "EWWrim", startingpoint, y_center, EWERED)
     startingpoint += 16*7
     draw_text(screen, "& ", startingpoint, y_center, BLACK)
     startingpoint += 16*2
     draw_text(screen, "kmc7468", startingpoint, y_center, KMC)
-    y_center += 80
     
     draw_text(screen, "Enter를 눌러 메뉴로 돌아가기", 50, SCREEN_HEIGHT - 100, GRAY)
     
     pygame.display.flip()
     #엔터 키를 눌러 메뉴로 돌아가기
-    waiting = True
-    while waiting:
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    waiting = False
+    wait_for_key()
 
 def show_help():
     """도움말을 pygame으로 표시"""

@@ -56,6 +56,22 @@ GPT = Items(
     special=True
 )
 
+ProfSoul = Items(
+    name="교수의 영혼",
+    description="교수님의 영혼을 깃들게 해 공격력을 최대로 올린다.",
+    effect="buff",
+    grade="레전더리",
+    fixed=15,
+)
+
+PGSSoul = Items(
+    name="원생의 영혼",
+    description="대학원생의 영혼을 깃들게 해 방어력을 최대로 올린다.",
+    effect="buff",
+    grade="레전더리",
+    fixed=16,
+)
+
 # 에픽
 Americano = Items(
     name="아메리카노", 
@@ -77,20 +93,26 @@ LectureNote = Items(
 # 레어 (새로 2개 추가)
 AirPods = Items(
     name="에어팟",
-    description="에어팟을 주고 노동요를 틀어준다. 흥이 올라 속도가 50% 오른다.", 
+    description="에어팟을 주고 노동요를 틀어준다. 흥이 올라 속도가 2랭크 오른다.", 
     effect="buff",
     grade="레어",
-    varied=0.5,
-    buffto="speed"
+    fixed=5,
 )
 
 Ransomware = Items(
     name="랜섬웨어",
-    description="상대에게 랜섬웨어를 건다. 상대의 방어력을 50% 감소시킨다.", 
+    description="상대에게 랜섬웨어를 건다. 상대의 방어력을 2랭크 감소시킨다.", 
     effect="debuff",
     grade="레어",
-    buffto="defense",
-    varied=0.5,
+    fixed=-8,
+)
+
+Protein = Items(
+    name="프로틴",
+    description="벌크업을 시도한다. 공격력과 방어력이 각 1랭크 상승한다.",
+    effect="buff",
+    grade="레어",
+    fixed=(0, 1),
 )
 
 # 노말 (새로 2개 추가)
@@ -105,30 +127,29 @@ SnackBar = Items(
 
 Virus = Items(
     name="바이러스",
-    description="상대에게 바이러스를 건다. 상대의 이동속도를 10% 감소시킨다.", 
+    description="상대에게 바이러스를 건다. 상대의 공격력를 1랭크 감소시킨다.", 
     effect="debuff",
     grade="노말",
-    varied=0.1,
+    fixed= -6,
     buffto="speed"
 )
 
 Alcohol = Items(
     name="알코올",
-    description="기분이 좋아지는 미지의 초록 병. 스피드를 30% 올린다.",
+    description="기분이 좋아지는 미지의 초록 병. 스피드를 1랭크 올린다.",
     effect="buff",
     grade="노말",
-    varied=0.3,
-    buffto="speed",
+    fixed = 2,
     canuse_on_fainted=False,
     special=False
 )
 
 Google = Items(
-    name="구글신",
-    description="구글신에게 나를 치료할 수 있는 방법을 검색한다. 체력을 5만큼 회복한다. ",
-    effect="heal",
+    name="구글링",
+    description="구글링을 통해 한글 자료를 찾는다. 공격력을 1랭크 올린다.",
+    effect="buff",
     grade="노말",
-    fixed=5
+    fixed=0,
 )
 
 # 아이템 목록
@@ -143,7 +164,10 @@ items = {
     "에너지바": SnackBar,
     "바이러스": Virus,
     "알코올": Alcohol,
-    "구글신": Google
+    "구글링": Google,
+    "교수의 영혼": ProfSoul,
+    "원생의 영혼": PGSSoul,
+    "프로틴": Protein
 }
 
 item_list = [
@@ -156,6 +180,9 @@ item_list = [
     SnackBar,
     Virus,
     Alcohol,
-    Google
+    Google,
+    ProfSoul,
+    PGSSoul,
+    Protein
 ]
 

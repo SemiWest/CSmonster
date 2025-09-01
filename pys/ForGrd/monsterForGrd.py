@@ -99,6 +99,7 @@ class Monster:
         self.SPD = int((self.SP * 2 + self.IV[3]) * (self.level / 100)) + 5
         
         self.drop_exp = int((self.level ** 2) * (30-10*difficulty))  # 드랍 경험치
+        self.Rank = [0]*3  # 버프/디버프 랭크 초기화
 
         # 교체: update 마지막 줄 근처
         self.update_battle()
@@ -568,7 +569,7 @@ coop = Monster(
     Num = 888, name="코옵", credit = 123123,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
-    image="../img/monsters/데이타구조.png",
+    image="../img/monsters/코옵.png",
     description="코옵설명",
     reward = "기업인의 길 해금",
     special=True
@@ -587,9 +588,9 @@ madcamp = Monster(
     Num = 777, name="몰입캠프", credit = 234234,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
-    image="../img/monsters/데이타구조.png",
+    image="../img/monsters/몰입캠프.png",
     description="몰입캠프설명",
-    reward = "레벨업 +3 및 체력 완전 회복",
+    reward = "멘트 변동 예정",
     special=True
 )
 madcamp.skills = {
@@ -606,7 +607,7 @@ study = Monster(
     Num = 999, name="개별연구", credit = 345345,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
-    image="../img/monsters/데이타구조.png",
+    image="../img/monsters/개별연구.png",
     description="개별연구설명",
     reward = "연구자의 길 해금",
     special=True
