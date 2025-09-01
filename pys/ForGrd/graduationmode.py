@@ -1,6 +1,161 @@
 import csv
 from ForGrd.battleForGrd import *
 import copy
+import logging
+import os, datetime, pygame, hashlib, time
+from catbox import CatboxUploader
+import qrcode
+from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+
+import os, datetime, hashlib, pygame
+
+def save_cropped_center(screen, player_name, crop_w=1100, crop_h=800, top_margin=60,
+                        final_name=None, out_dir="results_screenshots", prefix="crop"):
+    os.makedirs(out_dir, exist_ok=True)
+
+    sw, sh = screen.get_size()  # 화면 해상도
+    # 가로: 가운데 정렬
+    left = max(0, (sw - crop_w) // 2)
+    # 세로: 위에서 60px 지점부터 시작
+    top = max(0, top_margin)
+
+    # 화면 밖으로 나가지 않게 보정
+    if left + crop_w > sw:
+        left = max(0, sw - crop_w)
+    if top + crop_h > sh:
+        top = max(0, sh - crop_h)
+
+    rect = pygame.Rect(left, top, crop_w, crop_h)
+    cropped = screen.subsurface(rect)  # 일부분만 잘라오기
+
+    if final_name:
+        path = os.path.join(out_dir, final_name)
+    else:
+        # 파일명: 사용자 이름 해시 + 타임스탬프
+        name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
+        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        path = os.path.join(out_dir, f"{prefix}_{name_hash}_{ts}.png")
+
+    pygame.image.save(cropped, path)
+    print(f"[Saved] {path} @ {rect}")
+    return path
+
+# -----------------------------
+# 2) Catbox 업로드 (영구 or Litterbox 임시)
+#    - userhash가 있으면 계정 업로드
+#    - temporary=True면 Litterbox(1h/12h/24h/72h)
+# -----------------------------
+def upload_to_catbox(file_path, userhash=None, temporary=False, temp_time="24h"):
+    uploader = CatboxUploader(userhash=userhash) if userhash else CatboxUploader()
+    if temporary:
+        # Litterbox (임시 업로드)
+        url = uploader.upload_to_litterbox(file_path, time=temp_time)
+    else:
+        # 일반(영구) 업로드
+        url = uploader.upload_file(file_path)
+
+    if not (isinstance(url, str) and url.startswith("http")):
+        raise RuntimeError(f"Catbox 업로드 응답이 URL이 아님: {url}")
+    print(f"[Uploaded] {url}")
+    return url
+
+import qrcode
+
+def make_qr(url, out_path="qr.png", target_px=300, border=4):
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,  # 임시값
+        border=border,
+    )
+    qr.add_data(url)
+    qr.make(fit=True)
+
+    modules = qr.modules_count + border*2
+    box_size = max(1, target_px // modules)  # 목표 픽셀에 맞춰 박스크기 재계산
+    qr.box_size = box_size
+
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(out_path)
+    return out_path
+def _cleanup_old_files(dir_path: str, older_than_hours: int = 24) -> None:
+    if not dir_path or not os.path.isdir(dir_path):
+        return
+    cutoff = time.time() - older_than_hours * 3600
+    for name in os.listdir(dir_path):
+        path = os.path.join(dir_path, name)
+        try:
+            if os.path.isfile(path) and os.path.getmtime(path) < cutoff:
+                os.remove(path)
+        except Exception:
+            # 조용히 무시(권한/사용중 파일 등)
+            pass
+
+def export_screen_to_catbox_qr(
+    screen,
+    player_name: str,
+    crop_w: int = 1000,
+    crop_h: int = 800,
+    top_margin: int = 60,
+    userhash: Optional[str] = None,
+    temporary: bool = False,
+    temp_time: str = "24h",
+    out_dir: str = "screenshots",     # 스크린샷 폴더
+    prefix: str = "transcript",
+    qr_out_dir: str = "qrcodes",      # QR 전용 폴더 (screenshots와 분리)
+    keep_hours: int = 24,             # 24시간 지난 파일은 삭제
+):
+    # 0) 디렉토리 준비 및 정리
+    os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(qr_out_dir, exist_ok=True)
+    _cleanup_old_files(out_dir, older_than_hours=keep_hours)
+    _cleanup_old_files(qr_out_dir, older_than_hours=keep_hours)
+
+    # 1) 화면 동기화
+    pygame.display.flip()
+
+    # 2) 공통 식별자(타임스탬프 + 이름 해시) — 스크린샷/QR 둘 다 동일 타임스탬프 사용
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
+
+    # 3) 크롭 저장 (파일명: prefix_namehash_ts.png)
+    #    save_cropped_center 내부에서 파일명을 만들고 싶다면, 동일 규칙으로 수정하세요.
+    #    여기서는 out_dir/prefix_namehash_ts.png 로 저장되었다고 가정해 경로를 강제 지정합니다.
+    #    (save_cropped_center 가 반환하는 경로 대신, 아래와 같이 직접 저장하고 싶다면
+    #     subsurface + pygame.image.save 로 구현해도 됩니다.)
+    cropped_path = save_cropped_center(
+        screen,
+        player_name,
+        crop_w=crop_w,
+        crop_h=crop_h,
+        top_margin=top_margin,
+        final_name=f"{prefix}_{name_hash}_{ts}.png",
+        out_dir=out_dir,
+        prefix=prefix,
+    )
+
+    # 4) Catbox 업로드 (영구/임시)
+    url = upload_to_catbox(
+        cropped_path,
+        userhash=userhash,
+        temporary=temporary,
+        temp_time=temp_time,
+    )
+
+    # 5) QR 저장 (파일명: prefix_namehash_urlhash_ts.png, 저장 위치는 qr_out_dir)
+    url_hash = hashlib.sha256(url.encode()).hexdigest()[:8]
+    qr_name = f"{prefix}_{name_hash}_{url_hash}_{ts}.png"
+    qr_path = os.path.join(qr_out_dir, qr_name)
+    make_qr(url, out_path=qr_path)
+
+    return {
+        "image_path": cropped_path,  # screenshots/prefix_namehash_ts.png
+        "url": url,                  # catbox URL
+        "qr_path": qr_path,          # qrcodes/prefix_namehash_urlhash_ts.png
+    }
 
 def addSeonSus(player, monster):
     for mon_num in monster.SeonSu:
@@ -14,48 +169,60 @@ def display_Monster_Imge(screen, monster, x, y, size=1):
     height = img.get_height()
     screen.blit(img, (x, y-height//2))
 
-def save_game_log_csv(filename, player, final_semester):
+def save_game_log_csv(filename, player):
     """게임 결과를 CSV에 저장"""
-    try:
-        # 절대 경로 생성
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        filepath = os.path.join(base_dir, filename)
+    # 절대 경로 생성
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    filepath = os.path.join(base_dir, filename)
+    
+    # 파일이 없으면 헤더 작성 필요
+    write_header = not os.path.exists(filepath) or os.path.getsize(filepath) == 0
+    
+    # CSV 파일에 게임 결과 저장
+    with open(filepath, 'a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
         
-        # 파일이 없으면 헤더 작성 필요
-        write_header = not os.path.exists(filepath) or os.path.getsize(filepath) == 0
-        
-        # CSV 파일에 게임 결과 저장
-        with open(filepath, 'a', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            
-            # 헤더 작성
-            if write_header:
-                writer.writerow([
-                    '이름', '최종학기', '레벨', '처치과목수', '딘즈달성', 
-                    '장짤횟수', '학사경고', '획득칭호', '최종엔딩', '저장시간'
-                ])
-            
-            # 게임 결과 데이터 저장
-            import datetime
-            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            
+        # 헤더 작성
+        if write_header:
             writer.writerow([
-                player.name,
-                final_semester,
-                player.level,
-                len(player.defeated_monsters),
-                player.deans_count,
-                player.jangzal_count,
-                player.warning_count,
-                ', '.join(player.titles) if player.titles else '없음',
-                player.get_final_ending(),
-                now
+                '날짜', '이름', '최종 GPA', '최종 레벨', '딘즈 횟수', '장짤 횟수', '학사경고 횟수',
+                '최종 학기', '엔딩 타입', '스킬1', '스킬1레벨', '스킬2', '스킬2레벨',
+                '스킬3', '스킬3레벨', '스킬4', '스킬4레벨'
             ])
-            
-        return True, f"게임 결과가 {filename}에 저장되었습니다."
         
-    except Exception as e:
-        return False, f"저장 실패: {str(e)}"
+        # 게임 결과 데이터 저장
+        import datetime
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # 최종 스킬들 스킬타입, 스킬레벨
+        skillresult = []
+        # current_skills 에서 레벨이 0이상인 스킬들 key와 value를 skillresult에 추가
+        for skill, level in player.learned_skills.items():
+            if level > 0:
+                skillresult.append(skill)
+                skillresult.append(str(level))
+        gpa = player.calcGPA(2)
+        print(gpa)
+        writer.writerow([
+            now,
+            player.name,
+            gpa,
+            player.level,
+            player.deans_count,
+            player.jangzal_count,
+            player.warning_count,
+            player.current_semester,
+            player.ending_type,
+            skillresult[0] if len(skillresult) > 0 else '',
+            skillresult[1] if len(skillresult) > 1 else '',
+            skillresult[2] if len(skillresult) > 2 else '',
+            skillresult[3] if len(skillresult) > 3 else '',
+            skillresult[4] if len(skillresult) > 4 else '',
+            skillresult[5] if len(skillresult) > 5 else '',
+            skillresult[6] if len(skillresult) > 6 else '',
+            skillresult[7] if len(skillresult) > 7 else ''
+        ])
+        
+    return True, f"게임 결과가 {filename}에 저장되었습니다."
 
 def get_current_semester_monsters(player):
     length = len(player.canBeMetMonsters)
@@ -389,7 +556,7 @@ def show_final_result(player, screen):
     draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2+450, y_offset, BLACK, align='right')
     
     # 결과 저장
-    success, message = save_game_log_csv("graduation_results.csv", player, player.current_semester)
+    success, message = save_game_log_csv("graduation_results.csv", player)
     
     if success:
         draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
@@ -398,6 +565,47 @@ def show_final_result(player, screen):
     
     draw_text(screen, "아무 키나 눌러 메인메뉴로...", SCREEN_WIDTH//2 - 160, SCREEN_HEIGHT - 60, BLACK)
     
+    pygame.display.flip()
+    result = export_screen_to_catbox_qr(
+        screen,
+        player_name=player.name,
+        crop_w=1000, crop_h=800, top_margin=60,
+        userhash=None,         # 계정 업로드면 'your_userhash'
+        temporary=False,       # 임시면 True, temp_time="24h" 등
+        out_dir="results/screenshots", # 스크린샷 폴더
+        prefix="transcript",
+        qr_out_dir="results/qrcodes",  # QR 폴더 (screenshots와 분리)
+        keep_hours=24          # 24시간 지난 파일은 자동 삭제
+    )
+    print(result["url"], result["qr_path"])
+    wait_for_key()
+    
+    # 두 번째 화면: QR 링크와 멘트 표시
+    screen.fill(WHITE)
+    draw_text(screen, "! 졸업 결과 공유하기 !", SCREEN_WIDTH//2, 120, BLACK, size=48, align='center')
+
+    # QR 이미지 불러오기
+    try:
+        qr_image = pygame.image.load(result["qr_path"])
+        # 32비트 surface로 변환 (알파 포함)
+        qr_image = qr_image.convert_alpha()
+
+        # QR 코드를 적당한 크기로 리사이즈 (예: 300x300)
+        qr_image = pygame.transform.smoothscale(qr_image, (300, 300))
+
+        # 화면 가운데에 배치
+        qr_rect = qr_image.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2 + 40))
+        screen.blit(qr_image, qr_rect)
+
+    except Exception as e:
+        draw_text(screen, f"QR 불러오기 실패: {e}", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, RED, align='center')
+
+    # 안내 멘트
+    draw_text(screen, "위 QR을 스캔하면 결과 이미지를 얻을 수 있습니다.", SCREEN_WIDTH//2, 320, BLACK, size=28, align='center')
+    draw_text(screen, "인스타 스토리에 @in.cs.tagram과 @kaist_kamf를 태그해서 공유해보세요!", SCREEN_WIDTH//2, 370, BLACK, size=28, align='center')
+    # 추가 설명
+    draw_text(screen, "아무 키나 눌러 메인 메뉴로 돌아갑니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT - 80, GRAY, size=24, align='center')
+
     pygame.display.flip()
     wait_for_key()
 
@@ -465,6 +673,9 @@ def _add_cleared_entry(player, monster_name, semester, gpa):
 
 def game_start(screen, Me_name="넙죽이", debug_config=None):
     """새로운 졸업모드 메인 게임 로직"""
+    if logger.isEnabledFor(logging.INFO):
+        logger.info(f"졸업 모드 게임 시작: 플레이어={Me_name}")
+    
     # pygame 화면 초기화 강제 실행
     init_pygame_screen()
 

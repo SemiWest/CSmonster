@@ -99,6 +99,7 @@ class Monster:
         self.SPD = int((self.SP * 2 + self.IV[3]) * (self.level / 100)) + 5
         
         self.drop_exp = int((self.level ** 2) * (30-10*difficulty))  # 드랍 경험치
+        self.Rank = [0]*3  # 버프/디버프 랭크 초기화
 
         # 교체: update 마지막 줄 근처
         self.update_battle()
@@ -163,7 +164,7 @@ cs101.skills = {
         effect_type="Sdamage", 
         type="DS",
         skW=30,
-        priority=4, 
+        priority=1, 
         description="새내기의 시간표를 혼란스럽게 만든다.")
     
 }
@@ -228,14 +229,14 @@ cs206.skills = {
         effect_type="reflect", 
         type="DS",
         skW=0.5,
-        priority=3, 
+        priority=2, 
         description="큐를 U자로 만들어 상대를 향하게 한다. 상대의 공격을 절반의 피해로 상대에게 출력한다."),
     '트리 파괴': Monster.Skill(
         name='트리 파괴', 
         effect_type="Sdamage",
         type="DS",
         skW=50,
-        priority=2,
+        priority=1,
         description="거대한 트리를 상대에게 쓰러뜨린다. 반드시 명중한다."),
     'HashMap': Monster.Skill(
         name='HashMap', 
@@ -260,7 +261,7 @@ cs230.skills = {
         effect_type="Sdamage",
         type="SYS",
         skW=100,
-        priority=2,
+        priority=1,
         description="버퍼 오버플로우를 일으켜 공격한다."),
     '페이지 폴트': Monster.Skill(
         name='페이지 폴트', 
@@ -274,7 +275,7 @@ cs230.skills = {
         effect_type="Sdamage", 
         type="PS",
         skW=50,
-        priority=3,
+        priority=1,
         description="상대의 코드를 역공학하여 공격한다. 반드시 선제공격한다."),
     '셀프 디버그': Monster.Skill(
         name='셀프 디버그', 
@@ -305,14 +306,14 @@ cs330.skills = {
         effect_type="Sdamage", 
         type="PS",
         skW=130,
-        priority=3,
+        priority=1,
         description="과제가 나왔다. 큰일났다;; 명중률이 낮다."),
     '커널 패닉': Monster.Skill(
         name='커널 패닉', 
         effect_type="Sdamage", 
         type="PS",
         skW=70,
-        priority=4,
+        priority=2,
         description="OS 망했다."),
     '셀프 디버그': Monster.Skill(
         name='셀프 디버그', 
@@ -350,14 +351,14 @@ cs300.skills = {
         effect_type="halve_hp",
         type="PS",
         skW=0,
-        priority=3,
+        priority=1,
         description="상대를 이산화시켜 HP를 반으로 줄인다."),
     '무한루프그래프': Monster.Skill(
         name='무한루프그래프', 
         effect_type="reflect", 
         type = "CT",
         skW=0,
-        priority=4, 
+        priority=2, 
         description="무한 루프 그래프를 만들어 상대의 공격을 흘려보낸다."),
 }
 
@@ -389,7 +390,7 @@ cs311.skills = {
         effect_type="reflect",
         type="CT",
         skW=0,
-        priority=3,
+        priority=1,
         description="XOR 게이트로 상대 공격을 반전시켜 무효화시킨다."),
 }
 
@@ -421,14 +422,14 @@ cs320.skills = {
         effect_type="reflect",
         type="CT",
         skW=1,
-        priority=4,
+        priority=1,
         description="함수형 프로그래밍이 나를 거부한다. "),
     'Type Error': Monster.Skill(
         name='Type Error', 
         effect_type="disable",
         type="CT",
         skW=0, 
-        priority=3,
+        priority=2,
         description="타입 에러를 일으켜 상대의 행동을 취소한다."), #TODO: 구현 가능한지 확인해야함
 }
 
@@ -568,7 +569,7 @@ coop = Monster(
     Num = 888, name="코옵", credit = 123123,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
-    image="../img/monsters/데이타구조.png",
+    image="../img/monsters/코옵.png",
     description="코옵설명",
     reward = "기업인의 길 해금",
     special=True
@@ -587,9 +588,9 @@ madcamp = Monster(
     Num = 777, name="몰입캠프", credit = 234234,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
-    image="../img/monsters/데이타구조.png",
+    image="../img/monsters/몰입캠프.png",
     description="몰입캠프설명",
-    reward = "레벨업 +3 및 체력 완전 회복",
+    reward = "멘트 변동 예정",
     special=True
 )
 madcamp.skills = {
@@ -606,7 +607,7 @@ study = Monster(
     Num = 999, name="개별연구", credit = 345345,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
-    image="../img/monsters/데이타구조.png",
+    image="../img/monsters/개별연구.png",
     description="개별연구설명",
     reward = "연구자의 길 해금",
     special=True
