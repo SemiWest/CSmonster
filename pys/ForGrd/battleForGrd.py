@@ -1156,12 +1156,83 @@ def battle(getplayer, getenemy, screen=None):
             pygame.display.flip()
             wait_for_key()
 
-            if enemyCSmon.Num == "777":     # 몰캠
+            if enemyCSmon.Num == 777:     # 몰캠
                 pass
-            elif enemyCSmon.Num == "888":   # 코옵
-                pass
-            elif enemyCSmon.Num == "999":   # 개별연구
-                pass
+            elif enemyCSmon.Num == 888 or enemyCSmon.Num == 999:   # 코옵 or 개별연구
+                display_status(screen, detail=True)
+                draw_text(screen, f"  3번의 턴 안에 상대 hp를 1에 가깝게 만들어보자!", stX, stY, WHITE)
+                pygame.display.flip()
+                wait_for_key()
+                turn = 0
+                while turn < 3 and enemyCSmon.nowhp > 0 and player.is_alive():
+                    display_status(screen, detail=True)
+                    draw_text(screen, f"  {turn+1}번째 행동을 선택하자!", stX, stY, WHITE)
+                    pygame.display.flip()
+                    wait_for_key()
+                    display_status(screen, detail=True)
+                    action = select_action(screen)
+                    if action not in [0, 1]:
+                        display_status(screen, detail=True)
+                        draw_text(screen, f"  스킬 또는 아이템을 사용해야 한다!", stX, stY, WHITE)
+                        pygame.display.flip()
+                        wait_for_key()
+                        continue
+
+                    if action == 0: # 스킬 사용
+                        turn += 1
+                        esc = skill_phase(screen)
+                        if esc == -1:
+                            pass
+                    elif action == 1: # 아이템 사용
+                        turn += 1
+                        if not any(i.name != "빈 슬롯" for i in player.items):
+                            display_status(screen, detail=True)
+                            draw_text(screen, f"  아이템이 없다!", stX, stY, WHITE)
+                            pygame.display.flip()
+                            wait_for_key()
+                        else:
+                            esc = item_phase(screen)
+                            if esc == -1:
+                                pass
+                    # 적 체력 확인
+                    enemy_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
+                    if enemy_hp <= 0:
+                        display_status(screen, detail=True)
+                        draw_text(screen, f"  {enemyCSmon.name}이/가 쓰러졌다!", stX, stY, WHITE)
+                        pygame.display.flip()
+                        wait_for_key()
+                        
+                        battle_end = True
+                        return "실패"
+                    
+                # 3턴 종료 후 체력 체크
+                enemy_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
+                if enemy_hp <= 0:
+                    display_status(screen, detail=True)
+                    draw_text(screen, f"  {enemyCSmon.name}이/가 쓰러졌다!", stX, stY, WHITE)
+                    pygame.display.flip()
+                    wait_for_key()
+
+                    battle_end = True
+                    return "실패"
+                elif enemy_hp <= int(enemyCSmon.HP * 0.1):
+                    display_status(screen, detail=True)
+                    draw_text(screen, f"  {enemyCSmon.name}의 체력이 충분히 낮아졌다!", stX, stY, WHITE)
+                    pygame.display.flip()
+                    wait_for_key()
+
+                    battle_end = True
+                    return "성공"
+                else:
+                    display_status(screen, detail=True)
+                    draw_text(screen, f"  {enemyCSmon.name}의 체력이 충분히 낮아지지 않았다...", stX, stY, WHITE)
+                    pygame.display.flip()
+                    wait_for_key()
+
+                    battle_end = True
+                    return "실패"
+                           
+    
 
         while not battle_end:
             # 플레이어 턴
@@ -1398,5 +1469,23 @@ def battle(getplayer, getenemy, screen=None):
         wait_for_key()
         
         return 5, (0, "NR") # PNR 실패는 5를 반환
+
+    elif result == "실패":
+        Lose()
+        display_status(screen)
+        draw_text(screen, f" 특별 미션에 실패했다...", stX, stY, WHITE)
+        pygame.display.flip()
+        wait_for_key()
+        if enemy.type[0] == "EVENT":
+            return 4, (0, "실패...")
+    elif result == "성공":
+        Battle_win()
+        display_status(screen)
+        draw_text(screen, f" 특별 미션에 성공했다!", stX, stY, WHITE)
+        pygame.display.flip()
+        wait_for_key()
+        if enemy.type[0] == "EVENT":
+            return 4, (0, "성공!")
     
+        
     else: return 0, (enemy.credit, "F")
