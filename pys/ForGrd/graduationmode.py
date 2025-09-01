@@ -9,11 +9,15 @@ from typing import Optional
 import requests
 import json
 import os
+import dropbox
 
 logger = logging.getLogger(__name__)
 
 NOTION_TOKEN = "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"
 DATABASE_ID = "261e339f1ae5802ca71acd96446868d5"
+DROPBOX_ACCESS_TOKEN = "sl.u.AF_B0LhNAD19LEycuOieUIsgjl3VGl-78DDryOPDFo1YN2n8FVNiilannXvrcNyAzC_Ax0AeYxOih1H1Usl-BMma_rJjfxwpcf3vajhCwESCtUmB2aZucjC4MJrA5cEbwT8jRJvyJFD3Q7R5PCS1Hyf1MwgWQs6TmoENSerQJNnWdkeZ5_JWyQ4veMKvxDNNJeHibL5mAPpcIY3vnA3qOHGUzrOMcIlTnrDeWQ9y5hdovUnZGGB2-LT9gdLgU6IUCAJvD3epDNtibzzN8yKySMs16ajxA92b-6EnBUVakZuULD6rUBHe3OGL4A7672C_HxKTs1_2kjkTBXXTWsQDAZTsfSmfZPr2Vixu2Kp1tMLopRk5Zd7XG6V5Qa_zw-BLK3FxTnVgbzClqM5wPeXTxQWgZZJhA-pKZd7C-LKF2m0svtaX0YVtzsYQ5zePkz4ZdzF8COTgQo69BcsGuev31uZz2JV7dmebG6jG8LOuSXwJV3gCFiA6ODPbIxi7a_nLEb92zv5CEGT_ycllIGm_B-vURqBdeR0bv_w7wUKjPwA1ZSl4Belr7QzAppFBbNe2tk96LxWtUn8EIZcDhgUicxTsxv3CdP9xbJa7_OpDRmIs3HH738c8zZ4Yjz11sW_wKhKpyU5oqbFaEpVFPTZ4Qm1Lp11_zww9CX62Ik2sR2OMjguVbPW-gEDjS3GhGry5KuIJ6a4nXx3VzE1GY_SgcHlRTQRY6Q1oBOPn0G82WONYZPWDdVbkP2vezgY6GkG9F1KK8HeWrm6Wii1BPvQ280csXOrXvtlTTSlmKJ-jcNd7Hf8TpQtsVaPnqBxS5vsYjET4fpjf8BA__GCYCb5_OiuEEvHNRajgK8Y6s-7AZkDsZe_NJs7QWXOoXy2NLIJ96TZDPLy97gP5oPzTu8QodKqfdHZ5dT4AnLRWl0ZpwmHiXviN0itwyedaK4xl2NKUDI7B7MhXtfXHO1kut9UqepGWnVIMoR4_KaO3dRgQRmDT_DNrWA_r6rih1_k3wVP6eFsbe0h6YNcQpFjkqrQownooDEQq_NjJ906TONFSkHShHkMrXhJYMmz5Y60qgrGqCQ5-GwLCHgB_9FXFTwXj-lbhOxRz3MltfJKS6_LOV8JZJDdu6gAphTOa-0Jz7BN2Xb-dyIH_rbVTmPfLYnrSoeKV3IsP1y-XbaEpjeOywUCdHHlqUJLIFvIISUZ1tWPyc-wBnMCctQ7dR5RJZIl5MsVEku6eYvsIEFU2u4WwyNN6V9TqmiKscZpT_O1P-HDDHZGAoVi1NM-z-rSEgTeRcUcnl2G7oKMPKT3BOvLt-AzJPCyUwFbyMgbwXzczXV_5jQS3IrtTJ8Zq1Zy_RC-OO4NaEDs1TfxZ_JVWKSjbUF7vIy4rX16sQa_o4J4LFTMlcL6uRz8WKlZEgt3MAvccBEbPSw_1BLqr5WM4l-S5YYZrIQ" 
+DROPBOX_UPLOAD_FOLDER = "/uploads/csmonster"
+
 
 headers = {
     "Authorization": f"Bearer {NOTION_TOKEN}",
@@ -441,7 +445,7 @@ def show_deans_list(player, screen, leaderboard):
             draw_text(screen, f"{player_entry['gpa']:.2f}",          SCREEN_WIDTH//2 + 200, y_extra, RED, size=28, align='right')
 
     # 하단 안내
-    draw_text(screen, "아무 키나 눌러 메인 메뉴로 돌아갑니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT - 80, GRAY, size=24, align='center')
+    draw_text(screen, "아무 키나 눌러 다음으로 넘어갑니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT - 80, GRAY, size=24, align='center')
 
     pygame.display.flip()
     wait_for_key()
@@ -484,19 +488,60 @@ def save_cropped_center(screen, player_name, crop_w=1200, crop_h=800, top_margin
 #    - userhash가 있으면 계정 업로드
 #    - temporary=True면 Litterbox(1h/12h/24h/72h)
 # -----------------------------
-def upload_to_catbox(file_path, userhash=None, temporary=False, temp_time="24h"):
-    uploader = CatboxUploader(userhash=userhash) if userhash else CatboxUploader()
-    if temporary:
-        # Litterbox (임시 업로드)
-        url = uploader.upload_to_litterbox(file_path, time=temp_time)
-    else:
-        # 일반(영구) 업로드
-        url = uploader.upload_file(file_path)
+import dropbox
+import os
+import datetime
 
-    if not (isinstance(url, str) and url.startswith("http")):
-        raise RuntimeError(f"Catbox 업로드 응답이 URL이 아님: {url}")
-    print(f"[Uploaded] {url}")
-    return url
+def upload_to_dropbox(access_token, file_path, dropbox_folder_path):
+    """
+    Dropbox에 파일을 업로드하고 공유 가능한 링크를 반환합니다.
+
+    Args:
+        access_token (str): Dropbox API Access Token.
+        file_path (str): 업로드할 로컬 파일의 경로.
+        dropbox_folder_path (str): Dropbox 내에 파일을 저장할 경로 (예: '/uploads/').
+
+    Returns:
+        str: 공유 가능한 URL.
+    """
+    # Dropbox 객체 생성
+    try:
+        dbx = dropbox.Dropbox(access_token)
+        dbx.users_get_current_account() # 토큰 유효성 검사
+        print("Dropbox 계정 연결 성공.")
+    except dropbox.exceptions.AuthError:
+        print("오류: Access Token이 유효하지 않습니다. 다시 확인해주세요.")
+        return None
+
+    # 파일 업로드
+    try:
+        with open(file_path, 'rb') as f:
+            # Dropbox에 저장할 파일 경로 설정
+            file_name = os.path.basename(file_path)
+            dropbox_path = os.path.join(dropbox_folder_path, file_name).replace('\\', '/')
+            
+            print(f"'{file_path}' 파일을 Dropbox의 '{dropbox_path}' 경로에 업로드 중...")
+            
+            # files_upload: 파일을 업로드하는 API
+            # mode=dropbox.files.WriteMode('overwrite')는 덮어쓰기 옵션
+            dbx.files_upload(f.read(), dropbox_path, mode=dropbox.files.WriteMode('overwrite'))
+            print("업로드 완료!")
+
+        # 업로드된 파일의 공유 링크 생성
+        share_link_metadata = dbx.sharing_create_shared_link_with_settings(dropbox_path)
+        share_link = share_link_metadata.url
+        print(f"공유 링크 생성: {share_link}")
+        
+        # Dropbox 공유 링크는 직접 다운로드 링크가 아님
+        # 끝에 ?dl=0을 ?dl=1로 바꿔주면 바로 다운로드가능한 링크가 됨
+        download_link = share_link.replace('?dl=0', '?dl=1')
+        print(f"직접 다운로드 링크: {download_link}")
+        
+        return download_link
+        
+    except Exception as e:
+        print(f"파일 업로드 또는 링크 생성 중 오류 발생: {e}")
+        return None
 
 def make_qr(url, out_path="qr.png", target_px=300, border=4):
     qr = qrcode.QRCode(
@@ -572,13 +617,12 @@ def export_screen_to_catbox_qr(
     )
 
     # 4) Catbox 업로드 (영구/임시)
-    url = upload_to_catbox(
-        cropped_path,
-        userhash=userhash,
-        temporary=temporary,
-        temp_time=temp_time,
+    url = upload_to_dropbox(
+        file_path=cropped_path,
+        access_token=DROPBOX_ACCESS_TOKEN,
+        dropbox_folder_path=DROPBOX_UPLOAD_FOLDER
     )
-
+    print(url)
     # 5) QR 저장 (파일명: prefix_namehash_urlhash_ts.png, 저장 위치는 qr_out_dir)
     url_hash = hashlib.sha256(url.encode()).hexdigest()[:8]
     qr_name = f"{prefix}_{name_hash}_{url_hash}_{ts}.png"
@@ -1069,7 +1113,18 @@ def show_final_result(player, screen):
     # 위 방식이 복잡하므로, 아래와 같이 변경합니다.
     
     # 6. 최종 합성 이미지를 Catbox에 업로드하고 QR 코드 생성
-    upload_url = upload_to_catbox(final_combined_path, temporary=False)
+
+    # Dropbox 함수 호출
+    upload_url = upload_to_dropbox(
+        file_path=final_combined_path, 
+        access_token=DROPBOX_ACCESS_TOKEN, 
+        dropbox_folder_path=DROPBOX_UPLOAD_FOLDER
+    )
+
+    if upload_url:
+        print(f"업로드 완료! 공유 URL: {upload_url}")
+    else:
+        print("업로드에 실패했습니다.")
     if upload_url:
         qr_path = make_qr(upload_url)
         print(f"Debug: 최종 합성 이미지의 QR 코드 경로: {qr_path}")
