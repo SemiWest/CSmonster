@@ -120,6 +120,7 @@ class Monster:
             self.skW = skW # 위력
             self.priority = priority # 우선도
             self.consecutive_uses = 0  # 연속 사용 횟수 (리플렉트 계열 스킬에 사용)
+            self.animation = "none" # 애니메이션 파일명 (없으면 "none")
 
 # 플레이어와 적 전산몬스터 생성
 Nonemonster = Monster(

@@ -135,7 +135,7 @@ def play_effect(file_path, esp_volume = 100):
         sound.set_volume(ESVolume / esp_volume)  # 볼륨 설정
         effect_channel.play(sound)  # 효과음 재생
 
-def wait_for_key():
+def wait_for_key(sound = True):
     """키 입력 대기 (pygame)"""
     pygame.event.clear()
     waiting = True
@@ -146,7 +146,8 @@ def wait_for_key():
                 return None
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER or event.key == pygame.K_SPACE:
-                    option_select_sound()
+                    if sound:
+                        option_select_sound()
                     return 'enter'
                 elif event.key == pygame.K_ESCAPE or event.key == pygame.K_q or event.key == pygame.K_BACKSPACE:
                     return 'escape'
@@ -180,11 +181,14 @@ def caught():
 def Critical():
     play_effect("../sound/Critical.mp3")
 
-def Damage_strong():
-    play_effect("../sound/Damage_strong.mp3")
+def Effective():
+    play_effect("../sound/Hit Super Effective.mp3")
 
-def Damage_weak():
-    play_effect("../sound/Damage_weak.mp3")
+def NotEffective():
+    play_effect("../sound/Hit Weak Not Very Effective.mp3")
+
+def NormalDamage():
+    play_effect("../sound/Hit Normal Damage.mp3")
 
 def HP_low():
     play_effect("../sound/HP_low.mp3", 150)
@@ -206,3 +210,9 @@ def Lose():
 
 def Report():
     play_effect("../sound/report.mp3", 150)
+
+def RankUp():
+    play_effect("../sound/Stat Rise Up.mp3")
+
+def RankDown():
+    play_effect("../sound/Stat Fall.mp3")
