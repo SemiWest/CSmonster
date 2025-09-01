@@ -1307,8 +1307,6 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
             if battle_result == 1:  # 승리
                 if monster_name in player.clearedMonsters:
                     _remove_cleared_entry(player, monster_name)
-                    if gpa[1] == "A+" or gpa[1] == "A0":
-                        gpa[1] = "A-"
                 _add_cleared_entry(player, monster_name, player.current_semester, gpa)
                 player.thisSemesterGpas.append(gpa)
                 need_skill_change = player.complete_monster(monster_name)
