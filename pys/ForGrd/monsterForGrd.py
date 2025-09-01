@@ -228,14 +228,14 @@ cs206.skills = {
         effect_type="reflect", 
         type="DS",
         skW=0.5,
-        priority=3, 
+        priority=2, 
         description="큐를 U자로 만들어 상대를 향하게 한다. 상대의 공격을 절반의 피해로 상대에게 출력한다."),
     '트리 파괴': Monster.Skill(
         name='트리 파괴', 
         effect_type="Sdamage",
         type="DS",
         skW=50,
-        priority=2,
+        priority=1,
         description="거대한 트리를 상대에게 쓰러뜨린다. 반드시 명중한다."),
     'HashMap': Monster.Skill(
         name='HashMap', 
@@ -260,7 +260,7 @@ cs230.skills = {
         effect_type="Sdamage",
         type="SYS",
         skW=100,
-        priority=2,
+        priority=1,
         description="버퍼 오버플로우를 일으켜 공격한다."),
     '페이지 폴트': Monster.Skill(
         name='페이지 폴트', 
@@ -274,7 +274,7 @@ cs230.skills = {
         effect_type="Sdamage", 
         type="PS",
         skW=50,
-        priority=3,
+        priority=1,
         description="상대의 코드를 역공학하여 공격한다. 반드시 선제공격한다."),
     '셀프 디버그': Monster.Skill(
         name='셀프 디버그', 
@@ -305,14 +305,14 @@ cs330.skills = {
         effect_type="Sdamage", 
         type="PS",
         skW=130,
-        priority=3,
+        priority=1,
         description="과제가 나왔다. 큰일났다;; 명중률이 낮다."),
     '커널 패닉': Monster.Skill(
         name='커널 패닉', 
         effect_type="Sdamage", 
         type="PS",
         skW=70,
-        priority=4,
+        priority=2,
         description="OS 망했다."),
     '셀프 디버그': Monster.Skill(
         name='셀프 디버그', 
@@ -350,14 +350,14 @@ cs300.skills = {
         effect_type="halve_hp",
         type="PS",
         skW=0,
-        priority=3,
+        priority=1,
         description="상대를 이산화시켜 HP를 반으로 줄인다."),
     '무한루프그래프': Monster.Skill(
         name='무한루프그래프', 
         effect_type="reflect", 
         type = "CT",
         skW=0,
-        priority=4, 
+        priority=2, 
         description="무한 루프 그래프를 만들어 상대의 공격을 흘려보낸다."),
 }
 
@@ -389,7 +389,7 @@ cs311.skills = {
         effect_type="reflect",
         type="CT",
         skW=0,
-        priority=3,
+        priority=1,
         description="XOR 게이트로 상대 공격을 반전시켜 무효화시킨다."),
 }
 
@@ -421,14 +421,14 @@ cs320.skills = {
         effect_type="reflect",
         type="CT",
         skW=1,
-        priority=4,
+        priority=1,
         description="함수형 프로그래밍이 나를 거부한다. "),
     'Type Error': Monster.Skill(
         name='Type Error', 
         effect_type="disable",
         type="CT",
         skW=0, 
-        priority=3,
+        priority=2,
         description="타입 에러를 일으켜 상대의 행동을 취소한다."), #TODO: 구현 가능한지 확인해야함
 }
 
