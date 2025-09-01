@@ -799,7 +799,7 @@ def show_final_result(player, screen):
     draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2+450, y_offset, BLACK, align='right')
     
     # 결과 저장
-    success, message = save_game_log_csv("results/graduation/graduation_results.csv", player)
+    success, message = save_game_log_csv("../results/graduation/graduation_results.csv", player)
     success_notion = save_game_log_to_notion(player)
     if success:
         draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
