@@ -794,7 +794,11 @@ def semester_result_screen(player, screen):
     if monsters[player.thisSemesterMonsters[0]].type[0] == "EVENT":
         if player.thisSemesterGpas[0][1] == "성공!":
             Report()
-            draw_text(screen, f"{player.thisSemesterMonsters[0]} 이벤트에 성공하였습니다!", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
+            lup_amt = player.molcam
+            if lup_amt > 0:
+                draw_text(screen, f"{player.thisSemesterMonsters[0]} 이벤트에 성공하였습니다!", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
+            else:
+                draw_text(screen, f"{player.thisSemesterMonsters[0]} 이벤트를 노력했으나 결실을 맺지 못했다...", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
             draw_text(screen, f"{monsters[player.thisSemesterMonsters[0]].reward}", SCREEN_WIDTH//2, 200, BLUE, align='center')
         else:
             Lose()
