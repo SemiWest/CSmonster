@@ -21,6 +21,77 @@ headers = {
     "Notion-Version": "2022-06-28", # 최신 버전을 확인하고 사용
 }
 
+def save_cropped_and_return_path(screen, player_name, crop_w, crop_h, top_margin, out_dir, prefix):
+    """
+    화면을 크롭하여 파일로 저장하고, 저장된 파일 경로만 반환합니다.
+    """
+    os.makedirs(out_dir, exist_ok=True)
+    
+    sw, sh = screen.get_size()
+    left = max(0, (sw - crop_w) // 2)
+    top = max(0, top_margin)
+    if left + crop_w > sw:
+        left = max(0, sw - crop_w)
+    if top + crop_h > sh:
+        top = max(0, sh - crop_h)
+
+    rect = pygame.Rect(left, top, crop_w, crop_h)
+    cropped = screen.subsurface(rect)
+
+    name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    path = os.path.join(out_dir, f"{prefix}_{name_hash}_{ts}.png")
+
+    pygame.image.save(cropped, path)
+    print(f"Debug: 임시 이미지 저장 완료: {path}")
+    return path
+
+def combine_for_share(background_path, transcript_path, deans_list_path, player_name, out_dir="results/combined_images"):
+    """
+    졸업 성적표와 딘즈 리스트 이미지를 하나의 배경 이미지에 합성하여 저장합니다.
+    """
+    os.makedirs(out_dir, exist_ok=True)
+    
+    # 이미지 로드
+    try:
+        bg_image = pygame.image.load(background_path)
+        transcript_img = pygame.image.load(transcript_path)
+        deans_list_img = pygame.image.load(deans_list_path)
+    except pygame.error as e:
+        print(f"Debug: 이미지 로드 오류 - {e}")
+        return None
+
+    # 이미지 비율 조정 (리사이즈)
+    transcript_resized = pygame.transform.smoothscale(transcript_img, (800, 640))
+    deans_list_resized = pygame.transform.smoothscale(deans_list_img, (560, 793))
+
+    # 배경 이미지에 합성
+    # background 이미지의 크기 (1080x1920)
+    bg_width, bg_height = bg_image.get_size()
+
+    # 가로 중앙 정렬
+    transcript_x = (bg_width - transcript_resized.get_width()) // 2
+    deans_list_x = (bg_width - deans_list_resized.get_width()) // 2
+    
+    # 세로 위치 계산
+    deans_list_y = 291  # 윗 끝부분 마진 291
+    transcript_y = bg_height - transcript_resized.get_height() - 135 # 아래 끝부분 마진 135
+
+    # 합성
+    bg_image.blit(deans_list_resized, (deans_list_x, deans_list_y))
+    bg_image.blit(transcript_resized, (transcript_x, transcript_y))
+
+    # 최종 이미지 저장
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
+    final_filename = f"combined_{name_hash}_{ts}.png"
+    final_path = os.path.join(out_dir, final_filename)
+    
+    pygame.image.save(bg_image, final_path)
+    print(f"Debug: 합성 이미지 저장 완료: {final_path}")
+    
+    return final_path
+
 def save_game_log_to_notion(player):
     """
     게임 결과를 Notion 데이터베이스에 저장합니다.
@@ -301,13 +372,13 @@ def show_deans_list(player, screen, leaderboard):
     if player_rank is not None and player_rank <= 10:
         # 10위권 진입 축하 메시지
         if player_rank == 1:
-            message_lines.append(("전설의 1위! 새로운 딘즈 리스트 정상에 올랐습니다!", (255, 215, 0)))
+            message_lines.append(("전설의 1위!\n새로운 딘즈 리스트 정상에 올랐습니다!", (255, 215, 0)))
         elif player_rank == 2:
-            message_lines.append(("2위 달성! 환상적인 성적입니다!", (192, 192, 192)))
+            message_lines.append(("2위 달성!\n환상적인 성적입니다!", (192, 192, 192)))
         elif player_rank == 3:
-            message_lines.append(("3위 입성! 탑 티어에 합류했습니다!", (205, 127, 50)))
+            message_lines.append(("3위 입성!\n탑 티어에 합류했습니다!", (205, 127, 50)))
         else:
-            message_lines.append(("축하합니다! 새로운 딘즈 리스트 Top 10에 올랐습니다!", GREEN))
+            message_lines.append(("축하합니다!\n새로운 딘즈 리스트 Top 10에 올랐습니다!", GREEN))
     elif player_entry is not None:
         # 10위 밖이고, 불명예 섹션도 아니라면 중간에 본인만 표시
         bottom_count = min(3, len(combined))
@@ -327,8 +398,9 @@ def show_deans_list(player, screen, leaderboard):
     if message_lines:
         y_msg = after_top_y + 60
         for text, color in message_lines:
-            draw_text(screen, text, SCREEN_WIDTH//2, y_msg, color, size=28, align='center')
-            y_msg += 36
+            for line in text.splitlines():  # 줄바꿈 처리
+                draw_text(screen, line, SCREEN_WIDTH//2, y_msg, color, size=28, align='center')
+                y_msg += 36  # 줄 간격
         after_top_y = y_msg
 
     # 6) 불명예의 전당 (꼴찌 3 + GPA==0인 플레이어 포함 규칙)
@@ -367,7 +439,7 @@ def show_deans_list(player, screen, leaderboard):
     wait_for_key()
 
 
-def save_cropped_center(screen, player_name, crop_w=1100, crop_h=800, top_margin=60,
+def save_cropped_center(screen, player_name, crop_w=1200, crop_h=800, top_margin=60,
                         final_name=None, out_dir="results_screenshots", prefix="crop"):
     os.makedirs(out_dir, exist_ok=True)
 
@@ -932,43 +1004,84 @@ def show_final_result(player, screen):
 
     
     pygame.display.flip()
-    result = export_screen_to_catbox_qr(
+    # 1. 졸업 성적표 이미지 저장 (QR/업로드 없이 로컬에만 임시 저장)
+    transcript_path = save_cropped_and_return_path(
         screen,
-        player_name=player.name,
+        player.name,
         crop_w=1000, crop_h=800, top_margin=60,
-        userhash=None,         # 계정 업로드면 'your_userhash'
-        temporary=False,       # 임시면 True, temp_time="24h" 등
-        out_dir="results/screenshots", # 스크린샷 폴더
-        prefix="transcript",
-        qr_out_dir="results/qrcodes",  # QR 폴더 (screenshots와 분리)
-        keep_hours=24          # 24시간 지난 파일은 자동 삭제
+        out_dir="results/screenshots/temp_images",
+        prefix="transcript"
     )
-    print(result["url"], result["qr_path"])
     wait_for_key()
-    # Deans List 화면 표시
+
+    # 2. 딘즈 리스트 화면 표시
     show_deans_list(player, screen, leaderboard)
     
-    # 두 번째 화면: QR 링크와 멘트 표시
+    # 3. 딘즈 리스트 화면 이미지 저장 (QR/업로드 없이 로컬에만 임시 저장)
+    deans_list_path = save_cropped_and_return_path(
+        screen,
+        player.name,
+        crop_w=600, crop_h=880, top_margin=60,
+        out_dir="results/screenshots/temp_images",
+        prefix="deans_list"
+    )
+    
+    # 4. 두 이미지를 배경에 합성하여 최종 이미지 생성
+    background_image_path = "../img/instagram_background.png"
+    final_combined_path = combine_for_share(background_image_path, transcript_path, deans_list_path, player.name)
+    print(final_combined_path)
+
+    # 5. 합성에 사용된 임시 이미지 파일 삭제
+    try:
+        os.remove(transcript_path)
+        os.remove(deans_list_path)
+        print("Debug: 임시 이미지 파일 삭제 완료.")
+    except OSError as e:
+        print(f"Debug: 임시 파일 삭제 실패: {e.filename}")
+
+    # 6. 최종 합성 이미지를 Catbox에 업로드하고 QR 코드 생성
+    result = export_screen_to_catbox_qr(
+        screen=screen, # screen 인자는 필요하지만, 합성은 이미 완료됨.
+        player_name=player.name,
+        crop_w=100, crop_h=100, # 최종 이미지를 저장할 때는 크롭이 필요 없으므로, 더미 값을 넣습니다.
+        top_margin=0,
+        out_dir="results/screenshots/final_combined", # 최종 이미지 전용 폴더
+        prefix="final_share",
+        qr_out_dir="results/qrcodes/final_share", # 최종 QR 전용 폴더
+        keep_hours=24,
+        # combine_for_share에서 생성한 최종 이미지 경로를 직접 넘겨 업로드
+        # 이 부분은 export_screen_to_catbox_qr 함수를 약간 수정해야 함
+        # 편의를 위해 upload_to_catbox를 직접 호출하는 방식 추천
+    )
+    # 위 방식이 복잡하므로, 아래와 같이 변경합니다.
+    
+    # 6. 최종 합성 이미지를 Catbox에 업로드하고 QR 코드 생성
+    upload_url = upload_to_catbox(final_combined_path, temporary=False)
+    if upload_url:
+        qr_path = make_qr(upload_url)
+        print(f"Debug: 최종 합성 이미지의 QR 코드 경로: {qr_path}")
+    else:
+        qr_path = None # 업로드 실패 시 QR 경로 없음
+
+    # 7. QR 링크 화면 표시
     screen.fill(WHITE)
     draw_text(screen, "! 졸업 결과 공유하기 !", SCREEN_WIDTH//2, 120, BLACK, size=48, align='center')
 
-    # QR 이미지 불러오기
+    # QR 이미지 불러오기 (새로 생성된 QR 경로 사용)
     try:
-        qr_image = pygame.image.load(result["qr_path"])
-        # 32비트 surface로 변환 (알파 포함)
-        qr_image = qr_image.convert_alpha()
-
-        # QR 코드를 적당한 크기로 리사이즈 (예: 300x300)
-        qr_image = pygame.transform.smoothscale(qr_image, (300, 300))
-
-        # 화면 가운데에 배치
-        qr_rect = qr_image.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2 + 40))
-        screen.blit(qr_image, qr_rect)
-
+        if qr_path:
+            qr_image = pygame.image.load(qr_path)
+            # --- 이 부분에 .convert() 또는 .convert_alpha() 추가 ---
+            qr_image = qr_image.convert() 
+            # --------------------------------------------------------
+            qr_image = pygame.transform.smoothscale(qr_image, (300, 300))
+            qr_rect = qr_image.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2 + 40))
+            screen.blit(qr_image, qr_rect)
+        else:
+            draw_text(screen, "QR 코드 생성에 실패했습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, RED, align='center')
     except Exception as e:
         draw_text(screen, f"QR 불러오기 실패: {e}", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, RED, align='center')
-
-    # 안내 멘트
+    
     draw_text(screen, "위 QR을 스캔하면 결과 이미지를 얻을 수 있습니다.", SCREEN_WIDTH//2, 320, BLACK, size=28, align='center')
     draw_text(screen, "인스타 스토리에 @in.cs.tagram과 @kaist_kamf를 태그해서 공유해보세요!", SCREEN_WIDTH//2, 370, BLACK, size=28, align='center')
     # 추가 설명
