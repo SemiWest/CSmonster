@@ -1,6 +1,6 @@
 from playsound import *
 import numpy as np
-import logging
+import logging, random
 
 logger = logging.getLogger(__name__)
 
@@ -9,6 +9,88 @@ SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 screen = None
 font = None
+NOTION_TOKEN = "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"
+DATABASE_ID = "261e339f1ae5802ca71acd96446868d5"
+
+import os, requests, datetime, csv
+
+logger = logging.getLogger(__name__)
+
+headers = {
+    "Authorization": f"Bearer {NOTION_TOKEN}",
+    "Content-Type": "application/json",
+    "Notion-Version": "2022-06-28",
+}
+
+def get_leaderboard_from_notion_all():
+    """
+    Notion 데이터베이스에서 모든 기록을 페이지네이션으로 가져옵니다.
+    반환: [{'날짜':..., 'name':..., 'gpa':..., 'level':..., ...}, ...]
+    """
+    if not all([NOTION_TOKEN, DATABASE_ID]):
+        print("Debug: [Warning!] Notion 토큰 또는 DB ID가 설정되지 않았습니다.")
+        return []
+
+    url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
+    payload = {
+        "page_size": 100,
+        # 정렬 옵션(최신 날짜 내림차순) — 필요시 켜세요.
+        # "sorts": [{"property": "날짜", "direction": "descending"}]
+    }
+    has_more = True
+    next_cursor = None
+    results_all = []
+
+    try:
+        while has_more:
+            if next_cursor:
+                payload["start_cursor"] = next_cursor
+            resp = requests.post(url, headers=headers, json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+            results = data.get("results", [])
+            for page in results:
+                props = page.get("properties", {})
+
+                record_date = props.get("날짜", {}).get("date", {}).get("start", "")
+                # 안전하게 title 추출
+                title_arr = props.get("이름", {}).get("title", [])
+                name = ""
+                if title_arr and "text" in title_arr[0]:
+                    name = title_arr[0]["text"].get("content", "")
+
+                gpa = props.get("최종 GPA", {}).get("number", 0.0)
+                level = props.get("최종 레벨", {}).get("number", 0)
+                deans_count   = props.get("딘즈 횟수", {}).get("number", 0)
+                jangzal_count = props.get("장짤 횟수", {}).get("number", 0)
+                warning_count = props.get("학사경고 횟수", {}).get("number", 0)
+
+                semester_text = props.get("최종 학기", {}).get("rich_text", [])
+                semester = semester_text[0].get("text", {}).get("content", "") if semester_text else ""
+
+                ending_type_text = props.get("엔딩 타입", {}).get("rich_text", [])
+                ending_type = ending_type_text[0].get("text", {}).get("content", "") if ending_type_text else ""
+
+                results_all.append({
+                    "날짜": record_date,
+                    "name": name,
+                    "gpa": float(gpa) if gpa is not None else 0.0,
+                    "level": level,
+                    "deans_count": deans_count,
+                    "jangzal_count": jangzal_count,
+                    "warning_count": warning_count,
+                    "semester": semester,
+                    "ending_type": ending_type,
+                })
+
+            has_more = data.get("has_more", False)
+            next_cursor = data.get("next_cursor", None)
+
+        return results_all
+
+    except requests.exceptions.RequestException as e:
+        print(f"Debug: 조회 오류: Notion API 조회 실패 - {e}")
+        return []
 
 def init_pygame_screen():
     """pygame 화면을 초기화하는 함수"""
@@ -22,6 +104,98 @@ def init_pygame_screen():
         
         # 폰트 설정
         font = pygame.font.Font("../neodgm.ttf", 32)
+
+def show_deans_list_from_notion(player=None):
+    """Notion DB 기반 Deans List 화면"""
+
+    def rank_color_for_top(rank: int):
+        # RGB: Gold, Silver, Bronze, 그 외는 Black
+        if rank == 1:
+            return (255, 215, 0)   # Gold
+        elif rank == 2:
+            return (192, 192, 192) # Silver
+        elif rank == 3:
+            return (205, 127, 50)  # Bronze
+        return BLACK
+
+    init_pygame_screen()
+
+    # 1) 데이터 가져오기
+    leaderboard = get_leaderboard_from_notion_all()
+    if not leaderboard:
+        screen.fill(WHITE)
+        draw_text(screen, "명예의 전당 기록이 없습니다.", SCREEN_WIDTH // 2, 200, BLACK, align='center')
+        draw_text(screen, "아무 키나 눌러 메뉴로 돌아가기", SCREEN_WIDTH // 2, 240, GRAY, align='center')
+        pygame.display.flip()
+        wait_for_key()
+        return
+
+    # 2) 정렬: GPA 내림차순, 동점이면 이름 오름차순
+    leaderboard.sort(key=lambda x: (-x["gpa"], x["name"]))
+
+    # 3) GPA 색상 기본 함수 (상위권 외에는 기본 gpaColor 적용)
+    def color_for_gpa(gpa_value: float):
+        try:
+            return gpaColor(f"{gpa_value:.2f}")
+        except Exception:
+            return BLACK
+
+    # 4) 화면 그리기
+    screen.fill(WHITE)
+    draw_text(screen, "명예의 전당: Deans List", SCREEN_WIDTH // 2, 80, BLACK, size=48, align='center')
+    draw_text(screen, "최종 GPA 기준", SCREEN_WIDTH // 2, 140, GRAY, size=24, align='center')
+
+    y_offset = 200
+    top_k = min(10, len(leaderboard))
+    for i in range(top_k):
+        entry = leaderboard[i]
+        rank = i + 1
+
+        # 1~3등은 금/은/동 색, 그 외는 기본
+        rank_color = rank_color_for_top(rank)
+        name_color = rank_color
+        gpa_color  = rank_color if rank <= 3 else color_for_gpa(entry["gpa"])
+
+        # 순위 번호
+        draw_text(screen, f"{rank}.",            SCREEN_WIDTH//2 - 250, y_offset + i * 40, rank_color, size=32)
+        # 이름
+        draw_text(screen, entry["name"],         SCREEN_WIDTH//2 - 180, y_offset + i * 40, name_color, size=32)
+        # GPA
+        draw_text(screen, f"{entry['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_offset + i * 40, gpa_color, size=32, align='right')
+
+    # 5) 불명예의 전당
+    if len(leaderboard) > 0:
+        y_offset_bottom = y_offset + top_k * 40 + 60
+        draw_text(screen, "----- 불명예의 전당 -----", SCREEN_WIDTH//2, y_offset_bottom,
+                  RED, size=28, align='center')
+        y_offset_bottom += 40
+
+        # GPA 0인 사람 필터링
+        zero_gpa_entries = [e for e in leaderboard if e["gpa"] == 0.0]
+
+        if len(zero_gpa_entries) > 3:
+            # GPA 0인 사람 중 랜덤 3명 선택
+            bottom_entries = random.sample(zero_gpa_entries, 3)
+        else:
+            # 기존 꼴찌 3명 로직
+            bottom_count = min(3, len(leaderboard))
+            bottom_entries = leaderboard[-bottom_count:]
+
+        # 불명예 명단 출력
+        for j, entry in enumerate(bottom_entries, start=0):
+            # 원래 순위 계산 (leaderboard 내 위치 기반)
+            try:
+                rank = leaderboard.index(entry) + 1
+            except ValueError:
+                rank = "?"
+
+            draw_text(screen, f"{rank}.",            SCREEN_WIDTH//2 - 250, y_offset_bottom + j * 40, RED, size=32)
+            draw_text(screen, entry["name"],         SCREEN_WIDTH//2 - 180, y_offset_bottom + j * 40, RED, size=32)
+            draw_text(screen, f"{entry['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_offset_bottom + j * 40, RED, size=32, align='right')
+
+    draw_text(screen, "아무 키나 눌러 메뉴로 돌아갑니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT - 80, GRAY, size=24, align='center')
+    pygame.display.flip()
+    wait_for_key()
 
 def draw_text(surface, text, x, y, color=BLACK, highlight=False, size=32, align='left'):
     """pygame 화면에 텍스트를 그리는 함수""" 

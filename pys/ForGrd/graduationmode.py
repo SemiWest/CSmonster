@@ -97,55 +97,82 @@ def save_game_log_to_notion(player):
     
 def get_leaderboard_from_notion():
     """
-    Notion 데이터베이스에서 모든 기록을 가져옵니다.
+    Notion 데이터베이스에서 모든 기록을 '끝까지' 가져옵니다. (페이지네이션 지원)
+    반환값 형식은 기존과 동일: list[dict]
     """
     if not all([NOTION_TOKEN, DATABASE_ID]):
         print("Debug: [Warning!] Notion 토큰 또는 DB ID가 설정되지 않았습니다.")
         return []
 
     url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
-    
-    # 정렬 없이 모든 데이터 가져오기 (CSV 업데이트를 위해)
-    data = {"page_size": 100}
+
+    # 한 번에 100개씩 가져오되, has_more/next_cursor로 반복
+    payload = {
+        "page_size": 100,
+        # 필요하면 정렬 추가 (예: 날짜 내림차순)
+        # "sorts": [{"property": "날짜", "direction": "descending"}]
+    }
+
+    results_all = []
+    next_cursor = None
+    has_more = True
 
     try:
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        results = response.json().get("results", [])
+        while has_more:
+            if next_cursor:
+                payload["start_cursor"] = next_cursor
+            response = requests.post(url, headers=headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
 
-        records = []
-        for page in results:
-            props = page.get("properties", {})
-            
-            # Notion 속성에서 데이터 추출 (타입에 맞게)
-            record_date = props.get("날짜", {}).get("date", {}).get("start", "")
-            name = props.get("이름", {}).get("title", [{}])[0].get("text", {}).get("content", "")
-            gpa = props.get("최종 GPA", {}).get("number", 0.0)
-            level = props.get("최종 레벨", {}).get("number", 0)
-            deans_count = props.get("딘즈 횟수", {}).get("number", 0)
-            jangzal_count = props.get("장짤 횟수", {}).get("number", 0)
-            warning_count = props.get("학사경고 횟수", {}).get("number", 0)
+            pages = data.get("results", [])
+            for page in pages:
+                props = page.get("properties", {})
 
-            # Rich Text 속성에 대한 안전한 접근
-            semester_text = props.get("최종 학기", {}).get("rich_text", [])
-            semester = semester_text[0].get("text", {}).get("content", "") if semester_text else ""
-            
-            ending_type_text = props.get("엔딩 타입", {}).get("rich_text", [])
-            ending_type = ending_type_text[0].get("text", {}).get("content", "") if ending_type_text else ""
+                # 안전한 추출 유틸
+                def safe_title(p):
+                    arr = p.get("title", [])
+                    if arr and "text" in arr[0]:
+                        return arr[0]["text"].get("content", "")
+                    # 다른 경우도 대비(예: plain_text)
+                    if arr and "plain_text" in arr[0]:
+                        return arr[0].get("plain_text", "")
+                    return ""
 
-            records.append({
-                '날짜': record_date,
-                'name': name,  # '이름' -> 'name'으로 변경
-                'gpa': gpa,    # '최종 GPA' -> 'gpa'로 변경
-                'level': level, # '최종 레벨' -> 'level'로 변경
-                'deans_count': deans_count,
-                'jangzal_count': jangzal_count,
-                'warning_count': warning_count,
-                'semester': semester,
-                'ending_type': ending_type,
-            })
-            
-        return records
+                def safe_rich_text(p):
+                    arr = p.get("rich_text", [])
+                    if arr:
+                        t = arr[0].get("text", {})
+                        return t.get("content", "") or arr[0].get("plain_text", "")
+                    return ""
+
+                record_date = props.get("날짜", {}).get("date", {}).get("start", "")
+                name = safe_title(props.get("이름", {}))
+                gpa = props.get("최종 GPA", {}).get("number", 0.0)
+                level = props.get("최종 레벨", {}).get("number", 0)
+                deans_count = props.get("딘즈 횟수", {}).get("number", 0)
+                jangzal_count = props.get("장짤 횟수", {}).get("number", 0)
+                warning_count = props.get("학사경고 횟수", {}).get("number", 0)
+                semester = safe_rich_text(props.get("최종 학기", {}))
+                ending_type = safe_rich_text(props.get("엔딩 타입", {}))
+
+                results_all.append({
+                    '날짜': record_date,
+                    'name': name,
+                    'gpa': float(gpa) if gpa is not None else 0.0,
+                    'level': level,
+                    'deans_count': deans_count,
+                    'jangzal_count': jangzal_count,
+                    'warning_count': warning_count,
+                    'semester': semester,
+                    'ending_type': ending_type,
+                })
+
+            has_more = data.get("has_more", False)
+            next_cursor = data.get("next_cursor", None)
+
+        return results_all
+
     except requests.exceptions.RequestException as e:
         print(f"Debug: 조회 오류: Notion API 순위 조회 실패 - {e}")
         return []
@@ -194,61 +221,148 @@ def update_and_save_csv(notion_records, filename="deans_list.csv", out_dir="resu
 def show_deans_list(player, screen, leaderboard):
     """
     Deans List를 화면에 표시합니다.
+    - 상위 10위 표기 (1~3등: 금/은/동 텍스트 색)
+    - 플레이어 기록을 현재 순위표에 반영(없으면 추가 / 있으면 최신 GPA로 업데이트)
+    - 플레이어가 10위권에 들면 축하 메시지(1~3등은 강렬 버전)
+    - 플레이어가 10위 밖이지만 꼴찌 3명(불명예)도 아니면, 상/하 섹션 사이에 플레이어 등수/점수 표기
+    - 불명예의 전당: GPA==0 이거나 정렬상 뒤에서 3명 안에 포함 시 붉은색으로 표기
     """
+    # 내부 유틸: 상위 랭크 색상 (Gold/Silver/Bronze)
+    def _rank_color_for_top(rank: int):
+        if rank == 1:
+            return (255, 215, 0)   # Gold
+        elif rank == 2:
+            return (192, 192, 192) # Silver
+        elif rank == 3:
+            return (205, 127, 50)  # Bronze
+        return BLACK
+
+    def _gpa_color_default(gpa_value: float):
+        try:
+            return gpaColor(f"{gpa_value:.2f}")
+        except Exception:
+            return BLACK
+
     screen.fill(WHITE)
     draw_text(screen, "명예의 전당: Deans List", SCREEN_WIDTH // 2, 80, BLACK, size=48, align='center')
     draw_text(screen, "최종 GPA 기준", SCREEN_WIDTH // 2, 140, GRAY, size=24, align='center')
-    
+
     y_offset = 200
-    player_rank = -1
+
+    # 0) 플레이어 GPA/이름 확보
+    player_name = getattr(player, 'name', None)
+    try:
+        player_gpa = float(player.calcGPA(2))
+    except Exception:
+        player_gpa = 0.0
+
+    # 1) 플레이어 기록을 순위표에 반영(동명이인/미세 오차 고려)
+    combined = []
+    found = False
+    for e in leaderboard:
+        name = e.get('name')
+        gpa  = float(e.get('gpa', 0.0))
+        if not found and name == player_name and abs(gpa - player_gpa) < 1e-6:
+            found = True
+            combined.append({'name': name, 'gpa': player_gpa})
+        else:
+            combined.append({'name': name, 'gpa': gpa})
+    if not found and player_name is not None:
+        combined.append({'name': player_name, 'gpa': player_gpa})
+
+    # 2) 정렬: GPA 내림차순, 동점 시 이름 오름차순
+    combined.sort(key=lambda x: (-x['gpa'], x['name']))
+
+    # 3) 플레이어 순위 찾기 (1-indexed)
+    player_rank = None
     player_entry = None
-    # 플레이어의 GPA를 float 타입으로 변환 (오류 방지)
-    player_gpa = float(player.calcGPA(2))
-    
-    # 순위표에 플레이어 기록이 있는지 확인
-    for i, entry in enumerate(leaderboard):
-        if entry['name'] == player.name and abs(entry['gpa'] - player_gpa) < 0.01:
-            player_rank = i + 1
-            player_entry = entry
+    for i, e in enumerate(combined, start=1):
+        if e['name'] == player_name and abs(e['gpa'] - player_gpa) < 1e-6:
+            player_rank = i
+            player_entry = e
             break
 
-    # 10위까지 출력
-    for i in range(min(10, len(leaderboard))):
-        entry = leaderboard[i]
-        rank_color = BLACK
-        name_color = BLACK
-        # GPA 값을 문자열로 변환하여 gpaColor 함수에 전달
-        gpa_str_to_color = f"{entry['gpa']:.2f}"
-        gpa_color = gpaColor(gpa_str_to_color)
+    # 4) 상위 10위 출력
+    top_k = min(10, len(combined))
+    for i in range(top_k):
+        e = combined[i]
+        rank = i + 1
+        rank_color = _rank_color_for_top(rank)
+        name_color = rank_color
+        gpa_color  = rank_color if rank <= 3 else _gpa_color_default(e['gpa'])
 
-        # 내 기록이면 강조
-        if i + 1 == player_rank:
-            name_color = BLUE
-            gpa_color = BLUE
-        
-        # 순위
-        draw_text(screen, f"{i+1}.", SCREEN_WIDTH//2 - 250, y_offset + i * 40, rank_color, size=32)
-        # 이름
-        draw_text(screen, entry['name'], SCREEN_WIDTH//2 - 180, y_offset + i * 40, name_color, size=32)
-        # GPA
-        draw_text(screen, f"{entry['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_offset + i * 40, gpa_color, size=32, align='right')
+        draw_text(screen, f"{rank}.",            SCREEN_WIDTH//2 - 250, y_offset + i * 40, rank_color, size=32)
+        draw_text(screen, e['name'],              SCREEN_WIDTH//2 - 180, y_offset + i * 40, name_color, size=32)
+        draw_text(screen, f"{e['gpa']:.2f}",      SCREEN_WIDTH//2 + 200, y_offset + i * 40, gpa_color,  size=32, align='right')
 
-    # 내 기록이 10위 안에 없으면 별도로 표시
-    if player_rank > 10 and player_entry:
-        y_offset_my_rank = y_offset + 10 * 40 + 60
-        draw_text(screen, "----------------------------------", SCREEN_WIDTH//2, y_offset_my_rank, GRAY, size=24, align='center')
-        y_offset_my_rank += 40
-        
-        rank_color = RED
-        name_color = RED
-        gpa_color = gpaColor(player_entry['gpa'])
-        
-        draw_text(screen, f"{player_rank}.", SCREEN_WIDTH//2 - 250, y_offset_my_rank, rank_color, size=32)
-        draw_text(screen, player_entry['name'], SCREEN_WIDTH//2 - 180, y_offset_my_rank, name_color, size=32)
-        draw_text(screen, f"{player_entry['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_offset_my_rank, gpa_color, size=32, align='right')
+    # 5) 플레이어 축하/안내 메시지 또는 중간 표기
+    after_top_y = y_offset + top_k * 40
+    message_lines = []
+    if player_rank is not None and player_rank <= 10:
+        # 10위권 진입 축하 메시지
+        if player_rank == 1:
+            message_lines.append(("전설의 1위! 새로운 딘즈 리스트 정상에 올랐습니다!", (255, 215, 0)))
+        elif player_rank == 2:
+            message_lines.append(("2위 달성! 환상적인 성적입니다!", (192, 192, 192)))
+        elif player_rank == 3:
+            message_lines.append(("3위 입성! 탑 티어에 합류했습니다!", (205, 127, 50)))
+        else:
+            message_lines.append(("축하합니다! 새로운 딘즈 리스트 Top 10에 올랐습니다!", GREEN))
+    elif player_entry is not None:
+        # 10위 밖이고, 불명예 섹션도 아니라면 중간에 본인만 표시
+        bottom_count = min(3, len(combined))
+        bottom_start_rank = len(combined) - bottom_count + 1
+        is_in_disgrace_by_rank = (player_rank is not None and player_rank >= bottom_start_rank)
+        is_in_disgrace_by_zero = (player_entry['gpa'] == 0)
+        if not (is_in_disgrace_by_rank or is_in_disgrace_by_zero):
+            y_mid = after_top_y + 60
+            draw_text(screen, "----------------------------------", SCREEN_WIDTH//2, y_mid, GRAY, size=24, align='center')
+            y_mid += 40
+            draw_text(screen, f"{player_rank}.",            SCREEN_WIDTH//2 - 250, y_mid, BLUE, size=32)
+            draw_text(screen, player_entry['name'],         SCREEN_WIDTH//2 - 180, y_mid, BLUE, size=32)
+            draw_text(screen, f"{player_entry['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_mid, BLUE, size=32, align='right')
+            after_top_y = y_mid  # 아래 계산을 위해 위치 갱신
 
+    # 축하/안내 메시지 렌더링 (있다면)
+    if message_lines:
+        y_msg = after_top_y + 60
+        for text, color in message_lines:
+            draw_text(screen, text, SCREEN_WIDTH//2, y_msg, color, size=28, align='center')
+            y_msg += 36
+        after_top_y = y_msg
+
+    # 6) 불명예의 전당 (꼴찌 3 + GPA==0인 플레이어 포함 규칙)
+    if len(combined) > 0:
+        bottom_count = min(3, len(combined))
+        disgrace_entries = combined[-bottom_count:]
+
+        # 플레이어가 GPA==0 이지만 꼴찌 3명에 없다면 추가로 표기
+        need_append_player_zero = False
+        if player_entry is not None and player_entry['gpa'] == 0:
+            if player_entry not in disgrace_entries:
+                need_append_player_zero = True
+
+        y_bottom = after_top_y + 60
+        draw_text(screen, "----- 불명예의 전당 -----", SCREEN_WIDTH//2, y_bottom, RED, size=28, align='center')
+        y_bottom += 40
+
+        start_rank = len(combined) - bottom_count + 1
+        for j, e in enumerate(disgrace_entries):
+            rank = start_rank + j
+            draw_text(screen, f"{rank}.",       SCREEN_WIDTH//2 - 250, y_bottom + j * 40, RED, size=32)
+            draw_text(screen, e['name'],         SCREEN_WIDTH//2 - 180, y_bottom + j * 40, RED, size=32)
+            draw_text(screen, f"{e['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_bottom + j * 40, RED, size=32, align='right')
+
+        if need_append_player_zero:
+            # 플레이어 실제 순위를 붉은색으로 추가 표기
+            y_extra = y_bottom + bottom_count * 40 + 20
+            draw_text(screen, f"(특별) {player_rank}.",            SCREEN_WIDTH//2 - 250, y_extra, RED, size=28)
+            draw_text(screen, player_entry['name'],                   SCREEN_WIDTH//2 - 180, y_extra, RED, size=28)
+            draw_text(screen, f"{player_entry['gpa']:.2f}",          SCREEN_WIDTH//2 + 200, y_extra, RED, size=28, align='right')
+
+    # 하단 안내
     draw_text(screen, "아무 키나 눌러 메인 메뉴로 돌아갑니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT - 80, GRAY, size=24, align='center')
-    
+
     pygame.display.flip()
     wait_for_key()
 

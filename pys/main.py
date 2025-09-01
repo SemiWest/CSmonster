@@ -103,8 +103,8 @@ while True:
     elif start == "기록 보기":
         if logger.isEnabledFor(logging.INFO):
             logger.info("기록 보기 화면 진입")
-        from game_menu import show_records
-        show_records()
+        from game_menu import show_deans_list_from_notion
+        show_deans_list_from_notion(player=None)  # 플레이어 객체 있으면 넘기기
         clear_screen()
     
     elif start == "모험 모드":
