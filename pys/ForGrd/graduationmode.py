@@ -838,7 +838,11 @@ def semester_result_screen(player, screen):
     if monsters[player.thisSemesterMonsters[0]].type[0] == "EVENT":
         if player.thisSemesterGpas[0][1] == "성공!":
             Report()
-            draw_text(screen, f"{player.thisSemesterMonsters[0]} 이벤트에 성공하였습니다!", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
+            lup_amt = player.molcam
+            if lup_amt > 0:
+                draw_text(screen, f"{player.thisSemesterMonsters[0]} 이벤트에 성공하였습니다!", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
+            else:
+                draw_text(screen, f"{player.thisSemesterMonsters[0]} 이벤트를 노력했으나 결실을 맺지 못했다...", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
             draw_text(screen, f"{monsters[player.thisSemesterMonsters[0]].reward}", SCREEN_WIDTH//2, 200, BLUE, align='center')
         else:
             Lose()
@@ -1271,11 +1275,14 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
         # 각 과목과 전투
         for i, monster_name in enumerate(player.thisSemesterMonsters):
             print(f"Debug: {monster_name}와 전투 시작")
+
+            # 몰캠 레벨
+            mol_lev = player.molcam if player.molcam != None else 0
             
             # 몬스터 생성
             if monster_name in monsters:
                 enemy_monster = copy.deepcopy(monsters[monster_name])
-                enemy_monster.level = random.randint(player.level-1+player.level//10, player.level+1+(player.level//10)*2)
+                enemy_monster.level = random.randint(player.level-1+player.level//10, player.level+1+(player.level//10)*2) - mol_lev
                 enemy_monster.update_fullreset()
             else:
                 # 기본 몬스터 생성
