@@ -569,7 +569,7 @@ coop = Monster(
     Num = 888, name="코옵", credit = 123123,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
-    image="../img/monsters/데이타구조.png",
+    image="../img/monsters/코옵.png",
     description="코옵설명",
     reward = "기업인의 길 해금",
     special=True
@@ -588,7 +588,7 @@ madcamp = Monster(
     Num = 777, name="몰입캠프", credit = 234234,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
-    image="../img/monsters/데이타구조.png",
+    image="../img/monsters/몰입캠프.png",
     description="몰입캠프설명",
     reward = "멘트 변동 예정",
     special=True
@@ -607,7 +607,7 @@ study = Monster(
     Num = 999, name="개별연구", credit = 345345,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
-    image="../img/monsters/데이타구조.png",
+    image="../img/monsters/개별연구.png",
     description="개별연구설명",
     reward = "연구자의 길 해금",
     special=True
