@@ -3,7 +3,6 @@ from ForGrd.battleForGrd import *
 import copy
 import logging
 import os, datetime, pygame, hashlib, time, pygame
-from catbox import CatboxUploader
 import qrcode
 from typing import Optional
 import requests
@@ -543,7 +542,16 @@ def upload_to_dropbox(access_token, file_path, dropbox_folder_path):
         print(f"파일 업로드 또는 링크 생성 중 오류 발생: {e}")
         return None
 
+import os
+import time
+import qrcode
+
 def make_qr(url, out_path="qr.png", target_px=300, border=4):
+    # out_path가 속한 디렉토리가 없다면 생성
+    dir_path = os.path.dirname(out_path)
+    if dir_path and not os.path.exists(dir_path):
+        os.makedirs(dir_path, exist_ok=True)
+
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_M,
@@ -553,13 +561,15 @@ def make_qr(url, out_path="qr.png", target_px=300, border=4):
     qr.add_data(url)
     qr.make(fit=True)
 
-    modules = qr.modules_count + border*2
+    modules = qr.modules_count + border * 2
     box_size = max(1, target_px // modules)  # 목표 픽셀에 맞춰 박스크기 재계산
     qr.box_size = box_size
 
     img = qr.make_image(fill_color="black", back_color="white")
     img.save(out_path)
     return out_path
+
+
 def _cleanup_old_files(dir_path: str, older_than_hours: int = 24) -> None:
     if not dir_path or not os.path.isdir(dir_path):
         return
@@ -1122,7 +1132,9 @@ def show_final_result(player, screen):
     else:
         print("업로드에 실패했습니다.")
     if upload_url:
-        qr_path = make_qr(upload_url)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"results/qrcode/share_{timestamp}.png"
+        qr_path = make_qr(upload_url, out_path = filename)
         print(f"Debug: 최종 합성 이미지의 QR 코드 경로: {qr_path}")
     else:
         qr_path = None # 업로드 실패 시 QR 경로 없음
