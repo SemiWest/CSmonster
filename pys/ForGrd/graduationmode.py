@@ -2,7 +2,7 @@ import csv
 from ForGrd.battleForGrd import *
 import copy
 import logging
-import os, datetime, pygame, hashlib
+import os, datetime, pygame, hashlib, time
 from catbox import CatboxUploader
 import qrcode
 from typing import Optional
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 import os, datetime, hashlib, pygame
 
 def save_cropped_center(screen, player_name, crop_w=1100, crop_h=800, top_margin=60,
-                        out_dir="results_screenshots", prefix="crop"):
+                        final_name=None, out_dir="results_screenshots", prefix="crop"):
     os.makedirs(out_dir, exist_ok=True)
 
     sw, sh = screen.get_size()  # 화면 해상도
@@ -31,10 +31,13 @@ def save_cropped_center(screen, player_name, crop_w=1100, crop_h=800, top_margin
     rect = pygame.Rect(left, top, crop_w, crop_h)
     cropped = screen.subsurface(rect)  # 일부분만 잘라오기
 
-    # 파일명: 사용자 이름 해시 + 타임스탬프
-    name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
-    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    path = os.path.join(out_dir, f"{prefix}_{name_hash}_{ts}.png")
+    if final_name:
+        path = os.path.join(out_dir, final_name)
+    else:
+        # 파일명: 사용자 이름 해시 + 타임스탬프
+        name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
+        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        path = os.path.join(out_dir, f"{prefix}_{name_hash}_{ts}.png")
 
     pygame.image.save(cropped, path)
     print(f"[Saved] {path} @ {rect}")
@@ -129,8 +132,9 @@ def export_screen_to_catbox_qr(
         crop_w=crop_w,
         crop_h=crop_h,
         top_margin=top_margin,
+        final_name=f"{prefix}_{name_hash}_{ts}.png",
         out_dir=out_dir,
-        prefix=f"{prefix}_{name_hash}_{ts}",  # ← 파일명에 동일 타임스탬프/해시 반영
+        prefix=prefix,
     )
 
     # 4) Catbox 업로드 (영구/임시)
