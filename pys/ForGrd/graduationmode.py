@@ -341,8 +341,8 @@ def show_deans_list(player, screen, leaderboard):
     if not found and player_name is not None:
         combined.append({'name': player_name, 'gpa': player_gpa})
 
-    # 2) 정렬: GPA 내림차순, 동점 시 이름 오름차순
-    combined.sort(key=lambda x: (-x['gpa'], x['name']))
+    # 2) 정렬: 4.3 GPA를 최우선으로, 그 외는 GPA 내림차순, 동점 시 이름 오름차순
+    combined.sort(key=lambda x: (x['gpa'] != 4.3, -x['gpa'], x['name']))
 
     # 3) 플레이어 순위 찾기 (1-indexed)
     player_rank = None
@@ -359,11 +359,18 @@ def show_deans_list(player, screen, leaderboard):
         e = combined[i]
         rank = i + 1
         rank_color = _rank_color_for_top(rank)
-        name_color = rank_color
+        
+        # 1-3위는 정해진 색상, 그 외는 검정색
+        name_color = rank_color if rank <= 3 else BLACK
         gpa_color  = rank_color if rank <= 3 else _gpa_color_default(e['gpa'])
 
+        # 플레이어가 10위권에 들면 볼드체
+        is_player_in_top10 = (player_entry and e['name'] == player_entry['name'] and abs(e['gpa'] - player_entry['gpa']) < 1e-6)
+        is_bold = is_player_in_top10
+        name_font_size = 36 if is_bold else 32
+        
         draw_text(screen, f"{rank}.",            SCREEN_WIDTH//2 - 250, y_offset + i * 40, rank_color, size=32)
-        draw_text(screen, e['name'],              SCREEN_WIDTH//2 - 180, y_offset + i * 40, name_color, size=32)
+        draw_text(screen, e['name'],              SCREEN_WIDTH//2 - 180, y_offset + i * 40, name_color, size=name_font_size, bold=is_bold)
         draw_text(screen, f"{e['gpa']:.2f}",      SCREEN_WIDTH//2 + 200, y_offset + i * 40, gpa_color,  size=32, align='right')
 
     # 5) 플레이어 축하/안내 메시지 또는 중간 표기
@@ -386,17 +393,17 @@ def show_deans_list(player, screen, leaderboard):
         is_in_disgrace_by_rank = (player_rank is not None and player_rank >= bottom_start_rank)
         is_in_disgrace_by_zero = (player_entry['gpa'] == 0)
         if not (is_in_disgrace_by_rank or is_in_disgrace_by_zero):
-            y_mid = after_top_y + 60
+            y_mid = after_top_y + 28
             draw_text(screen, "----------------------------------", SCREEN_WIDTH//2, y_mid, GRAY, size=24, align='center')
-            y_mid += 40
+            y_mid += 28
             draw_text(screen, f"{player_rank}.",            SCREEN_WIDTH//2 - 250, y_mid, BLUE, size=32)
             draw_text(screen, player_entry['name'],         SCREEN_WIDTH//2 - 180, y_mid, BLUE, size=32)
             draw_text(screen, f"{player_entry['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_mid, BLUE, size=32, align='right')
-            after_top_y = y_mid  # 아래 계산을 위해 위치 갱신
+            after_top_y = y_mid + 28 # 아래 계산을 위해 위치 갱신
 
     # 축하/안내 메시지 렌더링 (있다면)
     if message_lines:
-        y_msg = after_top_y + 60
+        y_msg = after_top_y + 28
         for text, color in message_lines:
             for line in text.splitlines():  # 줄바꿈 처리
                 draw_text(screen, line, SCREEN_WIDTH//2, y_msg, color, size=28, align='center')
@@ -414,16 +421,17 @@ def show_deans_list(player, screen, leaderboard):
             if player_entry not in disgrace_entries:
                 need_append_player_zero = True
 
-        y_bottom = after_top_y + 60
+        y_bottom = after_top_y + 28
         draw_text(screen, "----- 불명예의 전당 -----", SCREEN_WIDTH//2, y_bottom, RED, size=28, align='center')
-        y_bottom += 40
+        y_bottom += 28
 
-        start_rank = len(combined) - bottom_count + 1
-        for j, e in enumerate(disgrace_entries):
-            rank = start_rank + j
-            draw_text(screen, f"{rank}.",       SCREEN_WIDTH//2 - 250, y_bottom + j * 40, RED, size=32)
-            draw_text(screen, e['name'],         SCREEN_WIDTH//2 - 180, y_bottom + j * 40, RED, size=32)
-            draw_text(screen, f"{e['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_bottom + j * 40, RED, size=32, align='right')
+        # 불명예 랭크 표기
+        disgrace_rank_start = len(combined) - len(disgrace_entries) + 1
+        for i, e in enumerate(disgrace_entries):
+            rank = disgrace_rank_start + i
+            draw_text(screen, f"{rank}.",       SCREEN_WIDTH//2 - 250, y_bottom + i * 40, RED, size=32)
+            draw_text(screen, e['name'],         SCREEN_WIDTH//2 - 180, y_bottom + i * 40, RED, size=32)
+            draw_text(screen, f"{e['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_bottom + i * 40, RED, size=32, align='right')
 
         if need_append_player_zero:
             # 플레이어 실제 순위를 붉은색으로 추가 표기
@@ -437,6 +445,7 @@ def show_deans_list(player, screen, leaderboard):
 
     pygame.display.flip()
     wait_for_key()
+
 
 
 def save_cropped_center(screen, player_name, crop_w=1200, crop_h=800, top_margin=60,

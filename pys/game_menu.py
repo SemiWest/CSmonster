@@ -197,16 +197,17 @@ def show_deans_list_from_notion(player=None):
     pygame.display.flip()
     wait_for_key()
 
-def draw_text(surface, text, x, y, color=BLACK, highlight=False, size=32, align='left'):
-    """pygame 화면에 텍스트를 그리는 함수""" 
-    font_obj = font
-    if size != 32:
+def draw_text(surface, text, x, y, color=BLACK, highlight=None, size=32, align='left', bold=False):
+    """pygame 화면에 텍스트를 그리는 함수"""
+    try:
         font_obj = pygame.font.Font("../neodgm.ttf", size)
+    except pygame.error:
+        font_obj = pygame.font.Font(None, size)
     
-    if highlight:
-        text_surface = font_obj.render(text, True, color, highlight)
-    else:
-        text_surface = font_obj.render(text, True, color)
+    # 여기서 폰트 객체에 볼드체 속성을 설정합니다.
+    font_obj.set_bold(bold)
+    
+    text_surface = font_obj.render(text, True, color, highlight)
     
     if align == 'center':
         text_rect = text_surface.get_rect(centerx=x, top=y)
@@ -315,6 +316,10 @@ def main_menu():
             pygame.display.flip()
             
             game_started()  # 게임 시작 사운드 재생
+    # The code `draw_text` is likely a function or method call in Python that is used to display text
+    # on the screen or in a graphical user interface. Without seeing the implementation of the
+    # `draw_text` function or method, it is difficult to provide more specific details about what it
+    # does.
             
             # 플래시 효과 (여러 프레임에 걸쳐)
             for flash_frame in range(64):
