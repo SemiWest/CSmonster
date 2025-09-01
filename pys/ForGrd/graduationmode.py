@@ -1275,11 +1275,14 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
         # 각 과목과 전투
         for i, monster_name in enumerate(player.thisSemesterMonsters):
             print(f"Debug: {monster_name}와 전투 시작")
+
+            # 몰캠 레벨
+            mol_lev = player.molcam if player.molcam != None else 0
             
             # 몬스터 생성
             if monster_name in monsters:
                 enemy_monster = copy.deepcopy(monsters[monster_name])
-                enemy_monster.level = random.randint(player.level-1+player.level//10, player.level+1+(player.level//10)*2)
+                enemy_monster.level = random.randint(player.level-1+player.level//10, player.level+1+(player.level//10)*2) - mol_lev
                 enemy_monster.update_fullreset()
             else:
                 # 기본 몬스터 생성

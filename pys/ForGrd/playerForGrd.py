@@ -177,7 +177,7 @@ class Player:
         self.debug_config = None  # 디버그 설정 (나중에 설정됨)
 
         # 몰캠용
-        self.molcam = None
+        self.molcam = None      # None / 0 / 1 / 2 / 3
 
     
     def playertype(self):
