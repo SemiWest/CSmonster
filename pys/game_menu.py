@@ -8,7 +8,6 @@ font = None
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 screen = None
-font = None
 NOTION_TOKEN = "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"
 DATABASE_ID = "261e339f1ae5802ca71acd96446868d5"
 GPACOLOR = {
@@ -216,14 +215,13 @@ def show_deans_list_from_notion(player=None):
 
 def draw_text(surface, text, x, y, color=BLACK, highlight=None, size=32, align='left', bold=False):
     """pygame 화면에 텍스트를 그리는 함수"""
-    try:
+    font_obj = font
+    if size != 32:
         font_obj = pygame.font.Font("../neodgm.ttf", size)
-    except pygame.error:
-        font_obj = pygame.font.Font(None, size)
     
     # 여기서 폰트 객체에 볼드체 속성을 설정합니다.
     font_obj.set_bold(bold)
-    
+
     text_surface = font_obj.render(text, True, color, highlight)
     
     if align == 'center':
@@ -238,20 +236,22 @@ def draw_text(surface, text, x, y, color=BLACK, highlight=None, size=32, align='
 
 def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=32, line_spacing=10):
     """설명 텍스트가 max_width를 넘지 않게 자동 줄바꿈해서 출력"""
-    font = pygame.font.Font("../neodgm.ttf", font_size)
+    font_obj = font
+    if font_size != 32:
+        font_obj = pygame.font.Font("../neodgm.ttf", font_size)
     words = text.split(' ')
     lines = []
     current_line = ""
     for word in words:
         test_line = current_line + word + " "
-        if font.size(test_line)[0] <= max_width:
+        if font_obj.size(test_line)[0] <= max_width:
             current_line = test_line
         else:
             lines.append(current_line)
             current_line = word + " "
     lines.append(current_line)
     for i, line in enumerate(lines):
-        surface.blit(font.render(line.strip(), True, color), (x, y + i * (font_size + line_spacing)))
+        surface.blit(font_obj.render(line.strip(), True, color), (x, y + i * (font_size + line_spacing)))
 
 
 def apply_alpha_overlay(screen, rect, alpha=180, color=(0,0,0)):
@@ -361,6 +361,8 @@ def main_menu():
         current_index = 0
         running = True
         pygame.event.clear()
+        global font
+        font = pygame.font.Font("../neodgm.ttf", 32)
 
         while running:
             if main_menu_reload:
