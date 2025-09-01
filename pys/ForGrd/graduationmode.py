@@ -2,15 +2,256 @@ import csv
 from ForGrd.battleForGrd import *
 import copy
 import logging
-import os, datetime, pygame, hashlib, time
+import os, datetime, pygame, hashlib, time, pygame
 from catbox import CatboxUploader
 import qrcode
 from typing import Optional
+import requests
+import json
+import os
 
 logger = logging.getLogger(__name__)
 
+NOTION_TOKEN = "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"
+DATABASE_ID = "261e339f1ae5802ca71acd96446868d5"
 
-import os, datetime, hashlib, pygame
+headers = {
+    "Authorization": f"Bearer {NOTION_TOKEN}",
+    "Content-Type": "application/json",
+    "Notion-Version": "2022-06-28", # 최신 버전을 확인하고 사용
+}
+
+def save_game_log_to_notion(player):
+    """
+    게임 결과를 Notion 데이터베이스에 저장합니다.
+    player 객체에서 필요한 정보를 추출하여 Notion API에 전송합니다.
+    """
+    url = "https://api.notion.com/v1/pages"
+
+    # player 객체로부터 데이터 추출
+    gpa = player.calcGPA(2)
+    now = datetime.datetime.now().isoformat()
+    
+    # Notion 데이터베이스의 속성명에 맞게 데이터 구성
+    data = {
+        "parent": {"database_id": DATABASE_ID},
+        "properties": {
+            "날짜": {
+                "date": {
+                    "start": now
+                }
+            },
+            "이름": {
+                "title": [
+                    {
+                        "text": {
+                            "content": player.name
+                        }
+                    }
+                ]
+            },
+            "최종 GPA": {
+                "number": float(gpa) if gpa and str(gpa).replace('.', '').isdigit() else 0.0
+            },
+            "최종 레벨": {
+                "number": player.level
+            },
+            "딘즈 횟수": {
+                "number": player.deans_count
+            },
+            "장짤 횟수": {
+                "number": player.jangzal_count
+            },
+            "학사경고 횟수": {
+                "number": player.warning_count
+            },
+            "최종 학기": {
+                "rich_text": [
+                    {
+                        "text": {
+                            "content": player.current_semester
+                        }
+                    }
+                ]
+            },
+            "엔딩 타입": {
+                "rich_text": [
+                    {
+                        "text": {
+                            "content": player.ending_type
+                        }
+                    }
+                ]
+            },
+        }
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status() # HTTP 오류가 발생하면 예외 발생
+        print("Debug: 저장 성공: 게임 기록이 Notion에 저장되었습니다.")
+        return True
+    except requests.exceptions.RequestException as e:
+        print(f"Debug: 저장 오류: Notion API 호출 실패 - {e}")
+        return False
+    
+def get_leaderboard_from_notion():
+    """
+    Notion 데이터베이스에서 모든 기록을 가져옵니다.
+    """
+    if not all([NOTION_TOKEN, DATABASE_ID]):
+        print("Debug: [Warning!] Notion 토큰 또는 DB ID가 설정되지 않았습니다.")
+        return []
+
+    url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
+    
+    # 정렬 없이 모든 데이터 가져오기 (CSV 업데이트를 위해)
+    data = {"page_size": 100}
+
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        results = response.json().get("results", [])
+
+        records = []
+        for page in results:
+            props = page.get("properties", {})
+            
+            # Notion 속성에서 데이터 추출 (타입에 맞게)
+            record_date = props.get("날짜", {}).get("date", {}).get("start", "")
+            name = props.get("이름", {}).get("title", [{}])[0].get("text", {}).get("content", "")
+            gpa = props.get("최종 GPA", {}).get("number", 0.0)
+            level = props.get("최종 레벨", {}).get("number", 0)
+            deans_count = props.get("딘즈 횟수", {}).get("number", 0)
+            jangzal_count = props.get("장짤 횟수", {}).get("number", 0)
+            warning_count = props.get("학사경고 횟수", {}).get("number", 0)
+
+            # Rich Text 속성에 대한 안전한 접근
+            semester_text = props.get("최종 학기", {}).get("rich_text", [])
+            semester = semester_text[0].get("text", {}).get("content", "") if semester_text else ""
+            
+            ending_type_text = props.get("엔딩 타입", {}).get("rich_text", [])
+            ending_type = ending_type_text[0].get("text", {}).get("content", "") if ending_type_text else ""
+
+            records.append({
+                '날짜': record_date,
+                'name': name,  # '이름' -> 'name'으로 변경
+                'gpa': gpa,    # '최종 GPA' -> 'gpa'로 변경
+                'level': level, # '최종 레벨' -> 'level'로 변경
+                'deans_count': deans_count,
+                'jangzal_count': jangzal_count,
+                'warning_count': warning_count,
+                'semester': semester,
+                'ending_type': ending_type,
+            })
+            
+        return records
+    except requests.exceptions.RequestException as e:
+        print(f"Debug: 조회 오류: Notion API 순위 조회 실패 - {e}")
+        return []
+
+def update_and_save_csv(notion_records, filename="deans_list.csv", out_dir="results/deans"):
+    """
+    Notion 기록을 가져와 기존 CSV와 병합하고 새로운 기록을 식별하여 저장합니다.
+    """
+    os.makedirs(out_dir, exist_ok=True)
+    filepath = os.path.join(out_dir, filename)
+    
+    existing_records = []
+    if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+        with open(filepath, 'r', newline='', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            existing_records = [row for row in reader]
+
+    existing_identifiers = set()
+    for row in existing_records:
+        identifier = (row.get('날짜', ''), row.get('이름', ''), str(row.get('최종 GPA', '')))
+        existing_identifiers.add(identifier)
+
+    new_records_to_add = []
+    for record in notion_records:
+        identifier = (record.get('날짜', ''), record.get('이름', ''), str(record.get('최종 GPA', '')))
+        if identifier not in existing_identifiers:
+            new_records_to_add.append(record)
+
+    if not new_records_to_add:
+        print("Debug: CSV에 추가할 새로운 기록이 없습니다.")
+        return True, "CSV 파일이 최신 상태입니다."
+
+    write_header = not os.path.exists(filepath) or os.path.getsize(filepath) == 0
+    with open(filepath, 'a', newline='', encoding='utf-8') as file:
+        fieldnames = list(notion_records[0].keys()) if notion_records else []
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        
+        if write_header:
+            writer.writeheader()
+        
+        writer.writerows(new_records_to_add)
+
+    print(f"Debug: CSV 파일이 업데이트되었습니다. 새로운 기록 {len(new_records_to_add)}개 추가.")
+    return True, f"게임 결과가 {filename}에 저장되었습니다."
+
+def show_deans_list(player, screen, leaderboard):
+    """
+    Deans List를 화면에 표시합니다.
+    """
+    screen.fill(WHITE)
+    draw_text(screen, "명예의 전당: Deans List", SCREEN_WIDTH // 2, 80, BLACK, size=48, align='center')
+    draw_text(screen, "최종 GPA 기준", SCREEN_WIDTH // 2, 140, GRAY, size=24, align='center')
+    
+    y_offset = 200
+    player_rank = -1
+    player_entry = None
+    # 플레이어의 GPA를 float 타입으로 변환 (오류 방지)
+    player_gpa = float(player.calcGPA(2))
+    
+    # 순위표에 플레이어 기록이 있는지 확인
+    for i, entry in enumerate(leaderboard):
+        if entry['name'] == player.name and abs(entry['gpa'] - player_gpa) < 0.01:
+            player_rank = i + 1
+            player_entry = entry
+            break
+
+    # 10위까지 출력
+    for i in range(min(10, len(leaderboard))):
+        entry = leaderboard[i]
+        rank_color = BLACK
+        name_color = BLACK
+        # GPA 값을 문자열로 변환하여 gpaColor 함수에 전달
+        gpa_str_to_color = f"{entry['gpa']:.2f}"
+        gpa_color = gpaColor(gpa_str_to_color)
+
+        # 내 기록이면 강조
+        if i + 1 == player_rank:
+            name_color = BLUE
+            gpa_color = BLUE
+        
+        # 순위
+        draw_text(screen, f"{i+1}.", SCREEN_WIDTH//2 - 250, y_offset + i * 40, rank_color, size=32)
+        # 이름
+        draw_text(screen, entry['name'], SCREEN_WIDTH//2 - 180, y_offset + i * 40, name_color, size=32)
+        # GPA
+        draw_text(screen, f"{entry['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_offset + i * 40, gpa_color, size=32, align='right')
+
+    # 내 기록이 10위 안에 없으면 별도로 표시
+    if player_rank > 10 and player_entry:
+        y_offset_my_rank = y_offset + 10 * 40 + 60
+        draw_text(screen, "----------------------------------", SCREEN_WIDTH//2, y_offset_my_rank, GRAY, size=24, align='center')
+        y_offset_my_rank += 40
+        
+        rank_color = RED
+        name_color = RED
+        gpa_color = gpaColor(player_entry['gpa'])
+        
+        draw_text(screen, f"{player_rank}.", SCREEN_WIDTH//2 - 250, y_offset_my_rank, rank_color, size=32)
+        draw_text(screen, player_entry['name'], SCREEN_WIDTH//2 - 180, y_offset_my_rank, name_color, size=32)
+        draw_text(screen, f"{player_entry['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_offset_my_rank, gpa_color, size=32, align='right')
+
+    draw_text(screen, "아무 키나 눌러 메인 메뉴로 돌아갑니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT - 80, GRAY, size=24, align='center')
+    
+    pygame.display.flip()
+    wait_for_key()
+
 
 def save_cropped_center(screen, player_name, crop_w=1100, crop_h=800, top_margin=60,
                         final_name=None, out_dir="results_screenshots", prefix="crop"):
@@ -61,8 +302,6 @@ def upload_to_catbox(file_path, userhash=None, temporary=False, temp_time="24h")
         raise RuntimeError(f"Catbox 업로드 응답이 URL이 아님: {url}")
     print(f"[Uploaded] {url}")
     return url
-
-import qrcode
 
 def make_qr(url, out_path="qr.png", target_px=300, border=4):
     qr = qrcode.QRCode(
@@ -174,8 +413,14 @@ def save_game_log_csv(filename, player):
     # 절대 경로 생성
     base_dir = os.path.dirname(os.path.abspath(__file__))
     filepath = os.path.join(base_dir, filename)
+
+    # 파일이 저장될 디렉토리 경로
+    dir_path = os.path.dirname(filepath)
     
-    # 파일이 없으면 헤더 작성 필요
+    # 디렉토리가 없으면 생성 (재귀적으로 생성)
+    os.makedirs(dir_path, exist_ok=True)
+    
+    # 파일이 없거나 비어 있으면 헤더 작성
     write_header = not os.path.exists(filepath) or os.path.getsize(filepath) == 0
     
     # CSV 파일에 게임 결과 저장
@@ -193,9 +438,7 @@ def save_game_log_csv(filename, player):
         # 게임 결과 데이터 저장
         import datetime
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        # 최종 스킬들 스킬타입, 스킬레벨
         skillresult = []
-        # current_skills 에서 레벨이 0이상인 스킬들 key와 value를 skillresult에 추가
         for skill, level in player.learned_skills.items():
             if level > 0:
                 skillresult.append(skill)
@@ -556,14 +799,23 @@ def show_final_result(player, screen):
     draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2+450, y_offset, BLACK, align='right')
     
     # 결과 저장
-    success, message = save_game_log_csv("graduation_results.csv", player)
-    
+    success, message = save_game_log_csv("results/graduation/graduation_results.csv", player)
+    success_notion = save_game_log_to_notion(player)
     if success:
         draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
     else:
         draw_text(screen, "X 저장 실패", SCREEN_WIDTH//2 - 72, SCREEN_HEIGHT - 120, RED)
     
     draw_text(screen, "아무 키나 눌러 메인메뉴로...", SCREEN_WIDTH//2 - 160, SCREEN_HEIGHT - 60, BLACK)
+    
+    # Notion에서 모든 기록을 가져와 CSV 업데이트 및 순위표 생성
+    notion_records = get_leaderboard_from_notion()
+    if notion_records:
+        update_and_save_csv(notion_records)
+    
+    # GPA를 기준으로 내림차순 정렬된 순위표
+    leaderboard = sorted(notion_records, key=lambda x: x['gpa'], reverse=True)
+
     
     pygame.display.flip()
     result = export_screen_to_catbox_qr(
@@ -579,6 +831,8 @@ def show_final_result(player, screen):
     )
     print(result["url"], result["qr_path"])
     wait_for_key()
+    # Deans List 화면 표시
+    show_deans_list(player, screen, leaderboard)
     
     # 두 번째 화면: QR 링크와 멘트 표시
     screen.fill(WHITE)
