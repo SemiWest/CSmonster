@@ -1,2 +1,5 @@
 pygame
 windows-curses
+catbox-uploader
+qrcode[pil]
+requests

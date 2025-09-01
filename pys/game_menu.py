@@ -11,6 +11,23 @@ screen = None
 font = None
 NOTION_TOKEN = "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"
 DATABASE_ID = "261e339f1ae5802ca71acd96446868d5"
+GPACOLOR = {
+    "A+": (255, 215, 0),    # Gold
+    "A0": (255, 215, 0),    # Gold
+    "A-": (255, 215, 0),    # Gold
+    "B+": (192, 192, 192),  # Silver
+    "B0": (192, 192, 192), # Silver
+    "B-": (192, 192, 192), # Silver
+    "C+": (205, 127, 50),  # Bronze
+    "C0": (205, 127, 50),  # Bronze
+    "C-": (205, 127, 50), # Bronze
+    "F": (255, 0, 0),       # Red
+    "W": (128, 128, 128),   # Gray
+    "-": (0, 0, 0),         # Black
+    "P": (0, 255, 0),       # Green
+    "NR": (0, 0, 0)          # Black
+}
+
 
 import os, requests, datetime, csv
 
@@ -136,7 +153,7 @@ def show_deans_list_from_notion(player=None):
     # 3) GPA 색상 기본 함수 (상위권 외에는 기본 gpaColor 적용)
     def color_for_gpa(gpa_value: float):
         try:
-            return gpaColor(f"{gpa_value:.2f}")
+            return GPACOLOR[f"{gpa_value:.2f}"]
         except Exception:
             return BLACK
 
