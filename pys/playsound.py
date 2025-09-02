@@ -12,6 +12,7 @@ effectsound = True  # 효과음 기본값
 ESVolume = 90  # 효과음 볼륨 기본값 (0 ~ 100)
 music_channel = None  # 음악 채널
 effect_channel = None  # 효과음 채널
+effect_channel_alt = None  # 효과음 채널2
 music_thread_running = False  # 음악 스레드 상태
 
 # 색상 정의
@@ -47,14 +48,15 @@ CTC = (165, 165, 165)
 EVENTC = (255, 255, 15)
 STARC = (100, 100, 100)
 
-def change_options(BGM, BGMV, ES, ESV, eChannel, mChannel):
+def change_options(BGM, BGMV, ES, ESV, eChannel, mChannel, eChannelAlt):
     """효과음 옵션 변경"""
-    global musicOnOff, musicVolume, effectsound, ESVolume, effect_channel, music_channel
+    global musicOnOff, musicVolume, effectsound, ESVolume, effect_channel, music_channel, effect_channel_alt
     musicOnOff = BGM
     musicVolume = BGMV
     effectsound = ES
     ESVolume = ESV
     effect_channel = eChannel
+    effect_channel_alt = eChannelAlt
     music_channel = mChannel
 
 def mute_music(num=0):
@@ -135,7 +137,15 @@ def play_effect(file_path, esp_volume = 100):
         sound.set_volume(ESVolume / esp_volume)  # 볼륨 설정
         effect_channel.play(sound)  # 효과음 재생
 
-def wait_for_key(sound = True):
+def play_effect_alt(file_path, esp_volume = 100):
+    """효과음 재생"""
+    global effect_channel_alt, effectsound, ESVolume
+    if effectsound:
+        sound = pygame.mixer.Sound(file_path)
+        sound.set_volume(ESVolume / esp_volume)  # 볼륨 설정
+        effect_channel_alt.play(sound)  # 효과음 재생
+
+def wait_for_key(sound = True, Noescape=False):
     """키 입력 대기 (pygame)"""
     pygame.event.clear()
     waiting = True
@@ -150,6 +160,8 @@ def wait_for_key(sound = True):
                         option_select_sound()
                     return 'enter'
                 elif event.key == pygame.K_ESCAPE or event.key == pygame.K_q or event.key == pygame.K_BACKSPACE:
+                    if Noescape:
+                        continue
                     return 'escape'
                 elif event.key == pygame.K_UP or event.key == pygame.K_w:
                     return 'up'
@@ -191,7 +203,7 @@ def NormalDamage():
     play_effect("../sound/Hit Normal Damage.mp3")
 
 def HP_low():
-    play_effect("../sound/HP_low.mp3", 150)
+    play_effect_alt("../sound/HP_low.mp3", 150)
 
 def Level_up():
     play_effect("../sound/Level_up.mp3")
