@@ -64,9 +64,9 @@ for i in range(len(os.listdir(path))):
     DEBUFF.append(img)
 # 반사 스킬용 이미지 로드
 SHIELD = pygame.image.load("../img/animations/items/shield.png")
-SHIELD = pygame.transform.scale_by(SHIELD, 5)
+SHIELD = pygame.transform.scale_by(SHIELD, 1)
 MIRROR = pygame.image.load("../img/animations/items/mirror.png")
-MIRROR = pygame.transform.scale_by(MIRROR, 5)
+MIRROR = pygame.transform.scale_by(MIRROR, 1)
 
 def comp(atskilltype, tgtype):
     """
@@ -296,45 +296,42 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         
     # D. 반사 스킬 (Reflect) - <<수정된 부분>>
     elif effect == "reflect":
-        # 1. 먼저 방패 또는 거울 애니메이션을 재생합니다.
-        play_reflect_animation(screen, user, skill)
+        # 1. 애니메이션을 재생하는 대신, 캐릭터에게 '방어 중' 상태를 부여합니다.
+        stance = 'shield' if skill["skW"] == 0 else 'mirror'
+        setattr(user, 'defensive_stance', stance)
+        # play_reflect_animation(screen, user, skill)  <- 이 줄은 삭제되었습니다.
 
-        # 2. 상대방이 공격 스킬을 사용했는지 확인합니다.
+        # 2. 상대방이 공격 스킬을 사용했는지 확인
         if counter_skill is None or counter_skill["effect_type"] not in ["Pdamage", "Sdamage"]:
-            return False, 0, False
+            # 공격을 받지 않았으므로 아무 일도 일어나지 않고 턴이 종료됩니다.
+            # 메시지 출력을 위해 damage 값을 -121(실패)로 설정합니다.
+            return False, -121, False
 
-        # 3. 스킬 효과를 분기합니다: 방어(skW=0) 또는 반사(skW>0)
-        if skill["skW"] == 0:  # 방어 (shield.png)
-            # 3-1. 상대의 공격 애니메이션을 재생하되, 데미지는 주지 않습니다.
-            # play_damage_sequence를 재사용하여 old_hp와 new_hp를 같게 전달하면
-            # 체력바 변화나 피격 효과 없이 스킬 애니메이션만 재생됩니다.
-            # 여기서 공격자는 원래 공격자(target), 맞는 쪽은 방어 스킬 사용자(user)입니다.
+        # 3. 스킬 효과 분기: 방어(skW=0) 또는 반사(skW>0)
+        if skill["skW"] == 0:  # 방어 (shield)
+            # 이제 공격 애니메이션은 play_damage_sequence에서 방패와 '함께' 재생됩니다.
+            # 데미지는 주지 않으므로 old_hp와 new_hp를 같게 전달합니다.
             play_damage_sequence(screen, counter_skill, target, user, user.nowhp, user.nowhp)
-
-            # 3-2. 애니메이션이 끝난 후, 공격을 막았다는 메시지를 출력합니다.
+            
+            # 공격을 막았다는 메시지를 출력합니다.
             display_status(screen, True)
             draw_text(screen, f"  {user.name}이(가) 공격을 막아냈다!", stX, stY, WHITE)
             pygame.display.flip()
             wait_for_key()
             
-            # 3-3. 상대의 턴을 종료시키고, 데미지는 0을 반환합니다.
-            return True, 0, 1
-        else:  # 반사 (mirror.png)
-            # 상대 공격을 기반으로 데미지를 계산하여 *상대에게* 돌려줍니다.
-            damage, Mul = Damage(target, user, counter_skill) 
-            damage = int(damage * skill["skW"])  # 반사 비율 적용
+            return True, 0, 1 # 상대 턴 종료
+        else:  # 반사 (mirror)
+            damage, Mul = Damage(target, user, counter_skill)
+            damage = int(damage * skill["skW"])
             
             old_hp = target.nowhp
             new_hp = max(0, old_hp - damage)
 
-            # 반사 데미지 애니메이션 재생 (상대방의 스킬 애니메이션을 사용)
+            # 반사 데미지 애니메이션 재생 (이제 거울과 함께 표시됩니다)
             play_damage_sequence(screen, counter_skill, user, target, old_hp, new_hp)
             
-            # 애니메이션 후 데이터 반영
             target.nowhp = new_hp
-            
-            # True를 반환하여 상대방의 턴을 종료시킵니다.
-            return True, damage, Mul
+            return True, damage, Mul # 상대 턴 종료
 
     # E. 그 외 모든 스킬
     else:
@@ -436,12 +433,24 @@ def buffAnimation(is_increase, targettype="player"):
 # useskillAnimation 함수 전체를 이 코드로 교체하세요.
 
 def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
-    """[수정됨] 스킬 → 피격(점멸+사운드) → 체력바 순서로 애니메이션을 재생합니다."""
-    
-    # --- 1. 초기 설정 ---
-    screen_copy = screen.copy()
+    """[최종 수정] 스킬 렌더링 순서 및 변수 할당 오류를 수정한 최종 버전입니다."""
+
+    # --- 1. 초기 설정: 시전자(Caster)와 타겟(Target)의 정보 설정 ---
     is_player_target = (target == player)
     
+    if is_player_target: 
+        caster_char, target_char = enemyCSmon, player
+        caster_img_surface = pygame.image.load(caster_char.image).convert_alpha()
+        caster_img_surface = pygame.transform.scale_by(caster_img_surface, 10)
+        caster_pos = (esX + 860 - caster_img_surface.get_width() // 2, esY + 310 - caster_img_surface.get_height())
+        target_img_surface, target_pos = ME, (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height())
+    else: 
+        caster_char, target_char = player, enemyCSmon
+        caster_img_surface, caster_pos = ME, (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height())
+        target_img_surface = pygame.image.load(target_char.image).convert_alpha()
+        target_img_surface = pygame.transform.scale_by(target_img_surface, 10)
+        target_pos = (esX + 860 - target_img_surface.get_width() // 2, esY + 310 - target_img_surface.get_height())
+
     skill_frames = []
     if skill["animation"] != "none":
         anim_path = f"../img/animations/{skill['animation']}"
@@ -452,79 +461,102 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
                 img = pygame.image.load(filepath).convert_alpha()
                 skill_frames.append(img)
     
-    target_surface, target_pos, red_surface = None, (0, 0), None
-    if is_player_target:
-        target_surface, target_pos = ME, (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height())
-    elif hasattr(target, 'image'):
-        enemy_img = pygame.image.load(target.image).convert_alpha()
-        enemy_img = pygame.transform.scale_by(enemy_img, 10)
-        target_surface, target_pos = enemy_img, (esX + 860 - enemy_img.get_width() // 2, esY + 310 - enemy_img.get_height())
-    
-    if target_surface:
-        red_surface = target_surface.copy()
-        red_surface.fill((255, 60, 60, 150), special_flags=pygame.BLEND_RGBA_MULT)
+    red_surface = target_img_surface.copy()
+    red_surface.fill((255, 60, 60, 150), special_flags=pygame.BLEND_RGBA_MULT)
 
-    # --- 2. 애니메이션 시간 순서 재설정 ---
-    # 각 단계의 시작 시간과 지속 시간을 명확히 구분합니다.
-    SKILL_ANIM_END_TIME = 700  # 1단계: 스킬 애니메이션이 끝나는 시간
-    IMPACT_START_TIME = SKILL_ANIM_END_TIME  # 2단계: 피격 효과(점멸, 사운드) 시작 시간
-    FLASH_DURATION = 300  # 점멸 지속 시간
-    HP_BAR_START_TIME = IMPACT_START_TIME + FLASH_DURATION  # 3단계: 체력바 애니메이션 시작 시간
-    HP_BAR_DURATION = 500  # 체력바 지속 시간
+    # --- 2. 애니메이션 시간 설정 (오류 수정) ---
+    SKILL_ANIM_END_TIME = 700
+    IMPACT_START_TIME = 700
+    FLASH_DURATION = 300
+    HP_BAR_START_TIME = IMPACT_START_TIME + FLASH_DURATION
+    HP_BAR_DURATION = 500
     TOTAL_DURATION = HP_BAR_START_TIME + HP_BAR_DURATION
-
+    
     start_time = pygame.time.get_ticks()
-    hurt_sound_played = False # 아픈 소리가 한 번만 재생되도록 제어
-
-    if skill_frames:
-        play_effect(f"../sound/skills/{skill['animation']}.mp3") # 스킬 시전 사운드
+    hurt_sound_played = False
+    if skill_frames: play_effect(f"../sound/skills/{skill['animation']}.mp3")
 
     # --- 3. 통합 애니메이션 루프 ---
     while True:
         elapsed_time = pygame.time.get_ticks() - start_time
-        if elapsed_time > TOTAL_DURATION:
-            break
+        if elapsed_time > TOTAL_DURATION: break
 
-        screen.blit(screen_copy, (0, 0)) # 화면 초기화
+        # --- 프레임별 렌더링 ---
+        
+        # [레이어 1] 배경
+        screen.blit(BACKGROUND, (sX, sY))
 
-        # --- 각 단계별 렌더링 ---
+        # [레이어 2] 타겟 캐릭터
+        if getattr(target_char, 'is_defeated', False):
+            silhouette = target_img_surface.copy(); silhouette.fill((30, 30, 30), special_flags=pygame.BLEND_RGB_MULT)
+            screen.blit(silhouette, target_pos)
+        else:
+            screen.blit(target_img_surface, target_pos)
 
-        # 1단계: 스킬 애니메이션
+        # [레이어 2.5] 방패/거울
+        active_stance = getattr(target_char, 'defensive_stance', None)
+        if active_stance:
+            defense_img = SHIELD if active_stance == 'shield' else MIRROR
+            if target_char == player:
+                anchor_x, anchor_y = sX + 320, sY + 536
+            else:
+                anchor_x, anchor_y = esX + 860, esY + 310
+            
+            img_pos_x = anchor_x - defense_img.get_width() // 2
+            img_pos_y = anchor_y - defense_img.get_height() + 10
+            screen.blit(defense_img, (img_pos_x, img_pos_y))
+
+        # [레이어 3] 스킬 애니메이션
         if elapsed_time < SKILL_ANIM_END_TIME and skill_frames:
             frame_index = int((elapsed_time / SKILL_ANIM_END_TIME) * len(skill_frames))
             frame_index = min(frame_index, len(skill_frames) - 1)
             screen.blit(skill_frames[frame_index], (sX, sY))
 
-        # 2단계: 피격 효과 (점멸 + 아픈 소리)
-        if elapsed_time >= IMPACT_START_TIME:
-            # "아픈 소리"를 이 시점에 한 번만 재생
-            if not hurt_sound_played and new_hp < old_hp:
-                NormalDamage()  # 데미지 사운드를 '아픈 소리'로 사용
-                hurt_sound_played = True
-            
-            # 점멸 효과 재생
-            flash_elapsed = elapsed_time - IMPACT_START_TIME
-            if flash_elapsed < FLASH_DURATION and red_surface and new_hp < old_hp:
-                if (int(flash_elapsed / 100)) % 2 == 0:
-                    screen.blit(red_surface, target_pos)
+        # [레이어 4] 시전자 캐릭터
+        if getattr(caster_char, 'is_defeated', False):
+            silhouette = caster_img_surface.copy(); silhouette.fill((30, 30, 30), special_flags=pygame.BLEND_RGB_MULT)
+            screen.blit(silhouette, caster_pos)
+        else:
+            screen.blit(caster_img_surface, caster_pos)
         
-        # 3단계: 체력바 애니메이션
-        # 체력바는 IMPACT 단계에서는 이전 체력을 유지하다가, HP_BAR_START_TIME이 되면 감소 시작
-        current_animated_hp = old_hp # 기본값은 이전 체력
-        if elapsed_time >= HP_BAR_START_TIME:
-            hp_bar_elapsed = elapsed_time - HP_BAR_START_TIME
-            progress = min(1.0, hp_bar_elapsed / HP_BAR_DURATION)
-            current_animated_hp = old_hp - (old_hp - new_hp) * progress
+        # [레이어 5] 피격 점멸 효과
+        if elapsed_time >= IMPACT_START_TIME:
+            if not hurt_sound_played and new_hp < old_hp: NormalDamage(); hurt_sound_played = True
+            flash_elapsed = elapsed_time - IMPACT_START_TIME
+            if flash_elapsed < FLASH_DURATION and new_hp < old_hp:
+                if (int(flash_elapsed / 100)) % 2 == 0: screen.blit(red_surface, target_pos)
 
-        # 현재 계산된 체력값으로 체력바 그리기
+        # [레이어 6] UI
+        screen.blit(STAT, (esX, esY))
+        draw_text(screen, f"{enemyCSmon.name}", esX + 64, esY + 52, WHITE)
+        draw_text(screen, f"lv.{getattr(enemyCSmon, 'level', 1)}", esX + 384, esY + 52, WHITE)
+        enemy_types = getattr(enemyCSmon, 'type', ['전산이론'])
+        if isinstance(enemy_types, str): enemy_types = [enemy_types]
+        for i, enemy_type in enumerate(enemy_types[:2]):
+            display_type(screen, esY, esX + 470 + i * 124, enemy_type)
+        
+        screen.blit(STAT, (psX, psY))
+        draw_text(screen, f"{player.name}", psX + 64, psY + 52, WHITE)
+        draw_text(screen, f"lv.{player.level}", psX + 384, psY + 52, WHITE)
+        display_type(screen, psY, psX + 470, player.type[0])
+        display_player_details(screen, player, sX + 1264)
+        screen.blit(TEXT, (sX+8, sY+536))
+
+        # [레이어 7] 체력바 애니메이션
         if is_player_target:
-            draw_health_bar(screen, psY + 104, psX + 135, current_animated_hp, target.HP)
-        else: # 몬스터가 타겟일 때
-            draw_health_bar(screen, esY + 104, esX + 135, current_animated_hp, target.HP)
+            progress = min(1.0, (elapsed_time - HP_BAR_START_TIME) / HP_BAR_DURATION) if elapsed_time >= HP_BAR_START_TIME else 0
+            animated_hp = old_hp - (old_hp - new_hp) * progress
+            draw_health_bar(screen, psY + 104, psX + 135, animated_hp, player.HP)
+            draw_health_bar(screen, esY + 104, esX + 135, enemyCSmon.nowhp, enemyCSmon.HP)
+        else:
+            progress = min(1.0, (elapsed_time - HP_BAR_START_TIME) / HP_BAR_DURATION) if elapsed_time >= HP_BAR_START_TIME else 0
+            animated_hp = old_hp - (old_hp - new_hp) * progress
+            draw_health_bar(screen, esY + 104, esX + 135, animated_hp, enemyCSmon.HP)
+            draw_health_bar(screen, psY + 104, psX + 135, player.nowhp, player.HP)
 
         pygame.display.flip()
-        pygame.time.Clock().tick(60)  # 애니메이션을 위해 FPS 제한
-        
+        pygame.time.Clock().tick(60)
+  
 def play_death_animation(target_character, screen):
     """[재수정됨] 지정한 캐릭터가 검정/흰색으로 점멸하는 애니메이션만 재생합니다."""
 
@@ -721,11 +753,15 @@ def flash_red(target_character, screen):
     display_status(screen, detail=True)
     pygame.display.flip()
             
-def display_status(screen, detail=True):
-    """상태 화면 표시 - 플레이어 직접 전투용으로 수정"""
+def display_status(screen, detail=True, skill_frame_to_draw=None):
+    """상태 화면 표시 - 플레이어 직접 전투용으로 수정 (스킬 레이어 처리 기능 추가)"""
     screen.fill((113,113,113))
     screen.blit(BACKGROUND, (sX, sY))
 
+    # 스킬 프레임이 전달된 경우, 배경 위에 먼저 그립니다.
+    if skill_frame_to_draw:
+        screen.blit(skill_frame_to_draw, (sX, sY))
+    
     # 배틀 정보 출력
     draw_text(screen, f"플레이어: {player.name}", sX, sY+820, VIOLET)
     draw_text(screen, f"현재 학기: {player.current_semester}", sX, sY+860, BLUE)
@@ -736,7 +772,6 @@ def display_status(screen, detail=True):
     
     # 적 스프라이트
     if hasattr(enemyCSmon, 'is_defeated') and enemyCSmon.is_defeated:
-        # 쓰러졌다면 어두운 실루엣을 그림
         if hasattr(enemyCSmon, 'image'):
             enemy_img = pygame.image.load(enemyCSmon.image).convert_alpha()
             silhouette = pygame.transform.scale_by(enemy_img, 10)
@@ -744,20 +779,17 @@ def display_status(screen, detail=True):
             silhouette.fill(dark_fill, special_flags=pygame.BLEND_RGB_MULT)
             screen.blit(silhouette, (esX+860-silhouette.get_width()//2, esY+310-silhouette.get_height()))
     elif hasattr(enemyCSmon, 'image'):
-        # 살아있다면 원래 이미지를 그림
         image = pygame.image.load(enemyCSmon.image).convert_alpha()
         image = pygame.transform.scale_by(image, 10)
         screen.blit(image, (esX+860-image.get_width()//2, esY+310-image.get_height()))
 
-    # 수정된 부분: 내 스프라이트 그리기
+    # 내 스프라이트 그리기
     if hasattr(player, 'is_defeated') and player.is_defeated:
-        # 쓰러졌다면 어두운 실루엣을 그림
         silhouette = ME.copy()
         dark_fill = (30, 30, 30)
         silhouette.fill(dark_fill, special_flags=pygame.BLEND_RGB_MULT)
         screen.blit(silhouette, (sX+320-ME.get_width()//2, sY+536-ME.get_height()))
     else:
-        # 살아있다면 원래 이미지를 그림
         screen.blit(ME, (sX+320-ME.get_width()//2, sY+536-ME.get_height()))
     
     # 적 상태
@@ -772,7 +804,7 @@ def display_status(screen, detail=True):
     enemy_types = getattr(enemyCSmon, 'type', ['전산이론'])
     if isinstance(enemy_types, str):
         enemy_types = [enemy_types]
-    for i, enemy_type in enumerate(enemy_types[:2]):  # 최대 2개만 표시
+    for i, enemy_type in enumerate(enemy_types[:2]):
         display_type(screen, esY, esX+470+i*124, enemy_type)
     
     # 디버그/치트모드 시 상대 능력치 표시
@@ -780,17 +812,15 @@ def display_status(screen, detail=True):
     show_debug_overlay = player.cheatmode or (dbg and dbg.debug)
     
     if show_debug_overlay:
-        # 상대 능력치 표시 (치트/디버그모드)
         draw_text(screen, f"{getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))}/{getattr(enemyCSmon, 'HP', 100)}", esX+445, esY+100, WHITE, highlight=VIOLET)
         draw_text(screen, f"ATK {getattr(enemyCSmon, 'CATK', 10)}/{getattr(enemyCSmon, 'ATK', 10)}", esX+610, esY+16, WHITE, highlight=RED)
         draw_text(screen, f"DEF {getattr(enemyCSmon, 'CDEF', 10)}/{getattr(enemyCSmon, 'DEF', 10)}", esX+610, esY+56, WHITE, highlight=RED)
         draw_text(screen, f"SPD {getattr(enemyCSmon, 'CSPD', 10)}/{getattr(enemyCSmon, 'SPD', 10)}", esX+610, esY+96, WHITE, highlight=RED)
         
-        # 디버그 워터마크 표시
         if dbg and dbg.debug:
             draw_text(screen, "DEBUG", 50, 50, YELLOW, size=24)
-        
-    # 플레이어 상태 (하단) - 직접 전투
+            
+    # 플레이어 상태 (하단)
     screen.blit(STAT, (psX, psY))
     
     draw_text(screen, f"{player.name}", psX+64, psY+52, WHITE)
@@ -808,7 +838,6 @@ def display_status(screen, detail=True):
         display_player_details(screen, player, sX+1264)
 
     screen.blit(TEXT, (sX+8, sY+536))
-
     draw_text(screen, "Enter를 눌러 확인", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, LIGHTGRAY, align='center')
 
 def display_player_details(screen, player, x):
@@ -1709,6 +1738,9 @@ def battle(getplayer, getenemy, screen=None):
     
     player.update()
     enemyCSmon.update()
+    
+    setattr(player, 'defensive_stance', None)
+    setattr(enemyCSmon, 'defensive_stance', None)
 
     # 적 초기화
     if not hasattr(enemyCSmon, 'nowhp'):
@@ -1878,6 +1910,8 @@ def battle(getplayer, getenemy, screen=None):
 
                     battle_end = True
                     return "패배"
+                setattr(player, 'defensive_stance', None)
+                setattr(enemyCSmon, 'defensive_stance', None)
                 
                 hap_num += 1
     
