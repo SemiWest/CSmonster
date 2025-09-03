@@ -9,6 +9,7 @@ import requests
 import json
 import os
 import dropbox
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -299,7 +300,7 @@ def update_and_save_csv(notion_records, filename="deans_list.csv", out_dir="resu
     print(f"Debug: CSV 파일이 업데이트되었습니다. 새로운 기록 {len(new_records_to_add)}개 추가.")
     return True, f"게임 결과가 {filename}에 저장되었습니다."
 
-def show_deans_list(player, screen, leaderboard):
+def show_deans_list(player, screen, leaderboard, stats):
     """
     Deans List를 화면에 표시합니다.
     - 상위 10위 표기 (1~3등: 금/은/동 텍스트 색)
@@ -307,6 +308,7 @@ def show_deans_list(player, screen, leaderboard):
     - 플레이어가 10위권에 들면 축하 메시지(1~3등은 강렬 버전)
     - 플레이어가 10위 밖이지만 꼴찌 3명(불명예)도 아니면, 상/하 섹션 사이에 플레이어 등수/점수 표기
     - 불명예의 전당: GPA==0 이거나 정렬상 뒤에서 3명 안에 포함 시 붉은색으로 표기
+    - 전체 기록 통계 및 플레이어의 상대적 위치(시그마) 표시
     """
     # 내부 유틸: 상위 랭크 색상 (Gold/Silver/Bronze)
     def _rank_color_for_top(rank: int):
@@ -325,10 +327,25 @@ def show_deans_list(player, screen, leaderboard):
             return BLACK
 
     screen.fill(WHITE)
-    draw_text(screen, "명예의 전당: Deans List", SCREEN_WIDTH // 2, 80, BLACK, size=48, align='center')
-    draw_text(screen, "최종 GPA 기준", SCREEN_WIDTH // 2, 140, GRAY, size=24, align='center')
+    draw_text(screen, "명예의 전당: Deans List", SCREEN_WIDTH // 2, 60, BLACK, size=48, align='center')
+    draw_text(screen, "최종 GPA 기준", SCREEN_WIDTH // 2, 120, GRAY, size=24, align='center')
 
-    y_offset = 200
+    # --- 통계 정보 표시 추가 ---
+    stats_text = (
+        f"전체 평균: {stats.get('mean', 0):.2f} | "
+        f"중간값: {stats.get('median', 0):.2f} | "
+        f"표준편차: {stats.get('std', 0):.2f}"
+    )
+    player_z_score = stats.get('z_score', 0)
+    z_score_text = f"내 성적 위치: 평균으로부터 {player_z_score:+.2f}sigma"
+
+    draw_text(screen, stats_text, SCREEN_WIDTH // 2, 150, (60, 60, 60), size=20, align='center')
+    z_color = BLUE if player_z_score >= 0 else RED
+    draw_text(screen, z_score_text, SCREEN_WIDTH // 2, 175, z_color, size=22, align='center')
+    
+    y_offset = 220  # 통계 표시 공간 확보를 위해 y_offset 조정
+    # ---------------------------
+
 
     # 0) 플레이어 GPA/이름 확보
     player_name = getattr(player, 'name', None)
@@ -352,7 +369,7 @@ def show_deans_list(player, screen, leaderboard):
         combined.append({'name': player_name, 'gpa': player_gpa})
 
     # 2) 정렬: 4.3 GPA를 최우선으로, 그 외는 GPA 내림차순, 동점 시 이름 오름차순
-    combined.sort(key=lambda x: (x['gpa'] != 4.3, -x['gpa'], x['name']))
+    combined.sort(key=lambda x: (x.get('gpa', 0.0) != 4.3, -x.get('gpa', 0.0), x.get('name', '')))
 
     # 3) 플레이어 순위 찾기 (1-indexed)
     player_rank = None
@@ -370,11 +387,9 @@ def show_deans_list(player, screen, leaderboard):
         rank = i + 1
         rank_color = _rank_color_for_top(rank)
         
-        # 1-3위는 정해진 색상, 그 외는 검정색
         name_color = rank_color if rank <= 3 else BLACK
         gpa_color  = rank_color if rank <= 3 else _gpa_color_default(e['gpa'])
 
-        # 플레이어가 10위권에 들면 볼드체
         is_player_in_top10 = (player_entry and e['name'] == player_entry['name'] and abs(e['gpa'] - player_entry['gpa']) < 1e-6)
         is_bold = is_player_in_top10
         name_font_size = 36 if is_bold else 32
@@ -387,17 +402,15 @@ def show_deans_list(player, screen, leaderboard):
     after_top_y = y_offset + top_k * 40
     message_lines = []
     if player_rank is not None and player_rank <= 10:
-        # 10위권 진입 축하 메시지
         if player_rank == 1:
-            message_lines.append(("전설의 1위!\n새로운 딘즈 리스트 정상에 올랐습니다!", (255, 215, 0)))
+            message_lines.append(("전설의 1위! 새로운 딘즈 리스트 정상에 올랐습니다!", (255, 215, 0)))
         elif player_rank == 2:
-            message_lines.append(("2위 달성!\n환상적인 성적입니다!", (192, 192, 192)))
+            message_lines.append(("2위 달성! 환상적인 성적입니다!", (192, 192, 192)))
         elif player_rank == 3:
-            message_lines.append(("3위 입성!\n탑 티어에 합류했습니다!", (205, 127, 50)))
+            message_lines.append(("3위 입성! 탑 티어에 합류했습니다!", (205, 127, 50)))
         else:
-            message_lines.append(("축하합니다!\n새로운 딘즈 리스트 Top 10에 올랐습니다!", GREEN))
+            message_lines.append(("축하합니다! 새로운 딘즈 리스트 Top 10에 올랐습니다!", GREEN))
     elif player_entry is not None:
-        # 10위 밖이고, 불명예 섹션도 아니라면 중간에 본인만 표시
         bottom_count = min(3, len(combined))
         bottom_start_rank = len(combined) - bottom_count + 1
         is_in_disgrace_by_rank = (player_rank is not None and player_rank >= bottom_start_rank)
@@ -409,23 +422,21 @@ def show_deans_list(player, screen, leaderboard):
             draw_text(screen, f"{player_rank}.",            SCREEN_WIDTH//2 - 250, y_mid, BLUE, size=32)
             draw_text(screen, player_entry['name'],         SCREEN_WIDTH//2 - 180, y_mid, BLUE, size=32)
             draw_text(screen, f"{player_entry['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_mid, BLUE, size=32, align='right')
-            after_top_y = y_mid + 28 # 아래 계산을 위해 위치 갱신
+            after_top_y = y_mid + 28 
 
-    # 축하/안내 메시지 렌더링 (있다면)
     if message_lines:
         y_msg = after_top_y + 28
         for text, color in message_lines:
-            for line in text.splitlines():  # 줄바꿈 처리
+            for line in text.splitlines():
                 draw_text(screen, line, SCREEN_WIDTH//2, y_msg, color, size=28, align='center')
-                y_msg += 36  # 줄 간격
+                y_msg += 36
         after_top_y = y_msg
 
-    # 6) 불명예의 전당 (꼴찌 3 + GPA==0인 플레이어 포함 규칙)
+    # 6) 불명예의 전당
     if len(combined) > 0:
         bottom_count = min(3, len(combined))
         disgrace_entries = combined[-bottom_count:]
 
-        # 플레이어가 GPA==0 이지만 꼴찌 3명에 없다면 추가로 표기
         need_append_player_zero = False
         if player_entry is not None and player_entry['gpa'] == 0:
             if player_entry not in disgrace_entries:
@@ -435,7 +446,6 @@ def show_deans_list(player, screen, leaderboard):
         draw_text(screen, "----- 불명예의 전당 -----", SCREEN_WIDTH//2, y_bottom, RED, size=28, align='center')
         y_bottom += 28
 
-        # 불명예 랭크 표기
         disgrace_rank_start = len(combined) - len(disgrace_entries) + 1
         for i, e in enumerate(disgrace_entries):
             rank = disgrace_rank_start + i
@@ -444,7 +454,6 @@ def show_deans_list(player, screen, leaderboard):
             draw_text(screen, f"{e['gpa']:.2f}", SCREEN_WIDTH//2 + 200, y_bottom + i * 40, RED, size=32, align='right')
 
         if need_append_player_zero:
-            # 플레이어 실제 순위를 붉은색으로 추가 표기
             y_extra = y_bottom + bottom_count * 40 + 20
             draw_text(screen, f"(특별) {player_rank}.",            SCREEN_WIDTH//2 - 250, y_extra, RED, size=28)
             draw_text(screen, player_entry['name'],                   SCREEN_WIDTH//2 - 180, y_extra, RED, size=28)
@@ -965,67 +974,33 @@ def semester_result_screen(player, screen):
     unmute_music()
 
 def show_final_result(player, screen):
-    """최종 결과 화면"""
-    # 졸업 또는 게임 오버 여부 판정
-    # 프밍기 패배 또는 일반적인 게임오버(학사경고 3회)인 경우
-    if player.gameover() or player.ending_type == "프밍기 패배":
-        screen.fill(WHITE)
+    """최종 결과 화면 (수정된 버전)"""
+    # 졸업 또는 게임 오버 여부에 따라 적절한 사운드 재생
+    is_game_over = player.gameover() or player.ending_type == "프밍기 패배"
+    if is_game_over:
         Lose()
-        draw_text(screen, "게임 오버", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, RED, size=64, align = 'center')
-        pygame.display.flip()
-        pygame.time.wait(2000)
-        # '프밍기 패배' 엔딩 메시지 추가
-        if player.ending_type == "프밍기 패배":
-            draw_text(screen, "당신은 프밍기 학인시를 처참하게 실패했습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
-            draw_text(screen, "전산과로의 진학을 포기하였습니다...", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+140, BLACK, align='center')
-        elif player.warning_count >= 3:
-            draw_text(screen, "학사 경고 3회로 제적되었습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
     else:
-        screen.fill(BLACK)
-        pygame.display.flip()
-        pygame.time.wait(1000)
-        draw_text(screen, f"{player.name}은 졸업 조건을 모두 채웠습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, WHITE, size=64, align='center')
-        pygame.display.flip()
-        wait_for_key()
-        # 화면 전체 페이드 효과-검은색->흰색, 0.4초간 점점 빠르게
-        for flash_frame in range(160):
-            screen.fill((flash_frame**2//100, flash_frame**2//100, flash_frame**2//100))  # 흰색으로 페이드
-            pygame.display.flip()
-            pygame.time.wait(2)  # 0.01초 대기
-
         play_music("../music/ending.wav")
-        screen.fill(WHITE)
-        draw_text(screen, f"{player.name}은/는 최종 학점 {player.calcGPA(2)}로 졸업했다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, BLACK, WHITE, 64, 'center')
-        pygame.display.flip()
-        wait_for_key()
 
-        # 엔딩 화면 = Graduation.jpg * 8배 사이즈
-        graduation_image = pygame.image.load("../img/Graduation.png")
-        graduation_image = pygame.transform.scale(graduation_image, (graduation_image.get_width() * 8, graduation_image.get_height() * 8))
-        screen.blit(graduation_image, (0, 0))
-        pygame.display.flip()
-        wait_for_key()
-        
-        # 엔딩 타입 표시
-        ending = player.get_final_ending()
-        draw_text(screen, f"엔딩: {ending}", SCREEN_WIDTH//2 - len(ending)*16 - 32, 140, BLUE)
-    pygame.display.flip()
-    wait_for_key()
-    
-    # 최종 통계
-    y_offset = 100
+    # --- 화면 표시 로직 시작 ---
     screen.fill(WHITE)
+    
+    # 1. 최종 성적표 그리기
+    y_offset = 100
     draw_text(screen, "=== 졸업 성적표 ===", SCREEN_WIDTH//2, y_offset, BLACK, size=48, align='center')
     y_offset += 60
     pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
     y_offset += 12
-    draw_text(screen,       f"학기",                            SCREEN_WIDTH//2-450 - 20, y_offset,  align='center')
-    draw_text(screen,       f"과목명",                            SCREEN_WIDTH//2-450 + 40, y_offset)
-    draw_text(screen,       f"성적",                              SCREEN_WIDTH//2-50 + 40, y_offset, align='right')
-    draw_text(screen,       f"과목명",                            SCREEN_WIDTH//2+50 , y_offset)
-    draw_text(screen,       f"성적",                              SCREEN_WIDTH//2+450, y_offset, align='right')
+    # 성적표 헤더
+    draw_text(screen, "학기", SCREEN_WIDTH//2-450 - 20, y_offset, align='center')
+    draw_text(screen, "과목명", SCREEN_WIDTH//2-450 + 40, y_offset)
+    draw_text(screen, "성적", SCREEN_WIDTH//2-50 + 40, y_offset, align='right')
+    draw_text(screen, "과목명", SCREEN_WIDTH//2+50, y_offset)
+    draw_text(screen, "성적", SCREEN_WIDTH//2+450, y_offset, align='right')
+    
     current = None
-    oneSemMonsters= 0
+    oneSemMonsters = 0
+    # 이수한 과목 목록 표시
     for i, Semestername in enumerate(player.clearedSemesters):
         if Semestername != current:
             current = Semestername
@@ -1035,30 +1010,52 @@ def show_final_result(player, screen):
             y_offset += 10
             draw_text(screen, f"{current}", SCREEN_WIDTH//2 - 450 - 20, y_offset, BLACK, align='center')
 
-        draw_text(screen,   f"{player.clearedMonsters[i]}", SCREEN_WIDTH//2-450 + 40+(470*(oneSemMonsters%2)), y_offset, BLACK)
-        draw_text(screen,   f"{player.gpas[i][1]}",         SCREEN_WIDTH//2-50 + 40 +(470*(oneSemMonsters%2)), y_offset, gpaColor(player.gpas[i][1]), align='right')
+        draw_text(screen, f"{player.clearedMonsters[i]}", SCREEN_WIDTH//2-450 + 40+(470*(oneSemMonsters%2)), y_offset, BLACK)
+        draw_text(screen, f"{player.gpas[i][1]}", SCREEN_WIDTH//2-50 + 40 +(470*(oneSemMonsters%2)), y_offset, gpaColor(player.gpas[i][1]), align='right')
         oneSemMonsters += 1
 
     y_offset += 40    
     pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
 
+    # 최종 GPA 표시
     cum_gpa = player.calcGPA(2)
     y_offset += 60 
     pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
     y_offset += 10
-    draw_text(screen,       f"최종 GPA", SCREEN_WIDTH//2-200, y_offset)
-    draw_text(screen,       f"{cum_gpa}", SCREEN_WIDTH//2+200, y_offset, gpaColor(cum_gpa), align='right')
+    draw_text(screen, "최종 GPA", SCREEN_WIDTH//2-200, y_offset)
+    draw_text(screen, f"{cum_gpa}", SCREEN_WIDTH//2+200, y_offset, gpaColor(cum_gpa), align='right')
     y_offset += 40
     pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
     y_offset += 10
 
+    # 비고란 표시
     draw_text(screen, "비고", SCREEN_WIDTH//2, y_offset, BLACK, size=32, align='center')
     y_offset += 40
     draw_text(screen, f"이름: {player.name}", SCREEN_WIDTH//2-450, y_offset, BLACK)
     draw_text(screen, f"최종 레벨: {player.level}", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
     draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2+450, y_offset, BLACK, align='right')
-    
-    # 결과 저장
+    y_offset += 60 # 다음 텍스트를 위한 추가 간격
+
+    # 2. 게임 결과 (졸업/게임 오버 사유)를 성적표 아래에 추가
+    if is_game_over:
+        # 게임 오버 사유 표시
+        if player.ending_type == "프밍기 패배":
+            draw_text(screen, "프밍기한테 졌습니다. 전산과로 진학하지 못했습니다.", SCREEN_WIDTH//2, y_offset, RED, size=32, align='center')
+        elif player.warning_count >= 3:
+            draw_text(screen, "학사 경고 3회로 제적당했습니다.", SCREEN_WIDTH//2, y_offset, RED, size=32, align='center')
+        else:
+            # 기타 게임오버 상황
+            draw_text(screen, "게임 오버", SCREEN_WIDTH//2, y_offset, RED, size=32, align='center')
+    else:
+        # 졸업 성공 메시지 및 엔딩 표시
+        ending = player.get_final_ending()
+        draw_text(screen, f"{player.name}은(는) 최종 학점 {player.calcGPA(2)}로 졸업했습니다.", SCREEN_WIDTH//2, y_offset, BLACK, size=32, align='center')
+        y_offset += 40
+        draw_text(screen, f"엔딩: {ending}", SCREEN_WIDTH//2, y_offset, BLUE, size=32, align='center')
+        
+    # --- 화면 표시 로직 종료 ---
+
+    # 3. 결과 저장 및 다음 단계 안내
     success, message = save_game_log_csv("../results/graduation/graduation_results.csv", player)
     success_notion = save_game_log_to_notion(player)
     if success:
@@ -1066,36 +1063,53 @@ def show_final_result(player, screen):
     else:
         draw_text(screen, "X 저장 실패", SCREEN_WIDTH//2 - 72, SCREEN_HEIGHT - 120, RED)
     
-    draw_text(screen, "아무 키나 눌러 메인메뉴로...", SCREEN_WIDTH//2 - 160, SCREEN_HEIGHT - 60, BLACK)
+    draw_text(screen, "아무 키나 눌러 다음으로...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, BLACK, align='center')
     
     # Notion에서 모든 기록을 가져와 CSV 업데이트 및 순위표 생성
     notion_records = get_leaderboard_from_notion()
     if notion_records:
         update_and_save_csv(notion_records)
-    
-    # GPA를 기준으로 내림차순 정렬된 순위표
-    leaderboard = sorted(notion_records, key=lambda x: x['gpa'], reverse=True)
 
+    # 통계 계산 로직 추가
+    stats = {'mean': 0.0, 'median': 0.0, 'std': 0.0, 'z_score': 0.0}
+    if notion_records:
+        all_gpas = [float(record['gpa']) for record in notion_records if record.get('gpa') is not None]
+        if all_gpas:
+            import numpy as np
+            stats['mean'] = np.mean(all_gpas)
+            stats['median'] = np.median(all_gpas)
+            stats['std'] = np.std(all_gpas)
+            
+            try:
+                player_gpa = float(player.calcGPA(2))
+                if stats['std'] > 0:
+                    stats['z_score'] = (player_gpa - stats['mean']) / stats['std']
+            except (ValueError, TypeError):
+                pass
+    
+    leaderboard = sorted(notion_records, key=lambda x: x.get('gpa', 0.0), reverse=True)
     
     pygame.display.flip()
+
+    # 4. 후속 화면으로 넘어가기 (QR 생성, 딘즈리스트 등)
     # 1. 졸업 성적표 이미지 저장 (QR/업로드 없이 로컬에만 임시 저장)
     transcript_path = save_cropped_and_return_path(
         screen,
         player.name,
-        crop_w=1000, crop_h=800, top_margin=60,
+        crop_w=1100, crop_h=880, top_margin=60,
         out_dir="results/screenshots/temp_images",
         prefix="transcript"
     )
     wait_for_key()
 
-    # 2. 딘즈 리스트 화면 표시
-    show_deans_list(player, screen, leaderboard)
+    # 2. 딘즈 리스트 화면 표시 (계산된 통계 정보 전달)
+    show_deans_list(player, screen, leaderboard, stats)
     
     # 3. 딘즈 리스트 화면 이미지 저장 (QR/업로드 없이 로컬에만 임시 저장)
     deans_list_path = save_cropped_and_return_path(
         screen,
         player.name,
-        crop_w=600, crop_h=880, top_margin=60,
+        crop_w=600, crop_h=880, top_margin=30,
         out_dir="results/screenshots/temp_images",
         prefix="deans_list"
     )
@@ -1107,59 +1121,35 @@ def show_final_result(player, screen):
 
     # 5. 합성에 사용된 임시 이미지 파일 삭제
     try:
-        os.remove(transcript_path)
-        os.remove(deans_list_path)
+        if os.path.exists(transcript_path): os.remove(transcript_path)
+        if os.path.exists(deans_list_path): os.remove(deans_list_path)
         print("Debug: 임시 이미지 파일 삭제 완료.")
     except OSError as e:
         print(f"Debug: 임시 파일 삭제 실패: {e.filename}")
 
-    # 6. 최종 합성 이미지를 Catbox에 업로드하고 QR 코드 생성
-    result = export_screen_to_catbox_qr(
-        screen=screen, # screen 인자는 필요하지만, 합성은 이미 완료됨.
-        player_name=player.name,
-        crop_w=100, crop_h=100, # 최종 이미지를 저장할 때는 크롭이 필요 없으므로, 더미 값을 넣습니다.
-        top_margin=0,
-        out_dir="results/screenshots/final_combined", # 최종 이미지 전용 폴더
-        prefix="final_share",
-        qr_out_dir="results/qrcodes/final_share", # 최종 QR 전용 폴더
-        keep_hours=24,
-        # combine_for_share에서 생성한 최종 이미지 경로를 직접 넘겨 업로드
-        # 이 부분은 export_screen_to_catbox_qr 함수를 약간 수정해야 함
-        # 편의를 위해 upload_to_catbox를 직접 호출하는 방식 추천
-    )
-    # 위 방식이 복잡하므로, 아래와 같이 변경합니다.
-    
-    # 6. 최종 합성 이미지를 Catbox에 업로드하고 QR 코드 생성
-
-    # Dropbox 함수 호출
+    # 6. 최종 합성 이미지를 Dropbox에 업로드하고 QR 코드 생성
     upload_url = upload_to_dropbox(
-    file_path=final_combined_path, 
-    dropbox_folder_path=DROPBOX_UPLOAD_FOLDER
+        file_path=final_combined_path, 
+        dropbox_folder_path=DROPBOX_UPLOAD_FOLDER
     )
 
     if upload_url:
         print(f"업로드 완료! 공유 URL: {upload_url}")
-    else:
-        print("업로드에 실패했습니다.")
-    if upload_url:
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"results/qrcode/share_{timestamp}.png"
-        qr_path = make_qr(upload_url, out_path = filename)
+        qr_path = make_qr(upload_url, out_path=filename)
         print(f"Debug: 최종 합성 이미지의 QR 코드 경로: {qr_path}")
     else:
+        print("업로드에 실패했습니다.")
         qr_path = None # 업로드 실패 시 QR 경로 없음
 
     # 7. QR 링크 화면 표시
     screen.fill(WHITE)
     draw_text(screen, "! 졸업 결과 공유하기 !", SCREEN_WIDTH//2, 120, BLACK, size=48, align='center')
 
-    # QR 이미지 불러오기 (새로 생성된 QR 경로 사용)
     try:
         if qr_path:
-            qr_image = pygame.image.load(qr_path)
-            # --- 이 부분에 .convert() 또는 .convert_alpha() 추가 ---
-            qr_image = qr_image.convert() 
-            # --------------------------------------------------------
+            qr_image = pygame.image.load(qr_path).convert() 
             qr_image = pygame.transform.smoothscale(qr_image, (300, 300))
             qr_rect = qr_image.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2 + 40))
             screen.blit(qr_image, qr_rect)
@@ -1170,12 +1160,10 @@ def show_final_result(player, screen):
     
     draw_text(screen, "위 QR을 스캔하면 결과 이미지를 얻을 수 있습니다.", SCREEN_WIDTH//2, 320, BLACK, size=28, align='center')
     draw_text(screen, "인스타 스토리에 @in.cs.tagram과 @kaist_kamf를 태그해서 공유해보세요!", SCREEN_WIDTH//2, 370, BLACK, size=28, align='center')
-    # 추가 설명
     draw_text(screen, "아무 키나 눌러 메인 메뉴로 돌아갑니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT - 80, GRAY, size=24, align='center')
 
     pygame.display.flip()
     wait_for_key()
-
 def get_text_input(screen, prompt):
     """pygame에서 텍스트 입력을 받는 함수"""
     input_text = ""
