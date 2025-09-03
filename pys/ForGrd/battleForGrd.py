@@ -700,7 +700,7 @@ def display_status(screen, detail=True, skill_frame_to_draw=None):
     
     # 배틀 정보 출력
     draw_text(screen, f"플레이어: {player.name}", sX, sY+820, VIOLET)
-    draw_text(screen, f"현재 학기: {player.current_semester}", sX, sY+900, BLUE)
+    draw_text(screen, f"현재 학기: {player.current_semester}", sX, sY+860, BLUE)
     draw_text(screen, f"턴 {hap_num}", sX, sY+900, CYAN)
     gpa = gpaCalculator(enemyCSmon, hap_num, item_num)[1]
     draw_text(screen, f"현재 성적: ", sX, sY+940, GREEN)
