@@ -3,6 +3,7 @@ from game_menu import *
 from ForGrd.playerForGrd import *
 from ForGrd.itemForGrd import get_item_color_by_grade
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -205,8 +206,8 @@ def play_reflect_animation(screen, user, skill):
         # 플레이어의 기준점 (sX + 320, sY + 536)
         anchor_x, anchor_y = sX + 320, sY + 536
     else: # 몬스터일 경우
-        # 몬스터의 기준점 (esX + 860, esY + 310)
-        anchor_x, anchor_y = esX + 860, esY + 310
+        # 몬스터의 기준점 (esX + 900, esY + 305)
+        anchor_x, anchor_y = esX + 900, esY + 305
 
     # 4. 기준점을 바탕으로 방패/거울 이미지의 최종 위치 계산
     # X축: 기준점(anchor_x)을 중앙으로 하여 이미지 너비의 절반만큼 왼쪽으로 이동
@@ -450,7 +451,7 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
         caster_char, target_char = enemyCSmon, player
         caster_img_surface = pygame.image.load(caster_char.image).convert_alpha()
         caster_img_surface = pygame.transform.scale_by(caster_img_surface, 10)
-        # ▼▼▼ [수정 1] 몬스터 위치를 display_status와 동일하게 변경 (860, 310 -> 900, 305) ▼▼▼
+        # ▼▼▼ [수정 1] 몬스터 위치를 display_status와 동일하게 변경 (900, 305 -> 900, 305) ▼▼▼
         caster_pos = (esX + 900 - caster_img_surface.get_width() // 2, esY + 305 - caster_img_surface.get_height())
         target_img_surface, target_pos = ME, (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height())
     else: 
@@ -458,27 +459,24 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
         caster_img_surface, caster_pos = ME, (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height())
         target_img_surface = pygame.image.load(target_char.image).convert_alpha()
         target_img_surface = pygame.transform.scale_by(target_img_surface, 10)
-        # ▼▼▼ [수정 1] 몬스터 위치를 display_status와 동일하게 변경 (860, 310 -> 900, 305) ▼▼▼
+        # ▼▼▼ [수정 1] 몬스터 위치를 display_status와 동일하게 변경 (900, 305 -> 900, 305) ▼▼▼
         target_pos = (esX + 900 - target_img_surface.get_width() // 2, esY + 305 - target_img_surface.get_height())
-
-    skill_frames = []
-    if skill["animation"] != "none":
-        anim_path = f"../img/animations/{skill['animation']}"
-        num_frames = len([f for f in os.listdir(anim_path) if f.endswith(".png")])
-        for i in range(num_frames):
-            filepath = os.path.join(anim_path, f"{i}.png")
-            if os.path.exists(filepath):
-                img = pygame.image.load(filepath).convert_alpha()
-                skill_frames.append(img)
+    
+    skill_frames = [] 
+    if skill["animation"] != "none":    
+        for i in range(len(os.listdir(f"../img/animations/{skill['animation']}"))):
+            img = pygame.image.load(f"../img/animations/{skill['animation']}/{i}.png")
+            img = pygame.transform.scale_by(img, 11/3)
+            skill_frames.append(img)
     
     red_surface = target_img_surface.copy()
     red_surface.fill((255, 60, 60, 150), special_flags=pygame.BLEND_RGBA_MULT)
 
     # --- 2. 애니메이션 시간 설정 (오류 수정) ---
-    SKILL_ANIM_END_TIME = 700
-    IMPACT_START_TIME = 700
-    FLASH_DURATION = 300
-    HP_BAR_START_TIME = IMPACT_START_TIME + FLASH_DURATION
+    SKILL_ANIM_END_TIME = 1500
+    IMPACT_START_TIME = 1500
+    FLASH_DURATION = 500
+    HP_BAR_START_TIME = IMPACT_START_TIME
     HP_BAR_DURATION = 500
     TOTAL_DURATION = HP_BAR_START_TIME + HP_BAR_DURATION
     
@@ -510,7 +508,7 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
             if target_char == player:
                 anchor_x, anchor_y = sX + 320, sY + 536
             else:
-                # ▼▼▼ [수정 1] 방패/거울 기준점도 몬스터 위치에 맞게 변경 (860, 310 -> 900, 305) ▼▼▼
+                # ▼▼▼ [수정 1] 방패/거울 기준점도 몬스터 위치에 맞게 변경 (900, 305 -> 900, 305) ▼▼▼
                 anchor_x, anchor_y = esX + 900, esY + 305
             
             img_pos_x = anchor_x - defense_img.get_width() // 2
@@ -522,6 +520,7 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
             frame_index = int((elapsed_time / SKILL_ANIM_END_TIME) * len(skill_frames))
             frame_index = min(frame_index, len(skill_frames) - 1)
             screen.blit(skill_frames[frame_index], (sX, sY))
+            pygame.time.wait(20)
 
         # [레이어 4] 시전자 캐릭터
         if getattr(caster_char, 'is_defeated', False):
@@ -571,7 +570,6 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
             draw_health_bar(screen, psY + 121, psX + 122, player.nowhp, player.HP)
 
         pygame.display.flip()
-        pygame.time.Clock().tick(60)
   
 def play_death_animation(target_character, screen):
     """[재수정됨] 지정한 캐릭터가 검정/흰색으로 점멸하는 애니메이션만 재생합니다."""
@@ -583,14 +581,14 @@ def play_death_animation(target_character, screen):
         if hasattr(enemyCSmon, 'image'):
             enemy_img = pygame.image.load(enemyCSmon.image).convert_alpha()
             target_surface = pygame.transform.scale_by(enemy_img, 10)
-        target_pos = (esX + 860 - target_surface.get_width() // 2, esY + 310 - target_surface.get_height())
+        target_pos = (esX + 900 - target_surface.get_width() // 2, esY + 305 - target_surface.get_height())
         living_char_surface, living_char_pos = ME, (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height())
     elif target_character == 'player':
         target_surface = ME; target_pos = (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height())
         if hasattr(enemyCSmon, 'image'):
             enemy_img = pygame.image.load(enemyCSmon.image).convert_alpha()
             living_char_surface = pygame.transform.scale_by(enemy_img, 10)
-        living_char_pos = (esX + 860 - living_char_surface.get_width() // 2, esY + 310 - living_char_surface.get_height())
+        living_char_pos = (esX + 900 - living_char_surface.get_width() // 2, esY + 305 - living_char_surface.get_height())
     if not target_surface: return
 
     # --- 2. 실루엣 생성 ---
@@ -600,7 +598,7 @@ def play_death_animation(target_character, screen):
     dark_silhouette_surface.fill((30, 30, 30), special_flags=pygame.BLEND_RGB_MULT)
 
     # --- 3. 애니메이션 시간 설정 ---
-    FLASH_DURATION = 1000
+    FLASH_DURATION = 600
     FLASH_INTERVAL = 100
     start_time = pygame.time.get_ticks()
     
@@ -620,7 +618,6 @@ def play_death_animation(target_character, screen):
             screen.blit(white_flash_surface, target_pos)
 
         pygame.display.flip()
-        pygame.time.Clock().tick(60)
     # 마지막 프레임을 그리는 부분을 삭제하여 역할을 분리함
 
 def useskillAnimation(skill, old_hp=None, new_hp=None, attacker_type=None): # ◀◀ 여기 인자 이름을 attacker_type으로 수정
@@ -655,11 +652,6 @@ def useskillAnimation(skill, old_hp=None, new_hp=None, attacker_type=None): # �
     else:
         return
     
-import time # time 모듈이 임포트되어 있지 않다면 추가해주세요
-
-# 이전에 정의된 sX, sY, esX, esY 변수들이 전역적으로 접근 가능하다고 가정합니다.
-# 만약 전역 변수가 아니라면, 함수 인자로 전달해야 합니다.
-
 def flash_red(target_character, screen):
     """지정한 캐릭터를 붉은색으로 깜빡이게 만듭니다. ('player' 또는 'monster')"""
     
@@ -674,7 +666,7 @@ def flash_red(target_character, screen):
         enemy_image_surface = pygame.image.load(enemyCSmon.image).convert_alpha()
         enemy_image_surface = pygame.transform.scale_by(enemy_image_surface, 10)
         target_surface = enemy_image_surface
-        target_pos = (esX + 860 - target_surface.get_width() // 2, esY + 310 - target_surface.get_height())
+        target_pos = (esX + 900 - target_surface.get_width() // 2, esY + 305 - target_surface.get_height())
     
     if not target_surface:
         return # 대상이 없으면 함수 종료
@@ -711,7 +703,7 @@ def display_status(screen, detail=True, skill_frame_to_draw=None):
     
     # 배틀 정보 출력
     draw_text(screen, f"플레이어: {player.name}", sX, sY+820, VIOLET)
-    draw_text(screen, f"현재 학기: {player.current_semester}", sX, sY+860, BLUE)
+    draw_text(screen, f"현재 학기: {player.current_semester}", sX, sY+900, BLUE)
     draw_text(screen, f"턴 {hap_num}", sX, sY+900, CYAN)
     gpa = gpaCalculator(enemyCSmon, hap_num, item_num)[1]
     draw_text(screen, f"현재 성적: ", sX, sY+940, GREEN)
@@ -724,7 +716,7 @@ def display_status(screen, detail=True, skill_frame_to_draw=None):
             silhouette = pygame.transform.scale_by(enemy_img, 10)
             dark_fill = (30, 30, 30)
             silhouette.fill(dark_fill, special_flags=pygame.BLEND_RGB_MULT)
-            screen.blit(silhouette, (esX+860-silhouette.get_width()//2, esY+310-silhouette.get_height()))
+            screen.blit(silhouette, (esX+900-silhouette.get_width()//2, esY+305-silhouette.get_height()))
     elif hasattr(enemyCSmon, 'image'):
         image = pygame.image.load(enemyCSmon.image).convert_alpha()
         image = pygame.transform.scale_by(image, 10)
