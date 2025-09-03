@@ -780,7 +780,7 @@ def display_status(screen, detail=True, skill_frame_to_draw=None):
     if detail:
         display_player_details(screen, player, sX+1264)
 
-    screen.blit(TEXT, (sX+8, sY+536))
+    screen.blit(TEXT, (sX+11, sY+535))
     draw_text(screen, "Enter를 눌러 확인", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, LIGHTGRAY, align='center')
 
 def display_player_details(screen, player, x):
@@ -1646,7 +1646,7 @@ def draw_health_bar(screen, y, x, current_hp, max_hp):
     def get_ratio(hp, max_hp):
         if hp <= 0:
             return 0
-        ratio = int(hp * 62 / max_hp)
+        ratio = int(hp * HPLEN / max_hp)
         return max(1, ratio) if hp > 0 else 0
 
     def draw_HP(surface, text, x, y, color, highlight=BLACK):
@@ -1658,9 +1658,12 @@ def draw_health_bar(screen, y, x, current_hp, max_hp):
 
     current_ratio = get_ratio(current_hp, max_hp)
     color = hpcolor(current_ratio)
-    bar_text = '█' * current_ratio + ' ' * (62 - current_ratio)
-    draw_HP(screen, bar_text, x, y+9, color)
+    bar_text = '█' * current_ratio + ' ' * (HPLEN - current_ratio)
+    draw_HP(screen, bar_text, x, y+10, color)
+    draw_HP(screen, bar_text, x, y+5, color)
     draw_HP(screen, bar_text, x, y+0, color)
+
+    
 
 def battle(getplayer, getenemy, screen=None):
     global player, enemy, enemyCSmon, battle_end, startBattleHp
