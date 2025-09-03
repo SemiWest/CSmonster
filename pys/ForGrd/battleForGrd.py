@@ -1807,9 +1807,6 @@ def battle(getplayer, getenemy, screen=None):
 
 
                     display_status(screen, detail=True)
-                    draw_text(screen, f"  3번의 턴 안에 상대 hp를 1에 가깝게 만들어보자!", stX, stY, WHITE)
-                    pygame.display.flip()
-                    wait_for_key()
                     turn = 0
 
                     while turn < 3 and enemyCSmon.nowhp > 0 and player.is_alive():
@@ -1828,13 +1825,13 @@ def battle(getplayer, getenemy, screen=None):
                             continue
 
                         if action == 0: # 스킬 사용
-                            turn += 1
                             esc = skill_phase(screen)
                             if esc == -1:
                                 pass
+                            else:
+                                turn += 1
                             
                         elif action == 1: # 아이템 사용
-                            turn += 1
                             if not any(i.name != "빈 슬롯" for i in player.items):
                                 display_status(screen, detail=True)
                                 draw_text(screen, f"  아이템이 없다!", stX, stY, WHITE)
@@ -1844,6 +1841,8 @@ def battle(getplayer, getenemy, screen=None):
                                 esc = item_phase(screen)
                                 if esc == -1:
                                     pass
+                                else: 
+                                    turn += 1
                         # 적 체력 확인
                         enemy_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
                         if enemy_hp <= 0:
@@ -1865,7 +1864,7 @@ def battle(getplayer, getenemy, screen=None):
 
                         battle_end = True
                         return "실패"
-                    elif enemy_hp <= int(enemyCSmon.HP * 0.50):
+                    elif enemy_hp <= int(enemyCSmon.HP * 0.1):
                         display_status(screen, detail=True)
                         draw_text(screen, f"  {enemyCSmon.name}의 체력이 충분히 낮아졌다!", stX, stY, WHITE)
                         pygame.display.flip()
