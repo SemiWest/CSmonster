@@ -792,6 +792,9 @@ def semester_intro_screen(player, screen):
                 draw_text(screen, option, SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*80, color, align='center', size=64)
                 if i == selected:
                     display_Monster_Imge(screen, monsters[option], SCREEN_WIDTH//2 + len(option)*32+96, SCREEN_HEIGHT//2 - 68 + i*80, size=4)
+            
+            draw_text(screen, "방향키로 조작, Enter로 선택", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, GRAY, align='center')
+            draw_text(screen, f"현재까지 받은 학사경고 횟수 {player.warning_count} / 3", SCREEN_WIDTH//2, SCREEN_HEIGHT - 120, align='center', color = RED, size=48)
             pygame.display.flip()
             key = wait_for_key()
             if key == 'enter':
@@ -805,7 +808,6 @@ def semester_intro_screen(player, screen):
             elif key == 'down' and selected < len(options)-1:
                 selected += 1
                 option_change_sound()
-            draw_text(screen, "방향키로 조작, Enter로 선택", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, GRAY, align='center')
 
     if semester_name == "3-여름방학":
         player.thisSemesterMonsters = ["몰입캠프"]
@@ -1497,7 +1499,7 @@ def show_skill_change(screen, player):
         wait_for_key()
         display_status(screen)
 
-        draw_text(screen, f"  그리고", stX, stY, color= WHITE)
+        draw_text(screen, f"  그리고...", stX, stY, color= WHITE)
         pygame.display.flip()
         wait_for_key()
         display_status(screen)
