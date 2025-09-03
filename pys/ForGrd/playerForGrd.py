@@ -175,6 +175,10 @@ class Player:
         # 치트 모드 (개발자용)
         self.cheatmode = False  # 치트모드 기본값 추가
         self.debug_config = None  # 디버그 설정 (나중에 설정됨)
+
+        # 몰캠용
+        self.molcam = None      # None / 0 / 1 / 2 / 3
+
     
     def playertype(self):
         """플레이어의 주력 스킬 타입 반환"""
@@ -267,8 +271,9 @@ class Player:
 
         if monster_name == "몰입캠프":
             self.level += 0
-            self.update_fullreset()
-            print("Debug: 몰입캠프 클리어! 레벨이 일정 상승하고 체력이 완전히 회복되었습니다.")
+            if self.molcam != 0:
+                self.update_fullreset()
+            print("Debug: 몰입캠프 클리어!")
         if monster_name == "코옵":
             self.update_fullreset()
             self.titles.append("회사원")
