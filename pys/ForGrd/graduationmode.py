@@ -865,7 +865,8 @@ def semester_result_screen(player, screen):
         if player.thisSemesterGpas[0][1] == "성공!":
             Report()
             lup_amt = player.molcam
-            if lup_amt > 0:
+            boolean = player.event_success
+            if lup_amt > 0 or boolean:
                 draw_text(screen, f"{player.thisSemesterMonsters[0]} 이벤트에 성공하였습니다!", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')
             else:
                 draw_text(screen, f"{player.thisSemesterMonsters[0]} 이벤트를 노력했으나 결실을 맺지 못했다...", SCREEN_WIDTH//2, 120, BLACK, size=64, align='center')

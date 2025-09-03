@@ -178,6 +178,7 @@ class Player:
 
         # 몰캠용
         self.molcam = None      # None / 0 / 1 / 2 / 3
+        self.event_success = False  # 코옵 / 개별 True / False (성공하면 true)
 
     
     def playertype(self):
