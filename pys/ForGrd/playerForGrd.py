@@ -42,7 +42,7 @@ GPACOLOR = {
 
 PLAYER_SKILLS = {
     "*": [
-        {"name": "타자치기", "effect_type": "Sdamage", "skW": round(25*DIFFICULTY_MULTIPLIER/5)*5, "type": "*", "description": "한글은 100타, 영어는 독수리타법", "level": 1, "priority": 0, "animation": "none"},
+        {"name": "타자치기", "effect_type": "Sdamage", "skW": round(25*DIFFICULTY_MULTIPLIER/5)*5, "type": "*", "description": "한글은 100타, 영어는 독수리타법", "level": 1, "priority": 0, "animation": "Typing"},
         {"name": "Python", "effect_type": "Sdamage", "skW": round(35*DIFFICULTY_MULTIPLIER/5)*5, "type": "*", "description": "프밍기를 수강한 당신, 이제 파이썬을 다룰 줄 안다", "level": 2, "priority": 0, "animation": "Python"}
     ],
     "PS": [

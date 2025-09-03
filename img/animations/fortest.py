@@ -61,6 +61,7 @@ path = "Python"
 images = []
 for i in range(len(os.listdir(path))):
     img = pygame.image.load(f"{path}/{i}.png")
+    img = pygame.transform.scale_by(img, 11/3)
     # img = pygame.transform.scale_by(img, 10)
     images.append(img)
 current_image = 0
