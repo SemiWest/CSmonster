@@ -2,7 +2,9 @@ import csv
 from ForGrd.battleForGrd import *
 import copy
 import logging
-import os, datetime, pygame, hashlib, time, pygame
+# [수정] datetime에서 필요한 클래스를 직접 가져옵니다.
+import os, pygame, hashlib, time
+from datetime import datetime, timezone, timedelta 
 import qrcode
 from typing import Optional
 import requests
@@ -50,11 +52,11 @@ def save_cropped_and_return_path(screen, player_name, crop_w, crop_h, top_margin
     cropped = screen.subsurface(rect)
 
     name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
-    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     path = os.path.join(out_dir, f"{prefix}_{name_hash}_{ts}.png")
 
     pygame.image.save(cropped, path)
-    print(f"Debug: 임시 이미지 저장 완료: {path}")
+    logger.info(f"Debug: 임시 이미지 저장 완료: {path}")
     return path
 
 def combine_for_share(background_path, transcript_path, deans_list_path, player_name, out_dir="results/combined_images"):
@@ -69,7 +71,7 @@ def combine_for_share(background_path, transcript_path, deans_list_path, player_
         transcript_img = pygame.image.load(transcript_path)
         deans_list_img = pygame.image.load(deans_list_path)
     except pygame.error as e:
-        print(f"Debug: 이미지 로드 오류 - {e}")
+        logger.error(f"Debug: 이미지 로드 오류 - {e}")
         return None
 
     # 이미지 비율 조정 (리사이즈)
@@ -93,88 +95,91 @@ def combine_for_share(background_path, transcript_path, deans_list_path, player_
     bg_image.blit(transcript_resized, (transcript_x, transcript_y))
 
     # 최종 이미지 저장
-    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
     final_filename = f"combined_{name_hash}_{ts}.png"
     final_path = os.path.join(out_dir, final_filename)
     
     pygame.image.save(bg_image, final_path)
-    print(f"Debug: 합성 이미지 저장 완료: {final_path}")
+    logger.info(f"Debug: 합성 이미지 저장 완료: {final_path}")
     
     return final_path
 
 def save_game_log_to_notion(player):
     """
-    게임 결과를 Notion 데이터베이스에 저장합니다.
+    게임 결과를 Notion 데이터베이스에 저장하고, 생성된 페이지의 ID를 반환합니다.
     player 객체에서 필요한 정보를 추출하여 Notion API에 전송합니다.
     """
     url = "https://api.notion.com/v1/pages"
 
-    # player 객체로부터 데이터 추출
+    # player 객체로부터 데이터 추출 (기존과 동일)
     gpa = player.calcGPA(2)
-    now = datetime.datetime.now().isoformat()
+    # [수정됨] 한국 시간(KST, GMT+9)을 명시적으로 설정합니다.
+    kst = timezone(timedelta(hours=9))
+    now = datetime.now(kst).isoformat() # datetime을 한번 더 써줌
     
-    # Notion 데이터베이스의 속성명에 맞게 데이터 구성
     data = {
         "parent": {"database_id": DATABASE_ID},
         "properties": {
-            "날짜": {
-                "date": {
-                    "start": now
-                }
-            },
-            "이름": {
-                "title": [
-                    {
-                        "text": {
-                            "content": player.name
-                        }
-                    }
-                ]
-            },
-            "최종 GPA": {
-                "number": float(gpa) if gpa and str(gpa).replace('.', '').isdigit() else 0.0
-            },
-            "최종 레벨": {
-                "number": player.level
-            },
-            "딘즈 횟수": {
-                "number": player.deans_count
-            },
-            "장짤 횟수": {
-                "number": player.jangzal_count
-            },
-            "학사경고 횟수": {
-                "number": player.warning_count
-            },
-            "최종 학기": {
-                "rich_text": [
-                    {
-                        "text": {
-                            "content": player.current_semester
-                        }
-                    }
-                ]
-            },
-            "엔딩 타입": {
-                "rich_text": [
-                    {
-                        "text": {
-                            "content": player.ending_type
-                        }
-                    }
-                ]
-            },
+            "날짜": {"date": {"start": now}},
+            "이름": {"title": [{"text": {"content": player.name}}]},
+            "인스타그램": {"rich_text": [{"text": {"content": player.instagram_id or ""}}]},
+            "최종 GPA": {"number": float(gpa) if gpa and str(gpa).replace('.', '').isdigit() else 0.0},
+            "최종 레벨": {"number": player.level},
+            "딘즈 횟수": {"number": player.deans_count},
+            "장짤 횟수": {"number": player.jangzal_count},
+            "학사경고 횟수": {"number": player.warning_count},
+            "최종 학기": {"rich_text": [{"text": {"content": player.current_semester}}]},
+            "엔딩 타입": {"rich_text": [{"text": {"content": player.ending_type}}]},
         }
     }
 
     try:
         response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status() # HTTP 오류가 발생하면 예외 발생
-        print("Debug: 저장 성공: 게임 기록이 Notion에 저장되었습니다.")
+        response.raise_for_status()
+        page_id = response.json().get("id") # 생성된 페이지의 ID 추출
+        logger.info(f"'{player.name}'의 게임 기록을 Notion에 저장했습니다.")
+        return True, page_id  # 성공 여부와 페이지 ID를 함께 반환
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Notion API 호출 실패: {e}")
+        return False, None # 실패 시 ID는 None
+
+def update_notion_page_with_results(page_id, image_url):
+    """
+    주어진 page_id를 가진 Notion 페이지에 결과 이미지와 인스타그램 태그를 업데이트합니다.
+    """
+    if not page_id or not image_url:
+        logger.error("Debug: 업데이트 실패: 페이지 ID 또는 이미지 URL이 없습니다.")
+        return False
+
+    url = f"https://api.notion.com/v1/pages/{page_id}"
+
+    properties_to_update = {
+        "properties": {
+            "결과": {
+                # [수정됨] "결과" 속성을 rich_text 타입으로 설정
+                "rich_text": [
+                    {
+                        "text": {
+                            "content": image_url
+                        }
+                    }
+                ]
+            }
+        }
+    }
+
+    try:
+        # 페이지를 업데이트할 때는 POST가 아닌 PATCH 메서드를 사용합니다.
+        response = requests.patch(url, headers=headers, json=properties_to_update)
+        response.raise_for_status()
+        logger.info("Debug: 업데이트 성공: Notion 페이지에 이미지와 태그가 추가되었습니다.")
         return True
     except requests.exceptions.RequestException as e:
-        print(f"Debug: 저장 오류: Notion API 호출 실패 - {e}")
+        logger.error(f"Debug: 업데이트 오류: Notion 페이지 업데이트 실패 - {e}")
+        # 오류 발생 시 응답 내용 출력
+        if response is not None:
+            logger.error(f"Debug: Notion Response: {response.json()}")
         return False
     
 def get_leaderboard_from_notion():
@@ -183,7 +188,7 @@ def get_leaderboard_from_notion():
     반환값 형식은 기존과 동일: list[dict]
     """
     if not all([NOTION_TOKEN, DATABASE_ID]):
-        print("Debug: [Warning!] Notion 토큰 또는 DB ID가 설정되지 않았습니다.")
+        logger.warning("Debug: [Warning!] Notion 토큰 또는 DB ID가 설정되지 않았습니다.")
         return []
 
     url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
@@ -256,7 +261,7 @@ def get_leaderboard_from_notion():
         return results_all
 
     except requests.exceptions.RequestException as e:
-        print(f"Debug: 조회 오류: Notion API 순위 조회 실패 - {e}")
+        logger.error(f"Debug: 조회 오류: Notion API 순위 조회 실패 - {e}")
         return []
 
 def update_and_save_csv(notion_records, filename="deans_list.csv", out_dir="results/deans"):
@@ -284,7 +289,7 @@ def update_and_save_csv(notion_records, filename="deans_list.csv", out_dir="resu
             new_records_to_add.append(record)
 
     if not new_records_to_add:
-        print("Debug: CSV에 추가할 새로운 기록이 없습니다.")
+        logger.info("Debug: CSV에 추가할 새로운 기록이 없습니다.")
         return True, "CSV 파일이 최신 상태입니다."
 
     write_header = not os.path.exists(filepath) or os.path.getsize(filepath) == 0
@@ -297,7 +302,7 @@ def update_and_save_csv(notion_records, filename="deans_list.csv", out_dir="resu
         
         writer.writerows(new_records_to_add)
 
-    print(f"Debug: CSV 파일이 업데이트되었습니다. 새로운 기록 {len(new_records_to_add)}개 추가.")
+    logger.info(f"Debug: CSV 파일이 업데이트되었습니다. 새로운 기록 {len(new_records_to_add)}개 추가.")
     return True, f"게임 결과가 {filename}에 저장되었습니다."
 
 def show_deans_list(player, screen, leaderboard, stats):
@@ -491,11 +496,11 @@ def save_cropped_center(screen, player_name, crop_w=1200, crop_h=800, top_margin
     else:
         # 파일명: 사용자 이름 해시 + 타임스탬프
         name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
-        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         path = os.path.join(out_dir, f"{prefix}_{name_hash}_{ts}.png")
 
     pygame.image.save(cropped, path)
-    print(f"[Saved] {path} @ {rect}")
+    logger.info(f"[Saved] {path} @ {rect}")
     return path
 
 # -----------------------------
@@ -505,7 +510,6 @@ def save_cropped_center(screen, player_name, crop_w=1200, crop_h=800, top_margin
 # -----------------------------
 import dropbox
 import os
-import datetime
 
 # upload_to_dropbox 함수를 찾아서 아래와 같이 수정합니다.
 
@@ -530,9 +534,9 @@ def upload_to_dropbox(file_path, dropbox_folder_path):
             oauth2_refresh_token=DROPBOX_REFRESH_TOKEN
         )
         dbx.users_get_current_account() # 토큰 유효성 검사
-        print("Dropbox 계정 연결 성공 (토큰 자동 갱신).")
+        logger.info("Dropbox 계정 연결 성공 (토큰 자동 갱신).")
     except dropbox.exceptions.AuthError as e:
-        print(f"오류: 인증 정보(앱 키, 시크릿, 리프레시 토큰)가 유효하지 않습니다. {e}")
+        logger.error(f"오류: 인증 정보(앱 키, 시크릿, 리프레시 토큰)가 유효하지 않습니다. {e}")
         return None
 
     # 파일 업로드 (이하 로직은 동일)
@@ -541,27 +545,23 @@ def upload_to_dropbox(file_path, dropbox_folder_path):
             file_name = os.path.basename(file_path)
             dropbox_path = os.path.join(dropbox_folder_path, file_name).replace('\\', '/')
 
-            print(f"'{file_path}' 파일을 Dropbox의 '{dropbox_path}' 경로에 업로드 중...")
+            logger.info(f"'{file_path}' 파일을 Dropbox의 '{dropbox_path}' 경로에 업로드 중...")
 
             dbx.files_upload(f.read(), dropbox_path, mode=dropbox.files.WriteMode('overwrite'))
-            print("업로드 완료!")
+            logger.info("업로드 완료!")
 
         share_link_metadata = dbx.sharing_create_shared_link_with_settings(dropbox_path)
         share_link = share_link_metadata.url
-        print(f"공유 링크 생성: {share_link}")
+        logger.info(f"공유 링크 생성: {share_link}")
 
         download_link = share_link.replace('?dl=0', '?dl=1')
-        print(f"직접 다운로드 링크: {download_link}")
+        logger.info(f"직접 다운로드 링크: {download_link}")
 
         return download_link
 
     except Exception as e:
-        print(f"파일 업로드 또는 링크 생성 중 오류 발생: {e}")
+        logger.error(f"파일 업로드 또는 링크 생성 중 오류 발생: {e}")
         return None
-
-import os
-import time
-import qrcode
 
 def make_qr(url, out_path="qr.png", target_px=300, border=4):
     # out_path가 속한 디렉토리가 없다면 생성
@@ -624,7 +624,7 @@ def export_screen_to_catbox_qr(
     pygame.display.flip()
 
     # 2) 공통 식별자(타임스탬프 + 이름 해시) — 스크린샷/QR 둘 다 동일 타임스탬프 사용
-    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     name_hash = hashlib.sha256(player_name.encode()).hexdigest()[:8]
 
     # 3) 크롭 저장 (파일명: prefix_namehash_ts.png)
@@ -648,7 +648,7 @@ def export_screen_to_catbox_qr(
     file_path=cropped_path,
     dropbox_folder_path=DROPBOX_UPLOAD_FOLDER
     )
-    print(url)
+    logger.info(url)
     # 5) QR 저장 (파일명: prefix_namehash_urlhash_ts.png, 저장 위치는 qr_out_dir)
     url_hash = hashlib.sha256(url.encode()).hexdigest()[:8]
     qr_name = f"{prefix}_{name_hash}_{url_hash}_{ts}.png"
@@ -701,15 +701,14 @@ def save_game_log_csv(filename, player):
             ])
         
         # 게임 결과 데이터 저장
-        import datetime
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         skillresult = []
         for skill, level in player.learned_skills.items():
             if level > 0:
                 skillresult.append(skill)
                 skillresult.append(str(level))
         gpa = player.calcGPA(2)
-        print(gpa)
+        logger.info(gpa)
         writer.writerow([
             now,
             player.name,
@@ -1059,10 +1058,21 @@ def show_final_result(player, screen):
 
     # 3. 결과 저장 및 다음 단계 안내
     success, message = save_game_log_csv("../results/graduation/graduation_results.csv", player)
-    success_notion = save_game_log_to_notion(player)
-    if success:
-        draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
+    success_notion, page_id = save_game_log_to_notion(player)
+    if success_notion:
+        # [수정됨] success가 True일 때, page_id 유무를 추가로 확인
+        if page_id:
+            # 1. 가장 이상적인 성공 사례
+            logger.info(f"Notion 기록 저장 성공. Page ID: {page_id}")
+            draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
+        else:
+            # 2. API는 성공했으나 ID를 받지 못한 예외 사례
+            logger.warning("Notion API는 성공을 반환했으나 Page ID를 얻지 못했습니다. 확인이 필요합니다.")
+            # 사용자에게는 성공으로 보이되, 개발자는 로그를 보고 문제를 인지할 수 있음
+            draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
     else:
+        # 3. 명백한 실패 사례
+        logger.error("Notion 기록 저장에 실패했습니다.")
         draw_text(screen, "X 저장 실패", SCREEN_WIDTH//2 - 72, SCREEN_HEIGHT - 120, RED)
     
     draw_text(screen, "아무 키나 눌러 다음으로...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, BLACK, align='center')
@@ -1119,30 +1129,40 @@ def show_final_result(player, screen):
     # 4. 두 이미지를 배경에 합성하여 최종 이미지 생성
     background_image_path = "../img/instagram_background.png"
     final_combined_path = combine_for_share(background_image_path, transcript_path, deans_list_path, player.name)
-    print(final_combined_path)
+    logger.info(f"최종 합성 이미지 경로: {final_combined_path}")
 
     # 5. 합성에 사용된 임시 이미지 파일 삭제
     try:
         if os.path.exists(transcript_path): os.remove(transcript_path)
         if os.path.exists(deans_list_path): os.remove(deans_list_path)
-        print("Debug: 임시 이미지 파일 삭제 완료.")
+        logger.debug("Debug: 임시 이미지 파일 삭제 완료.")
     except OSError as e:
-        print(f"Debug: 임시 파일 삭제 실패: {e.filename}")
+        logger.error(f"Debug: 임시 파일 삭제 실패: {e.filename}")
 
     # 6. 최종 합성 이미지를 Dropbox에 업로드하고 QR 코드 생성
     upload_url = upload_to_dropbox(
         file_path=final_combined_path, 
         dropbox_folder_path=DROPBOX_UPLOAD_FOLDER
     )
+    
+    # 6.5. 업로드 성공 시, 받아온 페이지 ID를 이용해 Notion 페이지 업데이트
+    if success_notion and page_id and upload_url:
+        update_notion_page_with_results(page_id, upload_url)
+    else:
+        if not page_id:
+            logger.error("Debug: Notion 페이지 ID가 없어 업데이트를 건너뜁니다.")
+        if not upload_url:
+            logger.error("Debug: 업로드 URL이 없어 Notion 업데이트를 건너뜁니다.")
+
 
     if upload_url:
-        print(f"업로드 완료! 공유 URL: {upload_url}")
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        logger.info(f"업로드 완료! 공유 URL: {upload_url}")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"results/qrcode/share_{timestamp}.png"
         qr_path = make_qr(upload_url, out_path=filename)
-        print(f"Debug: 최종 합성 이미지의 QR 코드 경로: {qr_path}")
+        logger.info(f"Debug: 최종 합성 이미지의 QR 코드 경로: {qr_path}")
     else:
-        print("업로드에 실패했습니다.")
+        logger.error("Debug: 업로드에 실패했습니다.")
         qr_path = None # 업로드 실패 시 QR 경로 없음
 
     # 7. QR 링크 화면 표시
@@ -1166,52 +1186,71 @@ def show_final_result(player, screen):
 
     pygame.display.flip()
     wait_for_key()
-def get_text_input(screen, prompt):
-    """pygame에서 텍스트 입력을 받는 함수"""
-    input_text = ""
-    
+def get_player_info(screen, prompts):
+    """
+    pygame에서 이름과 인스타그램 ID 입력을 함께 받는 함수.
+    """
+    inputs = [""] * len(prompts)
+    active_field = 0
+    font_size = 32
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return "플레이어"  # Or another default value
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:  # If the escape key is pressed
-                    return None  # Return None to signal going back
-                elif event.key == pygame.K_RETURN and input_text.strip():
-                    return input_text.strip()
+                return (None,) * len(prompts) # 종료 시 None 튜플 반환
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return (None,) * len(prompts)
+                elif event.key == pygame.K_RETURN:
+                    if inputs[0].strip():  # 이름은 필수 항목
+                        return tuple(i.strip() for i in inputs)
+                elif event.key in (pygame.K_UP, pygame.K_TAB):
+                    active_field = (active_field - 1) % len(prompts)
+                elif event.key == pygame.K_DOWN:
+                    active_field = (active_field + 1) % len(prompts)
                 elif event.key == pygame.K_BACKSPACE:
-                    input_text = input_text[:-1]
-                elif len(input_text) < 10 and event.unicode.isprintable():
-                    input_text += event.unicode
-        
+                    inputs[active_field] = inputs[active_field][:-1]
+                elif event.unicode.isprintable():
+                    # 필드별 글자 수 제한
+                    if active_field == 0 and len(inputs[active_field]) < 10: # 이름
+                        inputs[active_field] += event.unicode
+                    elif active_field == 1 and len(inputs[active_field]) < 30: # 인스타그램 ID
+                        inputs[active_field] += event.unicode
+
         screen.fill(BLACK)
-        
-        # 프롬프트 텍스트 출력
-        draw_text(screen, prompt, SCREEN_WIDTH//2, SCREEN_HEIGHT//2-100, WHITE, 32, align='center')
-        
-        # 입력 박스 그리기
-        box_x = SCREEN_WIDTH//2 - 160
-        box_y = SCREEN_HEIGHT//2
-        box_width = 320
+        draw_text(screen, "플레이어 정보를 입력하세요", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 200, WHITE, size=40, align='center')
+
+        box_width = 400
         box_height = 40
-        
-        pygame.draw.rect(screen, WHITE, (box_x, box_y, box_width, box_height))
-        pygame.draw.rect(screen, BLUE, (box_x, box_y, box_width, box_height), 2)
-        
-        # 입력된 텍스트 표시
-        if input_text:
-            draw_text(screen, input_text + "_", box_x + 8, box_y + 8, BLACK)
-        else:
-            draw_text(screen, "_", box_x + 8, box_y + 8, GRAY)
-        
-        # 안내 텍스트
-        if len(input_text) == 0:
-            draw_text(screen, "이름을 입력해주세요 (최대 10자)", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, GRAY, 32, align='center')
-        else:
-            draw_text(screen, "Enter로 확인, ESC로 뒤로가기", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, GRAY, 32, align='center')
-        
+        start_y = SCREEN_HEIGHT // 2 - 100
+
+        for i, prompt in enumerate(prompts):
+            is_active = (i == active_field)
+            prompt_y = start_y + i * 100
+            box_y = prompt_y + 30
+
+            # 프롬프트 텍스트
+            draw_text(screen, prompt, SCREEN_WIDTH // 2, prompt_y, WHITE, size=font_size, align='center')
+
+            # 입력 박스
+            box_x = SCREEN_WIDTH // 2 - box_width // 2
+            border_color = BLUE if is_active else WHITE
+            pygame.draw.rect(screen, WHITE, (box_x, box_y, box_width, box_height))
+            pygame.draw.rect(screen, border_color, (box_x, box_y, box_width, box_height), 2)
+
+            # 입력된 텍스트와 커서
+            text_to_show = inputs[i]
+            if is_active:
+                text_to_show += "_"
+            
+            if text_to_show:
+                draw_text(screen, text_to_show, box_x + 8, box_y + (box_height - font_size)//2 + 2, BLACK, size=font_size)
+            elif not is_active and i == 1: # 인스타그램 필드가 비활성 상태일 때
+                 draw_text(screen, "선택사항", box_x + 8, box_y + (box_height - font_size)//2 + 2, GRAY, size=font_size)
+
+        draw_text(screen, "방향키(혹은 Tab)로 이동, Enter로 확인, ESC로 뒤로가기", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100, GRAY, size=24, align='center')
         pygame.display.flip()
-        pygame.time.wait(50)
+        pygame.time.wait(30)
 
 def _remove_cleared_entry(player, monster_name):
     # 같은 과목이 중복으로 들어간 경우까지 안전하게 모두 제거
@@ -1249,9 +1288,10 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
         debug_config = DebugConfig(debug=False, damage=True, skip=False)
     
     # 이름 입력
-    newname = get_text_input(screen, "이름을 입력하세요:")
-    
-    if newname is None:
+    prompts = ["이름 (최대 10자)", "인스타그램 ID (선택사항)"]
+    newname, instagram_id = get_player_info(screen, prompts)
+    player.instagram_id = instagram_id if instagram_id else None
+    if newname is None: # ESC를 누르거나 창을 닫으면 newname이 None이 됨
         return
 
     # 디버그 설정을 플레이어에 연결
@@ -1282,7 +1322,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
 
         # 각 과목과 전투
         for i, monster_name in enumerate(player.thisSemesterMonsters):
-            print(f"Debug: {monster_name}와 전투 시작")
+            logger.debug(f"Debug: {monster_name}와 전투 시작")
 
             # 몰캠 레벨
             mol_lev = player.molcam if player.molcam != None else 0
@@ -1355,15 +1395,15 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
         semester_result_screen(player, screen)
         
          # 다음 학기로 진행 (수정된 로직)
-        print(f"Debug: 현재 진행도 {player.semester_progress}/{len(player.semester_order)}")
+        logger.info(f"Debug: 현재 진행도 {player.semester_progress}/{len(player.semester_order)}")
         
         # 남은 몬스터 수가 0인 경우
         if len(player.clearedMonsters) >= 14:
             if player.current_semester in ["4-1", "4-여름방학", "4-2"]:
-                print("Debug: 모든 학점 취득 완료. 정상 졸업.")
+                logger.info("Debug: 모든 학점 취득 완료. 정상 졸업.")
                 break # 게임 루프 종료
             else:
-                print("Debug: 모든 학점 취득 완료. 조기 졸업!")
+                logger.info("Debug: 모든 학점 취득 완료. 조기 졸업!")
                 player.ending_type = "조기"
                 break # 게임 루프 종료
         
@@ -1371,7 +1411,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
         if not player.advance_semester():
             # 모든 학기(4-2) 완료 후에도 몬스터가 남았을 때
             if len(player.canBeMetMonsters) > 0:
-                print("Debug: 연차초과! 추가 학기 시작.")
+                logger.info("Debug: 연차초과! 추가 학기 시작.")
                 player.ending_type = "연차초과"
                 # 추가 학기 로직을 여기에 구현
                 # 예: 5-1, 5-2, 6-1, 6-2 학기를 직접 추가
@@ -1379,12 +1419,12 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                 player.current_semester = player.semester_order[-4] # 5-1 학기로 설정
                 continue
             else:
-                print("Debug: 모든 학기 완료!")
+                logger.info("Debug: 모든 학기 완료!")
                 break
         
         # 6-2 학기까지 왔는데도 몬스터가 남았을 경우 제적
         if player.current_semester == "졸업" and len(player.canBeMetMonsters) > 0:
-            print("Debug: 모든 추가 학기 실패. 제적!")
+            logger.info("Debug: 모든 추가 학기 실패. 제적!")
             player.warning_count = 3 # 제적 조건 충족
             break # 게임 루프 종료
     
@@ -1409,7 +1449,7 @@ def show_skill_change(screen, player):
 
 
     for _, skill in enumerate(player.get_available_skills()):
-        print(f"Debug: available skills: {skill['name']}")
+        logger.info(f"Debug: available skills: {skill['name']}")
 
     pygame.display.flip()
     display_status(screen)
