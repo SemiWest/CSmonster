@@ -28,28 +28,44 @@ INTELLIGENCE_LEVEL = 80
 
 # 기존 좌표 및 이미지 로드는 그대로 유지
 sX, sY = 32, 32
-stX = sX+20
-stY = sY+568
+stX = sX+42
+stY = sY+575
 esX, esY = sX+20, sY+36
-psX, psY = sX+582, sY+347
+psX, psY = sX+582, sY+346
+HPLEN = 64
 
 # 기존 이미지들 그대로 유지
 BACKGROUND = pygame.image.load("../img/background.png")
 STAT = pygame.image.load("../img/stat.png")
 TEXT = pygame.image.load("../img/text.png")
-CST = pygame.image.load("../img/CST.png")
-DTS = pygame.image.load("../img/DTS.png")
+
+CT = pygame.image.load("../img/CT.png")
+DS = pygame.image.load("../img/DS.png")
 AI = pygame.image.load("../img/AI.png")
 PS = pygame.image.load("../img/PS.png")
 SYS = pygame.image.load("../img/SYS.png")
 EVENT = pygame.image.load("../img/EVENT.png")
 STAR = pygame.image.load("../img/STAR.png")
+
 ME = pygame.image.load("../img/monsters/ME.png")
-ME = pygame.transform.scale_by(ME, 10)
 ATK = pygame.image.load("../img/ATK.png")
 SPATK = pygame.image.load("../img/SP.ATK.png")
 ETC = pygame.image.load("../img/ETC.png")
 SPEC_TEXT = pygame.image.load("../img/special_txt.png")
+SKILL = pygame.image.load("../img/skill.png")
+
+BACKGROUND = pygame.transform.scale_by(BACKGROUND, 11)
+TEXT = pygame.transform.scale_by(TEXT, 5)
+SKILL = pygame.transform.scale_by(SKILL, 4)
+ME = pygame.transform.scale_by(ME, 10)
+CT = pygame.transform.scale_by(CT, 4)
+DS = pygame.transform.scale_by(DS, 4)
+AI = pygame.transform.scale_by(AI, 4)
+PS = pygame.transform.scale_by(PS, 4)
+SYS = pygame.transform.scale_by(SYS, 4)
+EVENT = pygame.transform.scale_by(EVENT, 4)
+STAR = pygame.transform.scale_by(STAR, 4)
+
 BUFF = []
 path = "../img/animations/buff"
 for i in range(len(os.listdir(path))):
@@ -293,9 +309,9 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
 def display_type(screen, y, x, type):
     """타입 표시 (pygame)"""
     if type == "CT":
-        screen.blit(CST, (x, y))
+        screen.blit(CT, (x, y))
     elif type == "DS":
-        screen.blit(DTS, (x, y))
+        screen.blit(DS, (x, y))
     elif type == "SYS":
         screen.blit(SYS, (x, y))
     elif type == "PS":
@@ -307,35 +323,25 @@ def display_type(screen, y, x, type):
     elif type == "EVENT":
         screen.blit(EVENT, (x, y))
 
+def get_ratio(hp, max_hp):
+    if hp <= 0:
+        return 0
+    ratio = int(hp * HPLEN / max_hp)
+    return max(1, ratio) if hp > 0 else 0
+
 def hpcolor(ratio):
     """체력 상태에 따른 색상 선택"""
-    if ratio >= 14:
+    if ratio >= 42:
         color_pair = GREEN
-    elif ratio >= 7:
+    elif ratio >= 21:
         color_pair = YELLOW
-    else:
+    elif ratio >= 1:
         color_pair = RED
+    else: color_pair = BLACK
     return color_pair
 
 def animate_health_bar(screen, y, x, current_hp, target_hp, max_hp):
     """체력바를 부드럽게 애니메이션으로 업데이트 (pygame)"""
-    # current_ratio = int(current_hp * 31 / max_hp)
-    # target_ratio = int(target_hp * 31 / max_hp)
-    # steps = abs(current_ratio-target_ratio)
-
-    # def draw_HP(surface, text, x, y, color, highlight=BLACK):
-    #     fontforHP = pygame.font.Font("../neodgm.ttf", 20)
-    #     font_obj = fontforHP
-    #     text_surface = font_obj.render(text, True, color, highlight)
-    #     surface.blit(text_surface, (x, y))
-    #     return text_surface.get_rect(topleft=(x, y))
-
-    def get_ratio(hp, max_hp):
-        if hp <= 0:
-            return 0
-        ratio = int(hp * 62 / max_hp)
-        return max(1, ratio) if hp > 0 else 0
-
     current_ratio = get_ratio(current_hp, max_hp)
     target_ratio = get_ratio(target_hp, max_hp)
     steps = abs(current_ratio - target_ratio)
@@ -348,13 +354,15 @@ def animate_health_bar(screen, y, x, current_hp, target_hp, max_hp):
         return text_surface.get_rect(topleft=(x, y))
 
     if steps == 0:
-        draw_HP(screen, f"{'█' * current_ratio}{' ' * (62 - current_ratio)}", x, y+9, hpcolor(current_ratio))
-        draw_HP(screen, f"{'█' * current_ratio}{' ' * (62 - current_ratio)}", x, y+0, hpcolor(current_ratio))
+        draw_HP(screen, f"{'█' * current_ratio}{' ' * (HPLEN - current_ratio)}", x, y+10, hpcolor(current_ratio))
+        draw_HP(screen, f"{'█' * current_ratio}{' ' * (HPLEN - current_ratio)}", x, y+5, hpcolor(current_ratio))
+        draw_HP(screen, f"{'█' * current_ratio}{' ' * (HPLEN - current_ratio)}", x, y+0, hpcolor(current_ratio))
         return
     for step in range(steps + 1):
         interpolated_ratio = current_ratio + int((target_ratio - current_ratio) * step / steps)
-        draw_HP(screen, f"{'█' * interpolated_ratio}{' ' * (62 - interpolated_ratio)}", x, y+9, hpcolor(interpolated_ratio))
-        draw_HP(screen, f"{'█' * interpolated_ratio}{' ' * (62 - interpolated_ratio)}", x, y+0, hpcolor(interpolated_ratio))
+        draw_HP(screen, f"{'█' * interpolated_ratio}{' ' * (HPLEN - interpolated_ratio)}", x, y+10, hpcolor(interpolated_ratio))
+        draw_HP(screen, f"{'█' * interpolated_ratio}{' ' * (HPLEN - interpolated_ratio)}", x, y+5, hpcolor(interpolated_ratio))
+        draw_HP(screen, f"{'█' * interpolated_ratio}{' ' * (HPLEN - interpolated_ratio)}", x, y+0, hpcolor(interpolated_ratio))
         pygame.display.flip()
         time.sleep(0.666/steps)
 
@@ -363,7 +371,7 @@ def buffAnimation(is_increase, targettype="player"):
     if targettype=="player":
         x, y = sX+320, sY+536
     else:
-        x, y = esX+860, esY+310
+        x, y = esX+900, esY+305
     screen = pygame.display.get_surface()
     if is_increase:
         RankUp()
@@ -528,18 +536,11 @@ def useskillAnimation(skill, old_hp=None, new_hp=None, attacker_type=None): # �
     if skill["animation"]!="none":
         x, y = sX, sY
         screen = pygame.display.get_surface()
-        frames = []
-        anim_path = f"../img/animations/{skill['animation']}"
-        num_frames = len([f for f in os.listdir(anim_path) if f.endswith(".png")])
-
-        for i in range(num_frames):
-            filepath = os.path.join(anim_path, f"{i}.png")
-            if os.path.exists(filepath):
-                img = pygame.image.load(filepath).convert_alpha() # ◀ 수정된 코드
-                frames.append(img)
-            else:
-                raise FileNotFoundError(f"필요한 프레임 {filepath} 이(가) 없습니다.")
-
+        frames = [] 
+        for i in range(len(os.listdir(f"../img/animations/{skill['animation']}"))):
+            img = pygame.image.load(f"../img/animations/{skill['animation']}/{i}.png")
+            img = pygame.transform.scale_by(img, 11/3)
+            frames.append(img)
         if hasattr(enemyCSmon, 'image'):
             enemyimage = pygame.image.load(enemyCSmon.image)
             enemyimage = pygame.transform.scale_by(enemyimage, 10)
@@ -550,75 +551,13 @@ def useskillAnimation(skill, old_hp=None, new_hp=None, attacker_type=None): # �
         anim_duration = 500  # 체력바 애니메이션 지속 시간 (ms)
 
         for i in range(len(frames)):
-            # 전체 화면 상태를 다시 그립니다.
-            screen.blit(BACKGROUND, (sX, sY))
+            display_status(screen, forskill1=True)
 
-            # 몬스터와 플레이어 스프라이트 그리기
-            if hasattr(enemyCSmon, 'image'):
-                screen.blit(enemyimage, (esX + 860 - enemyimage.get_width() // 2, esY + 310 - enemyimage.get_height()))
-            screen.blit(ME, (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height()))
-
-            # 스킬 애니메이션 프레임 그리기
-            image = frames[i]
-            screen.blit(image, (x, y))
-
-            # --- UI와 텍스트 그리기는 기존 코드와 동일하게 유지 ---
-            screen.blit(STAT, (esX, esY))
-            draw_text(screen, f"{enemyCSmon.name}", esX+64, esY+52, WHITE)
-            draw_text(screen, f"lv.{getattr(enemyCSmon, 'level', 1)}", esX+384, esY+52, WHITE)
-            enemy_types = getattr(enemyCSmon, 'type', ['전산이론'])
-            if isinstance(enemy_types, str):
-                enemy_types = [enemy_types]
-            for idx, enemy_type in enumerate(enemy_types[:2]):
-                display_type(screen, esY, esX+470+idx*124, enemy_type)
+            screen.blit(frames[i], (x, y))
             
-            dbg = getattr(player, "debug_config", None)
-            show_debug_overlay = player.cheatmode or (dbg and dbg.debug)
-            
-            if show_debug_overlay:
-                draw_text(screen, f"{getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))}/{getattr(enemyCSmon, 'HP', 100)}", esX+445, esY+100, WHITE, highlight=VIOLET)
-                draw_text(screen, f"ATK {getattr(enemyCSmon, 'CATK', 10)}/{getattr(enemyCSmon, 'ATK', 10)}", esX+610, esY+16, WHITE, highlight=RED)
-                draw_text(screen, f"DEF {getattr(enemyCSmon, 'CDEF', 10)}/{getattr(enemyCSmon, 'DEF', 10)}", esX+610, esY+56, WHITE, highlight=RED)
-                draw_text(screen, f"SPD {getattr(enemyCSmon, 'CSPD', 10)}/{getattr(enemyCSmon, 'SPD', 10)}", esX+610, esY+96, WHITE, highlight=RED)
-                if dbg and dbg.debug:
-                    draw_text(screen, "DEBUG", 50, 50, YELLOW, size=24)
-            
-            screen.blit(STAT, (psX, psY))
-            draw_text(screen, f"{player.name}", psX+64, psY+52, WHITE)
-            draw_text(screen, f"lv.{player.level}", psX+384, psY+52, WHITE)
-            display_type(screen, psY, psX+470, player.type[0])
-            # ---------------------------------------------------------
-
-            # 체력바 애니메이션 로직
-            elapsed_time = pygame.time.get_ticks() - anim_start_time
-
-            animated_hp = None
-            if old_hp is not None and new_hp is not None:
-                if elapsed_time < anim_duration:
-                    progress = min(1, elapsed_time / anim_duration)
-                    animated_hp = old_hp - (old_hp - new_hp) * progress
-                else:
-                    animated_hp = new_hp
-
-            # ◀◀ 여기 if 조건문에서 attacker_type 변수를 사용합니다.
-            if (skill["effect_type"] in ["Pdamage", "Sdamage", "halve_hp"] and attacker_type == "monster") or \
-               (skill["effect_type"] == "heal" and attacker_type == "player"):
-                draw_health_bar(screen, psY + 104, psX + 135, animated_hp if animated_hp is not None else player.nowhp, player.HP)
-                draw_health_bar(screen, esY + 104, esX + 135, enemyCSmon.nowhp, enemyCSmon.HP)
-            elif (skill["effect_type"] in ["Pdamage", "Sdamage", "halve_hp"] and attacker_type == "player") or \
-                 (skill["effect_type"] == "heal" and attacker_type == "monster"):
-                draw_health_bar(screen, psY + 104, psX + 135, player.nowhp, player.HP)
-                draw_health_bar(screen, esY + 104, esX + 135, animated_hp if animated_hp is not None else enemyCSmon.nowhp, enemyCSmon.HP)
-            else:
-                draw_health_bar(screen, psY + 104, psX + 135, player.nowhp, player.HP)
-                draw_health_bar(screen, esY + 104, esX + 135, enemyCSmon.nowhp, enemyCSmon.HP)
-
-            display_player_details(screen, player, sX+1264)
-            screen.blit(TEXT, (sX+8, sY+536))
-            draw_text(screen, "Enter를 눌러 확인", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, LIGHTGRAY, align='center')
-
+            display_status(screen, forskill=True)
             pygame.display.flip()
-
+            time.sleep(0.02)
         display_status(screen, detail=True)
         pygame.display.flip()
         time.sleep(0.3)
@@ -670,33 +609,18 @@ def flash_red(target_character, screen):
     display_status(screen, detail=True)
     pygame.display.flip()
             
-def display_status(screen, detail=True):
+def display_status(screen, detail=True, forskill = False, forskill1 = False):
     """상태 화면 표시 - 플레이어 직접 전투용으로 수정"""
-    screen.fill((113,113,113))
-    screen.blit(BACKGROUND, (sX, sY))
+    if not forskill:
+        screen.fill((113,113,113))
+        screen.blit(BACKGROUND, (sX, sY))
 
-    # 배틀 정보 출력
-    draw_text(screen, f"플레이어: {player.name}", sX, sY+820, VIOLET)
-    draw_text(screen, f"현재 학기: {player.current_semester}", sX, sY+860, BLUE)
-    draw_text(screen, f"턴 {hap_num}", sX, sY+900, CYAN)
-    gpa = gpaCalculator(enemyCSmon, hap_num, item_num)[1]
-    draw_text(screen, f"현재 성적: ", sX, sY+940, GREEN)
-    draw_text(screen, f"{gpa}", sX+200, sY+940, gpaColor(gpa))
-    
-    # 적 스프라이트
-    if hasattr(enemyCSmon, 'is_defeated') and enemyCSmon.is_defeated:
-        # 쓰러졌다면 어두운 실루엣을 그림
-        if hasattr(enemyCSmon, 'image'):
-            enemy_img = pygame.image.load(enemyCSmon.image).convert_alpha()
-            silhouette = pygame.transform.scale_by(enemy_img, 10)
-            dark_fill = (30, 30, 30)
-            silhouette.fill(dark_fill, special_flags=pygame.BLEND_RGB_MULT)
-            screen.blit(silhouette, (esX+860-silhouette.get_width()//2, esY+310-silhouette.get_height()))
-    elif hasattr(enemyCSmon, 'image'):
-        # 살아있다면 원래 이미지를 그림
-        image = pygame.image.load(enemyCSmon.image).convert_alpha()
+        # 적 스프라이트
+        image = pygame.image.load(enemyCSmon.image)
         image = pygame.transform.scale_by(image, 10)
-        screen.blit(image, (esX+860-image.get_width()//2, esY+310-image.get_height()))
+        screen.blit(image, (esX+900-image.get_width()//2, esY+305-image.get_height()))
+    
+    if forskill1: return
 
     # 수정된 부분: 내 스프라이트 그리기
     if hasattr(player, 'is_defeated') and player.is_defeated:
@@ -711,54 +635,54 @@ def display_status(screen, detail=True):
     
     # 적 상태
     screen.blit(STAT, (esX, esY))
-    draw_text(screen, f"{enemyCSmon.name}", esX+64, esY+52, WHITE)
-    draw_text(screen, f"lv.{getattr(enemyCSmon, 'level', 1)}", esX+384, esY+52, WHITE)
-    enemy_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
-    enemy_max_hp = getattr(enemyCSmon, 'HP', 100)
-    draw_health_bar(screen, esY+104, esX+135, enemy_hp, enemy_max_hp)
+    draw_text(screen, f"{enemyCSmon.name}", esX+64, esY+70, WHITE)
+    draw_text(screen, f"lv {enemyCSmon.level}", esX+384, esY+70, WHITE)
+    animate_health_bar(screen, esY+121, esX+122, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
 
     # 적 타입 표시
-    enemy_types = getattr(enemyCSmon, 'type', ['전산이론'])
-    if isinstance(enemy_types, str):
-        enemy_types = [enemy_types]
-    for i, enemy_type in enumerate(enemy_types[:2]):  # 최대 2개만 표시
-        display_type(screen, esY, esX+470+i*124, enemy_type)
+    display_type(screen, esY, esX+470, enemy.type[0])
     
-    # 디버그/치트모드 시 상대 능력치 표시
-    dbg = getattr(player, "debug_config", None)
-    show_debug_overlay = player.cheatmode or (dbg and dbg.debug)
-    
-    if show_debug_overlay:
-        # 상대 능력치 표시 (치트/디버그모드)
-        draw_text(screen, f"{getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))}/{getattr(enemyCSmon, 'HP', 100)}", esX+445, esY+100, WHITE, highlight=VIOLET)
-        draw_text(screen, f"ATK {getattr(enemyCSmon, 'CATK', 10)}/{getattr(enemyCSmon, 'ATK', 10)}", esX+610, esY+16, WHITE, highlight=RED)
-        draw_text(screen, f"DEF {getattr(enemyCSmon, 'CDEF', 10)}/{getattr(enemyCSmon, 'DEF', 10)}", esX+610, esY+56, WHITE, highlight=RED)
-        draw_text(screen, f"SPD {getattr(enemyCSmon, 'CSPD', 10)}/{getattr(enemyCSmon, 'SPD', 10)}", esX+610, esY+96, WHITE, highlight=RED)
+    if not forskill:    
+        # 디버그/치트모드 시 상대 능력치 표시
+        dbg = getattr(player, "debug_config", None)
+        show_debug_overlay = player.cheatmode or (dbg and dbg.debug)
         
-        # 디버그 워터마크 표시
-        if dbg and dbg.debug:
-            draw_text(screen, "DEBUG", 50, 50, YELLOW, size=24)
+        if show_debug_overlay:
+            # 상대 능력치 표시 (치트/디버그모드)
+            draw_text(screen, f"{getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))}/{getattr(enemyCSmon, 'HP', 100)}", esX+445, esY+100, WHITE, highlight=VIOLET)
+            draw_text(screen, f"ATK {getattr(enemyCSmon, 'CATK', 10)}/{getattr(enemyCSmon, 'ATK', 10)}", esX+610, esY+16, WHITE, highlight=RED)
+            draw_text(screen, f"DEF {getattr(enemyCSmon, 'CDEF', 10)}/{getattr(enemyCSmon, 'DEF', 10)}", esX+610, esY+56, WHITE, highlight=RED)
+            draw_text(screen, f"SPD {getattr(enemyCSmon, 'CSPD', 10)}/{getattr(enemyCSmon, 'SPD', 10)}", esX+610, esY+96, WHITE, highlight=RED)
+            
+            # 디버그 워터마크 표시
+            if dbg and dbg.debug:
+                draw_text(screen, "DEBUG", 50, 50, YELLOW, size=24)
         
     # 플레이어 상태 (하단) - 직접 전투
     screen.blit(STAT, (psX, psY))
     
-    draw_text(screen, f"{player.name}", psX+64, psY+52, WHITE)
-    draw_text(screen, f"lv.{player.level}", psX+384, psY+52, WHITE)
+    draw_text(screen, f"{player.name}", psX+64, psY+70, WHITE)
+    draw_text(screen, f"lv {player.level}", psX+384, psY+70, WHITE)
 
     # 플레이어 타입 표시
     display_type(screen, psY, psX+470, player.type[0])
     
     # 플레이어 체력바
-    player_hp = getattr(player, 'nowhp', getattr(player, 'HP', 100))
-    player_max_hp = getattr(player, 'HP', 100)
-    draw_health_bar(screen, psY+104, psX+135, player_hp, player_max_hp)
+    animate_health_bar(screen, psY+121, psX+122, player.nowhp, player.nowhp, player.HP)
 
     if detail:
         display_player_details(screen, player, sX+1264)
 
-    screen.blit(TEXT, (sX+8, sY+536))
-
-    draw_text(screen, "Enter를 눌러 확인", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, LIGHTGRAY, align='center')
+    screen.blit(TEXT, (sX+11, sY+535))
+    
+    # 배틀 정보 출력
+    draw_text(screen, f"플레이어: {player.name}", sX, sY+820, VIOLET)
+    draw_text(screen, f"현재 학기: {player.current_semester}", sX, sY+860, BLUE)
+    draw_text(screen, f"턴 {hap_num}", sX, sY+900, CYAN)
+    gpa = gpaCalculator(enemyCSmon, hap_num, item_num)[1]
+    draw_text(screen, f"현재 성적: ", sX, sY+940, GREEN)
+    draw_text(screen, f"{gpa}", sX+200, sY+940, gpaColor(gpa))
+    draw_text(screen, "Enter를 눌러 확인, Backspace를 눌러 취소", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, LIGHTGRAY, align='center')
 
 def display_player_details(screen, player, x):
     """플레이어 상세 정보 출력"""
@@ -834,7 +758,7 @@ def select_action(screen):
         
         for i, option in enumerate(options):
             x_pos = stX + (300 * (i % 2))
-            y_pos = stY + int(i / 2) * 56
+            y_pos = stY + int(i / 2) * 64
             
             # PNR 버튼은 파란색으로 표시
             color = BLUE if option == "PNR 사용" else WHITE
@@ -845,7 +769,7 @@ def select_action(screen):
         
         pygame.display.flip()
         
-        key = wait_for_key()
+        key = wait_for_key(Noescape=True)
         if key == 'enter':
             return current_index
         elif key == 'tab':
@@ -897,7 +821,7 @@ def select_player_skill(screen):
         # 스킬 목록 표시
         for i, skill in enumerate(available_skills):
             x_pos = stX + (300 * (i % 2))
-            y_pos = stY + int(i / 2) * 61 - 5
+            y_pos = stY + int(i / 2) * 69 - 5
             effectiveness = comp(skill["type"], enemyCSmon.type[0])
             
             # 스킬 표시
@@ -920,21 +844,25 @@ def select_player_skill(screen):
             if i == current_index:
                 # 선택된 스킬 상세정보 표시
                 # 선택된 스킬의 상세정보 표시
-                infoY = sY+536
-                display_type(screen, infoY, sX+600, skill['type'])
-                draw_text(screen, "타입", sX+760, infoY+20, WHITE)
-                draw_text(screen, f"{type_dict[skill['type']]}", sX+1212, infoY+20, typecolor_dict[skill['type']], align='right')
+                infoX = sX+621
+                infoY = sY+535
+                infoText = infoX + 200
                 
-                draw_text(screen, "위력", sX+760, infoY+60, WHITE)
-                draw_text(screen,f"{skill['skW']}", sX+1212, infoY+60, WHITE, align='right')
+                display_type(screen, infoY, infoX, skill['type'])
+                screen.blit(SKILL, (infoX+160, infoY))
+                draw_text(screen, "타입", infoText, infoY+20, WHITE)
+                draw_text(screen, f"{type_dict[skill['type']]}", infoText+344, infoY+24, typecolor_dict[skill['type']], align='right')
+                
+                draw_text(screen, "위력", infoText, infoY+60, WHITE)
+                draw_text(screen,f"{skill['skW']}", infoText+344, infoY+64, WHITE, align='right')
                 draw_wrapped_text(
                     screen,
                     skill['description'],
-                    sX+760,
-                    infoY + 100,
+                    infoText,
+                    infoY + 104,
                     WHITE,
                     font_size=16,
-                    max_width= 452 # 원하는 최대 너비 지정
+                    max_width= 344 # 원하는 최대 너비 지정
                 )
         if i < 3:
             for j in range(i+1, 4):
@@ -1182,7 +1110,9 @@ def player_skill_phase(screen, selected_skill, enemy_skill):
 
     # 스킬 효과 적용
     display_status(screen, True)
-    stop, damage, Mul = use_skill("player", player, enemyCSmon, selected_skill, enemy_skill, screen)
+    stop, damage, Mul = use_skill("player", player, enemyCSmon, selected_skill, enemy_skill)
+    animate_health_bar(screen, esY+121, esX+122,enemyCurrentHP, enemyCSmon.nowhp, enemyCSmon.HP)
+    animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
     skill_message(screen, "player", player, enemyCSmon, selected_skill, enemy_skill, damage, Mul)
 
     return stop
@@ -1199,7 +1129,9 @@ def enemy_attack_phase(screen, selected_skill, enemy_skill):
 
     # 스킬 효과 적용
     display_status(screen, True)
-    stop, damage, Mul = use_skill("monster", player, enemyCSmon, selected_skill, enemy_skill, screen)
+    stop, damage, Mul = use_skill("monster", player, enemyCSmon, selected_skill, enemy_skill)
+    animate_health_bar(screen, esY+121, esX+122,enemyCurrentHP, enemyCSmon.nowhp, enemyCSmon.HP)
+    animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
     skill_message(screen, "monster", player, enemyCSmon, selected_skill, enemy_skill, damage, Mul)
 
     return stop
@@ -1227,7 +1159,7 @@ def select_item(screen, temp=None):
         
         for i, item in enumerate(sorted_items):
             x_pos = stX + (200 * (i % 3))
-            y_pos = stY + int(i / 3) * 61
+            y_pos = stY + int(i / 3) * 64
 
             color = coloring[i] if coloring[i] else WHITE
             
@@ -1304,7 +1236,7 @@ def item_phase(screen):
     if selected_item.special:
         if selected_item.name == "GPT":
             enemyCSmon.nowhp = 1
-            animate_health_bar(screen, esY+104, esX+135, enemyCurrentHP, 1, getattr(enemyCSmon, 'HP', 100))
+            animate_health_bar(screen, esY+121, esX+122, enemyCurrentHP, 1, getattr(enemyCSmon, 'HP', 100))
             display_status(screen)
             Effective()
             draw_text(screen, f"  {enemyCSmon.name}의 체력이 1이 되었다!", stX, stY, WHITE)
@@ -1332,7 +1264,7 @@ def item_phase(screen):
             
         healed = player.heal(heal_amount_req, allow_revive=getattr(selected_item, "canuse_on_fainted", False))
         Heal()
-        animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player.nowhp, player.HP)
+        animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
         display_status(screen)
         draw_text(screen, f"  {player.name}의 체력이 {healed} 회복되었다!", stX, stY, WHITE)
 
@@ -1348,7 +1280,7 @@ def item_phase(screen):
             enemyCSmon.take_damage(damage_amount)
         enemy_hp_after = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
         NormalDamage()
-        animate_health_bar(screen, esY+104, esX+135, enemyCurrentHP, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
+        animate_health_bar(screen, esY+121, esX+122, enemyCurrentHP, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
 
         display_status(screen)
         draw_text(screen, f"  {enemyCSmon.name}에게 {damage_amount}의 데미지를 입혔다!", stX, stY, WHITE)
@@ -1504,7 +1436,7 @@ def option_accept_challenge(screen, options, y_offset = 30):
 
         for i, option in enumerate(options):
             x_pos = stX + (300 * (i % 2))
-            y_pos = stY + int(i / 2) * 56
+            y_pos = stY + int(i / 2) * 64
 
             prefix = "> " if i == current_index else "  "
             draw_text(screen, f"{prefix}{option}", x_pos, y_pos, WHITE)
@@ -1681,12 +1613,12 @@ def battle(getplayer, getenemy, screen=None):
 
         if player.current_semester == "새터":
             display_status(screen, detail=True)
-            draw_text(screen, f"  * 스킬을 사용해 적을 쓰러뜨리자!", stX, stY, WHITE)
+            draw_text(screen, f"* 스킬을 사용해 적을 쓰러뜨리자!", stX, stY, WHITE)
             pygame.display.flip()
             wait_for_key()
         if player.current_semester ==  "1-1":
             display_status(screen, detail=True)
-            draw_text(screen, f"  스킬과 아이템을 적절히 활용해 휼륭한 성적으로 졸업해보자!", stX, stY, WHITE)
+            draw_text(screen, f"* 스킬과 아이템을 적절히 활용해 휼륭한 성적으로 졸업해보자!", stX, stY, WHITE)
             pygame.display.flip()
             wait_for_key()
 
@@ -1741,6 +1673,8 @@ def battle(getplayer, getenemy, screen=None):
                 
             else:
                 # 플레이어 턴
+                if hpcolor(get_ratio(player.nowhp, player.HP)) == RED:
+                    HP_low()
                 action = select_action(screen)
                 
                 if action == -999:  # 디버그 스킵
@@ -1849,7 +1783,7 @@ def battle(getplayer, getenemy, screen=None):
         player.heal(heal_amount)
         display_status(screen)
         Heal()
-        animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player.nowhp, player.HP)
+        animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
         draw_text(screen, f"  {player.name}의 체력이 회복되었다!", stX, stY, GREEN)
         pygame.display.flip()
         wait_for_key()
@@ -1934,7 +1868,7 @@ def battle(getplayer, getenemy, screen=None):
         player.heal(heal_amount)
         display_status(screen)
         Heal()
-        animate_health_bar(screen, psY+104, psX+135, playerCurrentHP, player.nowhp, player.HP)
+        animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
         draw_text(screen, f"  {player.name}의 체력이 회복되었다!", stX, stY, GREEN)
         pygame.display.flip()
         wait_for_key()

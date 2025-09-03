@@ -874,6 +874,7 @@ def semester_result_screen(player, screen):
             gpa_data = player.thisSemesterGpas[i]
 
             draw_text(screen,   f"{monster_name}",                      SCREEN_WIDTH//2-200, y_offset + i*40, BLACK)
+            display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 -200 + len(monster_name)*32+32, y_offset + i*40 + 16, size=2)
             draw_text(screen,   f"{gpa_data[1]}",                       SCREEN_WIDTH//2+200, y_offset + i*40, gpaColor(gpa_data[1]), align='right')
                 
         pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-200, y_offset + len(player.thisSemesterMonsters)*40 + 20), (SCREEN_WIDTH//2+200, y_offset + len(player.thisSemesterMonsters)*40 + 20), 2)
@@ -1029,6 +1030,7 @@ def show_final_result(player, screen):
             draw_text(screen, f"{current}", SCREEN_WIDTH//2 - 450 - 20, y_offset, BLACK, align='center')
 
         draw_text(screen,   f"{player.clearedMonsters[i]}", SCREEN_WIDTH//2-450 + 40+(470*(oneSemMonsters%2)), y_offset, BLACK)
+        display_Monster_Imge(screen, monsters[player.clearedMonsters[i]], SCREEN_WIDTH//2 -450 + 40+(470*(oneSemMonsters%2)) + len(player.clearedMonsters[i]) * 32 + 32, y_offset+16, size=2)
         draw_text(screen,   f"{player.gpas[i][1]}",         SCREEN_WIDTH//2-50 + 40 +(470*(oneSemMonsters%2)), y_offset, gpaColor(player.gpas[i][1]), align='right')
         oneSemMonsters += 1
 
