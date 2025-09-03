@@ -1,12 +1,9 @@
 import pygame
-import curses
 import sys
 import os
 import time
 import threading
 import unicodedata
-
-import pygame
 
 # 전역 변수
 musicOnOff = True
@@ -17,6 +14,39 @@ music_channel = None  # 음악 채널
 effect_channel = None  # 효과음 채널
 music_thread_running = False  # 음악 스레드 상태
 
+# 색상 정의
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+CYAN = (0, 255, 255)
+GRAY = (128, 128, 128)
+LIGHTGRAY = (178, 178, 178)
+ORANGE = (255, 165, 0)
+LIGHTBLUE = (173, 216, 230)
+VIOLET = (238, 130, 238)
+PURPLE = (128, 0, 128)
+MYMINT = (33, 221, 159)
+EWERED = (150, 40, 35)
+SOCBLUE = (54, 176, 230)
+WONJUN = (230, 214, 41)
+JIMIN = (235, 131, 21)
+YUNJEONG = (146, 68, 230)
+MINBEOM = (86, 173, 41)
+SEUNGMIN = (209, 12, 12)
+MINHO = (0, 5, 153)
+TAK = (204, 86, 204)
+KMC = (156, 186, 186)
+AIC = (189, 215, 238)
+SYSC = (57, 36, 214)
+PSC = (152, 235, 96)
+DSC = (252, 98, 4)
+CTC = (165, 165, 165)
+EVENTC = (255, 255, 15)
+STARC = (100, 100, 100)
+
 def change_options(BGM, BGMV, ES, ESV, eChannel, mChannel):
     """효과음 옵션 변경"""
     global musicOnOff, musicVolume, effectsound, ESVolume, effect_channel, music_channel
@@ -26,6 +56,11 @@ def change_options(BGM, BGMV, ES, ESV, eChannel, mChannel):
     ESVolume = ESV
     effect_channel = eChannel
     music_channel = mChannel
+
+def mute_music(num=0):
+    pygame.mixer.music.set_volume(musicVolume * num / 100)
+def unmute_music():
+    pygame.mixer.music.set_volume(musicVolume / 100)
 
 def play_alternating_music(file_list):
     """두 개 이상의 배경음악을 끊김 없이 번갈아가며 재생"""
@@ -100,11 +135,33 @@ def play_effect(file_path, esp_volume = 100):
         sound.set_volume(ESVolume / esp_volume)  # 볼륨 설정
         effect_channel.play(sound)  # 효과음 재생
 
-def get_ch_with_sound(stdscr):
-    stdscr.refresh()
-    curses.flushinp()
-    stdscr.getch()
-    play_effect("../sound/Conv_end.mp3")
+def wait_for_key(sound = True):
+    """키 입력 대기 (pygame)"""
+    pygame.event.clear()
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return None
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER or event.key == pygame.K_SPACE:
+                    if sound:
+                        option_select_sound()
+                    return 'enter'
+                elif event.key == pygame.K_ESCAPE or event.key == pygame.K_q or event.key == pygame.K_BACKSPACE:
+                    return 'escape'
+                elif event.key == pygame.K_UP or event.key == pygame.K_w:
+                    return 'up'
+                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                    return 'down'
+                elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                    return 'left'
+                elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    return 'right'
+                elif event.key == pygame.K_TAB:
+                    return 'tab'
+        pygame.time.wait(10)
 
 def option_select_sound():
     play_effect("../sound/Option_select.mp3")
@@ -116,7 +173,6 @@ def option_change_sound():
     play_effect("../sound/Option_change.mp3")
 
 def catching():
-
     play_effect("../sound/Catch.mp3", 33)
 
 def caught():
@@ -125,11 +181,14 @@ def caught():
 def Critical():
     play_effect("../sound/Critical.mp3")
 
-def Damage_strong():
-    play_effect("../sound/Damage_strong.mp3")
+def Effective():
+    play_effect("../sound/Hit Super Effective.mp3")
 
-def Damage_weak():
-    play_effect("../sound/Damage_weak.mp3")
+def NotEffective():
+    play_effect("../sound/Hit Weak Not Very Effective.mp3")
+
+def NormalDamage():
+    play_effect("../sound/Hit Normal Damage.mp3")
 
 def HP_low():
     play_effect("../sound/HP_low.mp3", 150)
@@ -148,3 +207,12 @@ def game_started():
 
 def Lose():
     play_effect("../sound/Lose.mp3")
+
+def Report():
+    play_effect("../sound/report.mp3", 150)
+
+def RankUp():
+    play_effect("../sound/Stat Rise Up.mp3")
+
+def RankDown():
+    play_effect("../sound/Stat Fall.mp3")

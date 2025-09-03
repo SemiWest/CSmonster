@@ -45,6 +45,7 @@ class Player:
                 self.knowhow = 100
                 self.concentration = 50
                 self.grade = "A+"
+                self.totalhap = 0
 
         def gameover(self):
                 # 게임 오버 조건: 

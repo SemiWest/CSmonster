@@ -1,4 +1,19 @@
+<<<<<<< HEAD
 
 
 __pycache__/
 *.py[cod]
+=======
+__pycache__/
+*.py[cod]
+*$py.class
+logs/
+*.log
+game.log
+
+# macOS
+.DS_Store
+**/.DS_Store
+CLAUDE.md
+/.claude/
+>>>>>>> 4a7682b924a26c238dafc5c50270af06484424f4
