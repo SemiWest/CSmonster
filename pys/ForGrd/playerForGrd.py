@@ -111,6 +111,7 @@ class Player:
         self.skills = {}  # 스킬 저장
         self.usedskill = None
         self.starting = "CT"
+        self.instagram_id = "" # 이 줄을 추가하세요
         
         # 학기 진행 시스템
         self.current_semester = "새터"
