@@ -1709,6 +1709,7 @@ def battle(getplayer, getenemy, screen=None):
                     do_event = False
                     display_status(screen, detail=True)
                     draw_text(screen, f"  몰입 캠프를 거절한다...", stX, stY, WHITE)
+                    player.molcam = False
                     pygame.display.flip()
                     wait_for_key()
 
@@ -1729,9 +1730,10 @@ def battle(getplayer, getenemy, screen=None):
             if enemyCSmon.Num == 777:     # 몰캠
                 if do_event:
                     lup_amt = molcamp_quiz(screen)
-                    strl = "레벨업" + " +" + str(lup_amt) + " 및 체력 완전 회복"
+                    strl = "레벨업" + " +" + str(lup_amt)
                     print(strl)
                     madcamp.reward = strl
+                    player.molcam = lup_amt
                     return "승리"
 
                 else:
@@ -1834,7 +1836,11 @@ def battle(getplayer, getenemy, screen=None):
     if result == "승리":
         Battle_win()
         display_status(screen)
-        draw_text(screen, f"  승리했다!", stX, stY, WHITE)
+
+        if enemyCSmon.Num == 777:     # 몰캠
+            draw_text(screen, f"  몰캠을 수료했다!", stX, stY, WHITE)
+        else:
+            draw_text(screen, f"  승리했다!", stX, stY, WHITE)
         pygame.display.flip()
         wait_for_key()
         gpa = gpaCalculator(enemyCSmon, hap_num, item_num, False)
