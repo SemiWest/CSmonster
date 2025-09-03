@@ -938,16 +938,16 @@ def select_player_skill(screen):
                 
                 display_type(screen, infoY, infoX, skill['type'])
                 screen.blit(SKILL, (infoX+160, infoY))
-                draw_text(screen, "타입", infoText, infoY+20, WHITE)
+                draw_text(screen, "타입", infoText - 25, infoY+30, WHITE)
                 draw_text(screen, f"{type_dict[skill['type']]}", infoText+344, infoY+24, typecolor_dict[skill['type']], align='right')
                 
-                draw_text(screen, "위력", infoText, infoY+60, WHITE)
+                draw_text(screen, "위력", infoText - 25, infoY+70, WHITE)
                 draw_text(screen,f"{skill['skW']}", infoText+344, infoY+64, WHITE, align='right')
                 draw_wrapped_text(
                     screen,
                     skill['description'],
-                    infoText,
-                    infoY + 104,
+                    infoText - 25,
+                    infoY + 115,
                     WHITE,
                     font_size=16,
                     max_width= 344 # 원하는 최대 너비 지정
@@ -1470,7 +1470,7 @@ def select_reward_item(screen, items):
         # dark_overlay.fill((0, 0, 0, 180))  # 마지막 값(120)은 투명도, 0~255
         # screen.blit(dark_overlay, (0, 0))
 
-        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 222))
+        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 221))
 
         
         draw_text(screen, "  승리 보상! 아이템을 선택하자.", stX, stY, YELLOW)
@@ -1597,7 +1597,7 @@ def display_molcamp_quiz(screen, quizes):
         current_index = 0
         while True:
             display_status(screen)
-            apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 222))
+            apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 221))
             draw_text(screen, f"  {i+1}번 문제: 다음 출력값의 결과는?", stX, stY, YELLOW)
 
             display_quiz_interface(screen, quiz)
@@ -1622,14 +1622,14 @@ def display_molcamp_quiz(screen, quizes):
                 option_change_sound()
         
         display_status(screen)
-        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 222))
+        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 221))
         display_quiz_interface(screen, quiz)
         draw_text(screen, f"  {quiz['Options'][current_index]}를 선택했다.", stX, stY, WHITE)
         pygame.display.flip()
         wait_for_key()
 
         display_status(screen)
-        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 222))
+        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 221))
         display_quiz_interface(screen, quiz)
         draw_text(screen, f"  {quiz['Options'][quiz['Answer']-1]}가 정답이였다!", stX, stY, YELLOW)
         pygame.display.flip()

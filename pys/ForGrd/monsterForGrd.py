@@ -132,7 +132,7 @@ Nonemonster = Monster(
 
 # 프밍기	전산이론	팽도리
 cs101 = Monster(
-    Num = 101, name="프밍기", credit= 3,
+    Num = 101, name="프로그래밍 기초", credit= 3,
     HP = 53, ATK = 55, DEF = 54, SPD = 40, 
     type=["CT"], SeonSu=[206, 204, 230], 
     image="../img/monsters/프밍기.png", 
@@ -250,7 +250,7 @@ cs206.skills = {
 
 # 시프	시 넽	레츠고이브이
 cs230 = Monster(
-    Num = 230, name="시프", credit = 3,
+    Num = 230, name="시스템 프로그래밍", credit = 3,
     HP = 65, ATK = 70, DEF = 77, SPD = 75, 
     type=["SYS"], SeonSu=[311, 341],
     image="../img/monsters/시프.png",
@@ -289,7 +289,7 @@ cs230.skills = {
 
 # OS	시 넽	거북왕
 cs330 = Monster(
-    Num = 330, name="OS", credit = 4,
+    Num = 330, name="운영체제 및 실험", credit = 4,
     HP =79, ATK = 119, DEF = 117, SPD = 78, 
     type = ["SYS"], SeonSu=[],
     image="../img/monsters/OS.png",  
@@ -327,7 +327,7 @@ cs330.skills = {
 
 # 알고개	PS	피카츄
 cs300 = Monster(
-    Num = 300, name = "알고개", credit = 3,
+    Num = 300, name = "알고리즘 개론", credit = 3,
     HP = 45, ATK = 77, DEF = 55, SPD = 120, 
     type = ["PS"], SeonSu=[202],
     image="../img/monsters/알고개.png",
@@ -397,7 +397,7 @@ cs311.skills = {
 
 # PL	전산이론	메타몽
 cs320 = Monster(
-    Num = 320, name="프로그래밍언어", credit = 3,
+    Num = 320, name="프로그래밍 언어", credit = 3,
     HP = 85, ATK = 85, DEF = 85, SPD = 85, 
     type=["CT"], SeonSu=[220],
     image="../img/monsters/프로그래밍언어.png",
@@ -453,7 +453,7 @@ cs341.skills = {
 }
 # 디비개	데이터 과학	리자몽
 cs360 = Monster(
-    Num = 360, name="데이터베이스개론", credit = 3,
+    Num = 360, name="데이타베이스 개론", credit = 3,
     HP = 78, ATK = 96, DEF = 81, SPD = 100, 
     type=["DS"], SeonSu=[],
     image="../img/monsters/데이터베이스개론.png",
@@ -567,7 +567,7 @@ cs220.skills = {
 
 # 코옵	(이벤트)	야도란
 coop = Monster(
-    Num = 888, name="코옵", credit = 123123,
+    Num = 888, name="Co-op", credit = 123123,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/코옵.png",
@@ -586,7 +586,7 @@ coop.skills = {
 
 # 몰캠	(이벤트)	고라파덕
 madcamp = Monster(
-    Num = 777, name="몰입캠프", credit = 234234,
+    Num = 777, name="몰입 캠프", credit = 234234,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/몰입캠프.png",
@@ -605,7 +605,7 @@ madcamp.skills = {
 
 # 개별연구	(이벤트)	폴리곤
 study = Monster(
-    Num = 999, name="개별연구", credit = 345345,
+    Num = 999, name="개별 연구", credit = 345345,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/개별연구.png",
@@ -623,21 +623,21 @@ study.skills = {
 }
 
 monsters = {
-    "프밍기": cs101,
+    "프로그래밍 기초": cs101,
     "이산구조": cs204,
     "데이타구조": cs206,
-    "시프": cs230,
-    "OS": cs330,
-    "알고개": cs300,
+    "시스템 프로그래밍": cs230,
+    "운영체제 및 실험": cs330,
+    "알고리즘 개론": cs300,
     "전산기조직": cs311,
-    "프로그래밍언어": cs320,
+    "프로그래밍 언어": cs320,
     "전산망개론": cs341,
-    "데이터베이스개론": cs360,
+    "데이타베이스 개론": cs360,
     "문제해결기법": cs202,
     "딥러닝개론": cs371,
     "기계학습": cs376,
     "프로그래밍의 이해": cs220,
-    "코옵": coop,
-    "몰입캠프": madcamp,
-    "개별연구": study,
+    "Co-op": coop,
+    "몰입 캠프": madcamp,
+    "개별 연구": study,
 }

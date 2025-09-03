@@ -752,10 +752,10 @@ def semester_intro_screen(player, screen):
     # 학기별 제목 설정
     if semester_name == "새터":
         title = "새터"
-        description = ("당신은 카이스트에 갓 입학한 새내기입니다.", "당신은 자신이 전산학부에 걸맞는 인재인지 확인하기 위해 프밍기 학점인정시험을 신청했습니다.")
+        description = ("당신은 카이스트에 갓 입학한 새내기입니다.", "당신은 자신이 전산학부에 걸맞는 인재인지 확인하기 위해 프로그래밍 기초 학점인정시험을 신청했습니다.")
     elif semester_name == "1-1":
         title = "1-1"
-        description = ("프밍기 학점인정시험을 통과한 당신은 전산학도의 길을 걷기로 결심하였습니다.", "당신은 전산학부의 필수 과목 중 하나를 선택하여 미리 듣기로 하였습니다.")
+        description = ("프로그래밍 기초 학점인정시험을 통과한 당신은 전산학도의 길을 걷기로 결심하였습니다.", "당신은 전산학부의 필수 과목 중 하나를 선택하여 미리 듣기로 하였습니다.")
     elif semester_name == "2-1":
         title = "2-1"
         description = ("당신은 드디어 2학년이 되어 전산학부를 주전공으로 선택했습니다.", "이제부터 진짜 대학 생활의 시작입니다. 행운을 빕니다.")
@@ -782,7 +782,7 @@ def semester_intro_screen(player, screen):
 
     if semester_name == "1-1":
         # 이산구조, 데이타구조, 시스템 프로그래밍 중 한 과목을 직접 선택
-        options = ["이산구조", "데이타구조", "시프"]
+        options = ["이산구조", "데이타구조", "시스템 프로그래밍"]
         selected = 0
         while True:
             screen.fill(BLACK)
@@ -1042,7 +1042,7 @@ def show_final_result(player, screen):
     if is_game_over:
         # 게임 오버 사유 표시
         if player.ending_type == "프밍기 패배":
-            draw_text(screen, "프밍기한테 졌습니다. 전산과로 진학하지 못했습니다.", SCREEN_WIDTH//2, y_offset, RED, size=32, align='center')
+            draw_text(screen, "프로그래밍 기초한테 졌습니다. 전산과로 진학하지 못했습니다.", SCREEN_WIDTH//2, y_offset, RED, size=32, align='center')
         elif player.warning_count >= 3:
             draw_text(screen, "학사 경고 3회로 제적당했습니다.", SCREEN_WIDTH//2, y_offset, RED, size=32, align='center')
         else:
@@ -1335,14 +1335,14 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                 enemy_monster.update_fullreset()
             else:
                 # 기본 몬스터 생성
-                enemy_monster = copy.deepcopy(monsters["프밍기"])
+                enemy_monster = copy.deepcopy(monsters["프로그래밍 기초"])
                 enemy_monster.name = monster_name
             
             # 전투 진행
             battle_result, gpa = battle(player, enemy_monster, screen)
 
             # 프밍기 패배 또는 드랍 시 게임 오버 처리
-            if monster_name == "프밍기" and battle_result in [0, 3, 5]: # 0: 패배, 3: 드랍, 5: NR
+            if monster_name == "프로그래밍 기초" and battle_result in [0, 3, 5]: # 0: 패배, 3: 드랍, 5: NR
                 player.ending_type = "프밍기 패배"
                 game_running = False
                 break
@@ -1515,7 +1515,7 @@ def display_skill_change(screen, newskill, player):
 
     while True:
         display_status(screen)
-        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 222))
+        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 221))
 
         draw_text(screen, "  잊어 버릴 기술을 선택하자.", stX, stY, YELLOW)
 

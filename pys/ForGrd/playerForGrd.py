@@ -117,7 +117,7 @@ class Player:
         self.current_semester = "새터"
         self.semester_order = ["새터", "1-1", "1-2", "2-1", "2-2", "3-1", "3-여름방학", "3-2", "4-1", "4-여름방학", "4-2"]
         self.semester_progress = 0
-        self.canBeMetMonsters = ["프밍기"]
+        self.canBeMetMonsters = ["프로그래밍 기초"]
         self.thisSemesterMonsters = []
         self.thisSemesterGpas = []
         self.clearedMonsters = []
@@ -305,7 +305,7 @@ class Player:
     
         skill_type = monsters[monster_name].type[0]
         
-        if monster_name == "프밍기":
+        if monster_name == "프로그래밍 기초":
             self.learned_skills['*'] += 1
             self.current_skills['*'] = self.learned_skills['*']
             print(f"Debug: {'*'} 스킬이 {self.learned_skills['*']} 레벨로 상승!")
