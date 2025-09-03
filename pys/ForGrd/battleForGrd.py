@@ -1333,7 +1333,7 @@ def item_phase(screen):
     if selected_item.special:
         if selected_item.name == "GPT":
             enemyCSmon.nowhp = 1
-            animate_health_bar(screen, esY+125, esX+130, enemyCurrentHP, 1, getattr(enemyCSmon, 'HP', 100))
+            animate_health_bar(screen, esY+121, esX+122, enemyCurrentHP, 1, getattr(enemyCSmon, 'HP', 100))
             display_status(screen)
             Effective()
             draw_text(screen, f"  {enemyCSmon.name}의 체력이 1이 되었다!", stX, stY, WHITE)
@@ -1361,7 +1361,7 @@ def item_phase(screen):
             
         healed = player.heal(heal_amount_req, allow_revive=getattr(selected_item, "canuse_on_fainted", False))
         Heal()
-        animate_health_bar(screen, psY+125, psX+130, playerCurrentHP, player.nowhp, player.HP)
+        animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
         display_status(screen)
         draw_text(screen, f"  {player.name}의 체력이 {healed} 회복되었다!", stX, stY, WHITE)
 
@@ -1377,7 +1377,7 @@ def item_phase(screen):
             enemyCSmon.take_damage(damage_amount)
         enemy_hp_after = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
         NormalDamage()
-        animate_health_bar(screen, esY+125, esX+130, enemyCurrentHP, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
+        animate_health_bar(screen, esY+121, esX+122, enemyCurrentHP, enemy_hp_after, getattr(enemyCSmon, 'HP', 100))
 
         display_status(screen)
         draw_text(screen, f"  {enemyCSmon.name}에게 {damage_amount}의 데미지를 입혔다!", stX, stY, WHITE)
@@ -1955,7 +1955,7 @@ def battle(getplayer, getenemy, screen=None):
         player.heal(heal_amount)
         display_status(screen)
         Heal()
-        animate_health_bar(screen, psY+125, psX+130, playerCurrentHP, player.nowhp, player.HP)
+        animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
         draw_text(screen, f"  {player.name}의 체력이 회복되었다!", stX, stY, GREEN)
         pygame.display.flip()
         wait_for_key()
@@ -2040,7 +2040,7 @@ def battle(getplayer, getenemy, screen=None):
         player.heal(heal_amount)
         display_status(screen)
         Heal()
-        animate_health_bar(screen, psY+125, psX+130, playerCurrentHP, player.nowhp, player.HP)
+        animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
         draw_text(screen, f"  {player.name}의 체력이 회복되었다!", stX, stY, GREEN)
         pygame.display.flip()
         wait_for_key()
