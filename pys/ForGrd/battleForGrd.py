@@ -62,6 +62,11 @@ for i in range(len(os.listdir(path))):
     img = pygame.image.load(f"{path}/{i}.png")
     img = pygame.transform.scale_by(img, 10)
     DEBUFF.append(img)
+# 반사 스킬용 이미지 로드
+SHIELD = pygame.image.load("../img/animations/items/shield.png")
+SHIELD = pygame.transform.scale_by(SHIELD, 5)
+MIRROR = pygame.image.load("../img/animations/items/mirror.png")
+MIRROR = pygame.transform.scale_by(MIRROR, 5)
 
 def comp(atskilltype, tgtype):
     """
@@ -168,6 +173,41 @@ def get_best_enemy_skill(enemy, player):
         selected_skill_name = random.choices(skill_list, weights=probabilities, k=1)[0]
         return enemy_skills[selected_skill_name]
 
+def play_reflect_animation(screen, user, skill):
+    """'reflect' 타입 스킬 사용 시 방패 또는 거울 이미지를 사용자 앞에 표시합니다."""
+    # 1. 사용할 원본 이미지 결정
+    reflect_img_original = SHIELD if skill["skW"] == 0 else MIRROR
+
+    # 2. 이미지 최적화 및 크기 조절
+    # 화면에 맞게 최적화한 후, 요청하신 대로 20% 크기로 줄입니다.
+    reflect_img = reflect_img_original.convert_alpha()
+    reflect_img = pygame.transform.scale_by(reflect_img, 0.20) # <-- 크기를 55%로 수정
+
+    # 3. 이미지 표시 기준점 (캐릭터의 발밑 중앙) 좌표 설정
+    anchor_x, anchor_y = 0, 0
+    if user == player:
+        # 플레이어의 기준점 (sX + 320, sY + 536)
+        anchor_x, anchor_y = sX + 320, sY + 536
+    else: # 몬스터일 경우
+        # 몬스터의 기준점 (esX + 860, esY + 310)
+        anchor_x, anchor_y = esX + 860, esY + 310
+
+    # 4. 기준점을 바탕으로 방패/거울 이미지의 최종 위치 계산
+    # X축: 기준점(anchor_x)을 중앙으로 하여 이미지 너비의 절반만큼 왼쪽으로 이동
+    img_pos_x = anchor_x - reflect_img.get_width() // 2
+    # Y축: 기준점(anchor_y)에서 이미지의 높이만큼 위로 이동시키고, 10픽셀 아래로 내립니다.
+    img_pos_y = anchor_y - reflect_img.get_height() + 10 # <-- 10픽셀 아래로 내리기 위해 +10 추가
+
+    # 5. 애니메이션 루프 (0.8초 동안 표시)
+    duration = 800
+    start_time = pygame.time.get_ticks()
+
+    while pygame.time.get_ticks() - start_time < duration:
+        display_status(screen, detail=True) # 배경과 캐릭터를 계속 다시 그림
+        screen.blit(reflect_img, (img_pos_x, img_pos_y)) # 계산된 위치에 방패/거울 표시
+        pygame.display.flip()
+        pygame.time.Clock().tick(60)
+
 def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
     # --- 1. 초기 설정: 변수 준비 ---
     if playerskill is None:
@@ -229,18 +269,14 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
 
     # B. 회복 스킬 (Heal)
     elif effect == "heal":
-        # heal은 user(스킬 시전자)의 체력을 변경
         old_hp = user.nowhp
         heal_amount = int(skill["skW"] * user.HP)
         new_hp = min(user.HP, old_hp + heal_amount)
         
         Heal() # 회복 사운드 재생
-        # 체력바 애니메이션만 재생 (play_damage_sequence를 회복에도 사용)
         play_damage_sequence(screen, skill, target, user, old_hp, new_hp)
 
-        # 애니메이션 종료 후 실제 데이터 반영
         user.nowhp = new_hp
-
         return False, 0, False
 
     # C. 버프/디버프 스킬 (Buff)
@@ -253,40 +289,55 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         
         user.update_battle()
         
-        # 버프는 자체 애니메이션 함수 호출
         is_buff = (skill["skW"] // 3 + 1) > 0 if not isinstance(skill["skW"], tuple) else (skill["skW"][0] // 3 + 1) > 0
         buffAnimation(is_buff, "player" if attackerType == "player" else "monster")
 
         return False, 0, False
         
-    # D. 반사 스킬 (Reflect)
+    # D. 반사 스킬 (Reflect) - <<수정된 부분>>
     elif effect == "reflect":
-        # 상대방이 공격 스킬을 쓰지 않았거나, 스킬 정보가 없으면 실패
+        # 1. 먼저 방패 또는 거울 애니메이션을 재생합니다.
+        play_reflect_animation(screen, user, skill)
+
+        # 2. 상대방이 공격 스킬을 사용했는지 확인합니다.
         if counter_skill is None or counter_skill["effect_type"] not in ["Pdamage", "Sdamage"]:
-            # 여기에 '하지만 아무 일도 일어나지 않았다!' 메시지와 함께 간단한 애니메이션 추가 가능
             return False, 0, False
 
-        # 상대 공격을 기반으로 데미지를 계산하여 *상대에게* 돌려줌
-        # 여기서 user는 반사 스킬 사용자, target은 원래 공격자
-        damage, Mul = Damage(target, user, counter_skill) # 데미지 계산 (타겟:원래 공격자, 공격자:반사 사용자)
-        damage = int(damage * skill["skW"]) # 반사 비율 적용
-        
-        old_hp = target.nowhp
-        new_hp = max(0, old_hp - damage)
+        # 3. 스킬 효과를 분기합니다: 방어(skW=0) 또는 반사(skW>0)
+        if skill["skW"] == 0:  # 방어 (shield.png)
+            # 3-1. 상대의 공격 애니메이션을 재생하되, 데미지는 주지 않습니다.
+            # play_damage_sequence를 재사용하여 old_hp와 new_hp를 같게 전달하면
+            # 체력바 변화나 피격 효과 없이 스킬 애니메이션만 재생됩니다.
+            # 여기서 공격자는 원래 공격자(target), 맞는 쪽은 방어 스킬 사용자(user)입니다.
+            play_damage_sequence(screen, counter_skill, target, user, user.nowhp, user.nowhp)
 
-        # 반사 데미지 애니메이션 재생
-        play_damage_sequence(screen, skill, user, target, old_hp, new_hp)
-        
-        # 애니메이션 후 데이터 반영
-        target.nowhp = new_hp
-        
-        # True를 반환하여 상대방의 턴을 종료시킴
-        return True, damage, Mul
+            # 3-2. 애니메이션이 끝난 후, 공격을 막았다는 메시지를 출력합니다.
+            display_status(screen, True)
+            draw_text(screen, f"  {user.name}이(가) 공격을 막아냈다!", stX, stY, WHITE)
+            pygame.display.flip()
+            wait_for_key()
+            
+            # 3-3. 상대의 턴을 종료시키고, 데미지는 0을 반환합니다.
+            return True, 0, 1
+        else:  # 반사 (mirror.png)
+            # 상대 공격을 기반으로 데미지를 계산하여 *상대에게* 돌려줍니다.
+            damage, Mul = Damage(target, user, counter_skill) 
+            damage = int(damage * skill["skW"])  # 반사 비율 적용
+            
+            old_hp = target.nowhp
+            new_hp = max(0, old_hp - damage)
+
+            # 반사 데미지 애니메이션 재생 (상대방의 스킬 애니메이션을 사용)
+            play_damage_sequence(screen, counter_skill, user, target, old_hp, new_hp)
+            
+            # 애니메이션 후 데이터 반영
+            target.nowhp = new_hp
+            
+            # True를 반환하여 상대방의 턴을 종료시킵니다.
+            return True, damage, Mul
 
     # E. 그 외 모든 스킬
     else:
-        # 기타 스킬은 현재 정의된 애니메이션이 있다면 그것만 재생
-        # play_effect_animation(screen, skill) # << 만약 만든다면 이런 식으로 호출
         return False, 0, False
 
 # 기존 함수들 그대로 유지

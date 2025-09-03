@@ -14,7 +14,14 @@ logger = logging.getLogger(__name__)
 
 NOTION_TOKEN = "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"
 DATABASE_ID = "261e339f1ae5802ca71acd96446868d5"
-DROPBOX_ACCESS_TOKEN = "sl.u.AF-2RQwXsh3jNHYsLvOoPXGiG5vZ4gv4M5fsVs8J3hNzjnvOM9MVcdmVxPhW6rvTHB9bVAkhu1ggspF2BlTtvyoj8YM3wiEgEtQ1jiYOUe8ulMQzpCzGImZZy4bNeUNlWXtIM3QgKUWuM0f5Ug3rzjqymKRd5tH2tmdwvuCxtqvzRH9EhvYsB6FnI7Knx4wMMW_0ZTTORfmc7QhMY6L1WI2-keTaU8939WftSFJFfDE-3k7hWxawzudu1AJ40byHkG8dAaKDRU64U9rG52yjqfYQeaWlYBJUJbgy38_CugQTn9ndi9qsZ1rRHss6BFt9kMnGqSRoO7oxxlGH1rCyWQRvHJe2My_S17yk-QHtY0jU4OTe7FWb_QFtnGs_0Sh_lXPPquk8232d45dMNaCJqINRR6TDtwP0bd_QPw1iLZfkH9JSoR8B50uOkBdnDsDMyACZx358w2pBmkYFzceIDEhY9qOJEY8myEXP3aZX63ng4rsilt6vxp7A2Pha_9CQRE1FY5M3wQ3hTUUbMLlbV6QUYiZoRWoTOYf5ASmMWoyOHi_QCoyX8k6nlpmNnkJFsBNnw6Ca8wjOcMZXrkq34d3ConMC_6Wqm53C4HO_F6VWdMHDDiFNiki80xJoS2Sa3ovT0TrnH6-He4e9gVYZbmzo0lTajcbYiAjWmUQHO7Z5VYk88Ff_hRzRivZFZbnkoh7qNsAgzKUwwGLIxxajFlLdJrxRjWVf5o0AjelbbNcMXYyCNce2gB9JCtAUd4W9JH5ICKH9YP7zkXPu0VrdgeBg2KY_VnC2OXl58MhluGVcn0pcfbb_57sQiTwIVTsRVfmTDGBWm67w3qY-7ugnKT192b0H3Tt8M_eeYg1TBgidbBNdk7av68sJc_eMOGSEf5LLzZs-3J2jT6fpQQUidejhUk3VHvxs8XX1NzE_jOrTophIWvoQ_nKEdsEilvSiKlgOfRUtyWdYT8kn8OzOm5idoDYCZQZz0DP13RT6aL5kPT_XitCMVgC9dW2_DCX0HY55ThfaHIvZ3i01cXqiZruwceQWCNhVVb2UPk_gDVkWh_m_v_oF2OtAyzjQuTdZoZaDN3yUzxMiH_XOi42CC64KWkqU3AF5JGZ7lZisOQBS2NXRWUN8JXkXzHlejFtWg8PPzDII4ZATJxgLVSZrWc96o9F-58RXOAu_-5x4IRnuOlVfCE9xhyG64hof5ZfGZi8EAPa_MRoKTXmPt8RH2j1THGS-UjzjIFpIE62RTlQrwlc4MHViMRSd9gO0tCRYI320zcIcq1d1GErs_uqblVXwZe52pXZDAzFzqH3anOq3BkSCJre5ri9-vCyCJSkmTF1OAzX9RJVuquQ8Rc5s7avJFZIlu45dlhcFnF304tnDSqXVrD7ft_qpn5xSX0awC7qTmGwIqy1tiL8tzFIjZfwALeLVH70H9D5av-XJ6fU-Kg"
+# Dropbox API 인증 정보 (리프레시 토큰 방식)
+# generate_refresh_token.py를 통해 얻은 값들을 여기에 입력합니다.
+DROPBOX_APP_KEY = "1ii2zxyvjattedf"
+DROPBOX_APP_SECRET = "8co8pfh4n6ibpun"
+DROPBOX_REFRESH_TOKEN = "_NvgGhQ4hJoAAAAAAAAAAeyYKpolu93vrUu9Az9xCGOQLNxb5iH85LGSdnyccn9t"
+
+# 아래 두 변수는 이제 사용하지 않으므로 주석 처리하거나 삭제합니다.
+# DROPBOX_ACCESS_TOKEN = "sl.u.AF-2R..."
 DROPBOX_UPLOAD_FOLDER = "/uploads/csmonster"
 
 
@@ -491,53 +498,54 @@ import dropbox
 import os
 import datetime
 
-def upload_to_dropbox(access_token, file_path, dropbox_folder_path):
+# upload_to_dropbox 함수를 찾아서 아래와 같이 수정합니다.
+
+def upload_to_dropbox(file_path, dropbox_folder_path):
     """
     Dropbox에 파일을 업로드하고 공유 가능한 링크를 반환합니다.
+    (리프레시 토큰을 사용하여 자동으로 액세스 토큰을 갱신합니다.)
 
     Args:
-        access_token (str): Dropbox API Access Token.
         file_path (str): 업로드할 로컬 파일의 경로.
         dropbox_folder_path (str): Dropbox 내에 파일을 저장할 경로 (예: '/uploads/').
 
     Returns:
         str: 공유 가능한 URL.
     """
-    # Dropbox 객체 생성
+    # Dropbox 객체 생성 시, 리프레시 토큰과 앱 키/시크릿을 전달합니다.
+    # 이렇게 하면 라이브러리가 알아서 최신 액세스 토큰을 유지합니다.
     try:
-        dbx = dropbox.Dropbox(access_token)
+        dbx = dropbox.Dropbox(
+            app_key=DROPBOX_APP_KEY,
+            app_secret=DROPBOX_APP_SECRET,
+            oauth2_refresh_token=DROPBOX_REFRESH_TOKEN
+        )
         dbx.users_get_current_account() # 토큰 유효성 검사
-        print("Dropbox 계정 연결 성공.")
-    except dropbox.exceptions.AuthError:
-        print("오류: Access Token이 유효하지 않습니다. 다시 확인해주세요.")
+        print("Dropbox 계정 연결 성공 (토큰 자동 갱신).")
+    except dropbox.exceptions.AuthError as e:
+        print(f"오류: 인증 정보(앱 키, 시크릿, 리프레시 토큰)가 유효하지 않습니다. {e}")
         return None
 
-    # 파일 업로드
+    # 파일 업로드 (이하 로직은 동일)
     try:
         with open(file_path, 'rb') as f:
-            # Dropbox에 저장할 파일 경로 설정
             file_name = os.path.basename(file_path)
             dropbox_path = os.path.join(dropbox_folder_path, file_name).replace('\\', '/')
-            
+
             print(f"'{file_path}' 파일을 Dropbox의 '{dropbox_path}' 경로에 업로드 중...")
-            
-            # files_upload: 파일을 업로드하는 API
-            # mode=dropbox.files.WriteMode('overwrite')는 덮어쓰기 옵션
+
             dbx.files_upload(f.read(), dropbox_path, mode=dropbox.files.WriteMode('overwrite'))
             print("업로드 완료!")
 
-        # 업로드된 파일의 공유 링크 생성
         share_link_metadata = dbx.sharing_create_shared_link_with_settings(dropbox_path)
         share_link = share_link_metadata.url
         print(f"공유 링크 생성: {share_link}")
-        
-        # Dropbox 공유 링크는 직접 다운로드 링크가 아님
-        # 끝에 ?dl=0을 ?dl=1로 바꿔주면 바로 다운로드가능한 링크가 됨
+
         download_link = share_link.replace('?dl=0', '?dl=1')
         print(f"직접 다운로드 링크: {download_link}")
-        
+
         return download_link
-        
+
     except Exception as e:
         print(f"파일 업로드 또는 링크 생성 중 오류 발생: {e}")
         return None
@@ -628,9 +636,8 @@ def export_screen_to_catbox_qr(
 
     # 4) Catbox 업로드 (영구/임시)
     url = upload_to_dropbox(
-        file_path=cropped_path,
-        access_token=DROPBOX_ACCESS_TOKEN,
-        dropbox_folder_path=DROPBOX_UPLOAD_FOLDER
+    file_path=cropped_path,
+    dropbox_folder_path=DROPBOX_UPLOAD_FOLDER
     )
     print(url)
     # 5) QR 저장 (파일명: prefix_namehash_urlhash_ts.png, 저장 위치는 qr_out_dir)
@@ -1126,9 +1133,8 @@ def show_final_result(player, screen):
 
     # Dropbox 함수 호출
     upload_url = upload_to_dropbox(
-        file_path=final_combined_path, 
-        access_token=DROPBOX_ACCESS_TOKEN, 
-        dropbox_folder_path=DROPBOX_UPLOAD_FOLDER
+    file_path=final_combined_path, 
+    dropbox_folder_path=DROPBOX_UPLOAD_FOLDER
     )
 
     if upload_url:
