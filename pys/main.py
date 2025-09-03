@@ -56,10 +56,11 @@ difficulty = 1
 
 def initialize_channels():
     """음악과 효과음을 위한 채널 초기화"""
-    global music_channel, effect_channel
+    global music_channel, effect_channel, effect_channel_alt
     pygame.mixer.init()
     music_channel = pygame.mixer.Channel(0)  # 채널 0: 음악
     effect_channel = pygame.mixer.Channel(1)  # 채널 1: 효과음
+    effect_channel_alt = pygame.mixer.Channel(2)  # 채널 2: 효과음 대체
 
 # 현재 작업 디렉터리를 Python 파일이 위치한 디렉터리로 설정
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -73,10 +74,11 @@ def wild_monster(lists):
     return copy.deepcopy(random.choice(lists))
 
 initialize_channels()
-change_options(music_on, music_volume, effectsound, ESVolume, effect_channel, music_channel)
+change_options(music_on, music_volume, effectsound, ESVolume, effect_channel, music_channel, effect_channel_alt)
 set_difficulty(difficulty)
 pygame.mixer.music.set_volume(music_volume / 100)  # 음악 볼륨 설정
 pygame.mixer.Channel(1).set_volume(ESVolume / 100)  # 효과음 볼륨 설정
+pygame.mixer.Channel(2).set_volume(ESVolume / 100)  # 효과음 대체 볼륨 설정
 
 if logger.isEnabledFor(logging.INFO):
     logger.info("게임 시작")
