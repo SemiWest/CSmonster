@@ -81,9 +81,9 @@ for i in range(len(os.listdir(path))):
     DEBUFF.append(img)
 # 반사 스킬용 이미지 로드
 SHIELD = pygame.image.load("../img/animations/items/shield.png")
-SHIELD = pygame.transform.scale_by(SHIELD, 1)
+SHIELD = pygame.transform.scale_by(SHIELD, 8)
 MIRROR = pygame.image.load("../img/animations/items/mirror.png")
-MIRROR = pygame.transform.scale_by(MIRROR, 1)
+MIRROR = pygame.transform.scale_by(MIRROR, 8)
 
 def comp(atskilltype, tgtype):
     """
@@ -305,9 +305,6 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
             user.Rank[skill["skW"] % 3] = max(-6, min(6, user.Rank[skill["skW"] % 3] + skill["skW"] // 3 + 1))
         
         user.update_battle()
-        
-        is_buff = (skill["skW"] // 3 + 1) > 0 if not isinstance(skill["skW"], tuple) else (skill["skW"][0] // 3 + 1) > 0
-        buffAnimation(is_buff, "player" if attackerType == "player" else "monster")
 
         return False, 0, False
         
