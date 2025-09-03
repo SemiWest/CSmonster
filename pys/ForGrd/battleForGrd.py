@@ -462,7 +462,7 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
     skill_frames = [] 
     if skill["animation"] != "none":    
         for i in range(len(os.listdir(f"../img/animations/{skill['animation']}"))):
-            img = pygame.image.load(f"../img/animations/{skill['animation']}/{i}.png")
+            img = pygame.image.load(f"../img/animations/{skill['animation']}/{i - 1}.png")
             img = pygame.transform.scale_by(img, 11/3)
             skill_frames.append(img)
     
@@ -1508,7 +1508,7 @@ def select_reward_item(screen, items):
 
 # 메인 전투 함수 수정
 # 기존의 battle 함수를 아래 코드로 교체하세요.
-def option_accept_challenge(screen, options, y_offset = 30):
+def option_accept_challenge_molcamp(screen, options, y_offset = 30):
     current_index = 0
     while True:
 
@@ -1538,7 +1538,45 @@ def option_accept_challenge(screen, options, y_offset = 30):
         elif key == 'right' and current_index < len(options)-1:
             current_index += 1
             option_change_sound()
-        
+    
+def option_accept_challenge_2(screen, options, y_offset = 30, num = 888):
+
+    if num == 888:
+        name = "Co-op"
+    elif num == 999:
+        name = "개별 연구"
+    else:
+        name = "특별 이벤트"
+
+    current_index = 0
+    while True:
+
+        display_status(screen)
+        screen.blit(SPEC_TEXT, (sX+8, sY+536 - 300))
+        draw_text(screen, f"{name}! 마구마구 때려라!", sX+8 + 300, sY+536 - 300 + 30, ORANGE, size = 32, align='center')
+        draw_wrapped_text(screen, f"수락한다면 {name} 몬스터를 상대하게 된다. ", sX+ 20 , sY+536 - 300 + 50 + y_offset, WHITE, max_width= 600, font_size=16)
+        draw_wrapped_text(screen, f"{name} 몬스터를 3턴 동안 체력을 10% 이내로 만들면 성공이다. 만약 몬스터가 죽거나 10% 이상의 체력을 가지게 되면 실패하게 된다.", sX+20, sY+536 - 300 + 50 + y_offset * 3, WHITE, max_width= 600, font_size=16)
+        draw_wrapped_text(screen, "도전을 성공하게 된다면 체력을 모두 회복한다.", sX+20, sY+536 - 300 + 50 + y_offset * 6, WHITE, max_width= 600, font_size=16)
+        draw_wrapped_text(screen, "도전을 수락할까?", sX+20, sY+536 - 300 + 50 + y_offset * 7, YELLOW, max_width= 600, font_size=16)
+
+        for i, option in enumerate(options):
+            x_pos = stX + (300 * (i % 2))
+            y_pos = stY + int(i / 2) * 64
+
+            prefix = "> " if i == current_index else "  "
+            draw_text(screen, f"{prefix}{option}", x_pos, y_pos, WHITE)
+
+        pygame.display.flip()
+
+        key = wait_for_key()
+        if key == 'enter':
+            return current_index
+        elif key == 'left' and current_index > 0:
+            current_index -= 1
+            option_change_sound()
+        elif key == 'right' and current_index < len(options)-1:
+            current_index += 1
+            option_change_sound()
 
 def molcamp_quiz(screen):
     # 몰입 캠프 퀴즈 로직 구현
@@ -1724,8 +1762,8 @@ def battle(getplayer, getenemy, screen=None):
 
             if enemyCSmon.Num == 777:     # 몰캠
                 # print("Debug: 몰캠 전투 시작")
-                
-                current_index = option_accept_challenge(screen, options=["수락한다", "거절한다"], y_offset=y_offset)
+
+                current_index = option_accept_challenge_molcamp(screen, options=["수락한다", "거절한다"], y_offset=y_offset)
                 do_event = False
 
                 # 거절
@@ -1744,79 +1782,106 @@ def battle(getplayer, getenemy, screen=None):
                     draw_text(screen, f"  몰입 캠프에 도전한다!", stX, stY, WHITE)
                     pygame.display.flip()
                     wait_for_key()
+
             elif enemyCSmon.Num == 888 or enemyCSmon.Num == 999:   # 코옵 or 개별연구
-                display_status(screen, detail=True)
-                draw_text(screen, f"  3번의 턴 안에 상대 hp를 1에 가깝게 만들어보자!", stX, stY, WHITE)
-                pygame.display.flip()
-                wait_for_key()
-                turn = 0
-                while turn < 3 and enemyCSmon.nowhp > 0 and player.is_alive():
+
+                current_index = option_accept_challenge_2(screen, options=["수락한다", "거절한다"], y_offset=y_offset, num = enemyCSmon.Num)
+                do_event = False
+
+                # 거절
+                if current_index == 1:
+                    do_event = False
                     display_status(screen, detail=True)
-                    draw_text(screen, f"  {turn+1}번째 행동을 선택하자!", stX, stY, WHITE)
+                    draw_text(screen, f"  {enemyCSmon.name}를 거절한다...", stX, stY, WHITE)
+                    # player.molcam = False
                     pygame.display.flip()
                     wait_for_key()
+
+                # 수락
+                elif current_index == 0:
+                    do_event = True
                     display_status(screen, detail=True)
-                    action = select_action(screen)
-                    if action not in [0, 1]:
+                    draw_text(screen, f"  {enemyCSmon.name}에 도전한다!", stX, stY, WHITE)
+                    pygame.display.flip()
+                    wait_for_key()
+
+
+                    display_status(screen, detail=True)
+                    draw_text(screen, f"  3번의 턴 안에 상대 hp를 1에 가깝게 만들어보자!", stX, stY, WHITE)
+                    pygame.display.flip()
+                    wait_for_key()
+                    turn = 0
+
+                    while turn < 3 and enemyCSmon.nowhp > 0 and player.is_alive():
                         display_status(screen, detail=True)
-                        draw_text(screen, f"  스킬 또는 아이템을 사용해야 한다!", stX, stY, WHITE)
+                        draw_text(screen, f"  {turn+1}번째 행동을 선택하자!", stX, stY, WHITE)
                         pygame.display.flip()
                         wait_for_key()
-                        continue
 
-                    if action == 0: # 스킬 사용
-                        turn += 1
-                        esc = skill_phase(screen)
-                        if esc == -1:
-                            pass
-                    elif action == 1: # 아이템 사용
-                        turn += 1
-                        if not any(i.name != "빈 슬롯" for i in player.items):
+                        display_status(screen, detail=True)
+                        action = select_action(screen)
+                        if action not in [0, 1]:
                             display_status(screen, detail=True)
-                            draw_text(screen, f"  아이템이 없다!", stX, stY, WHITE)
+                            draw_text(screen, f"  스킬 또는 아이템을 사용해야 한다!", stX, stY, WHITE)
                             pygame.display.flip()
                             wait_for_key()
-                        else:
-                            esc = item_phase(screen)
+                            continue
+
+                        if action == 0: # 스킬 사용
+                            turn += 1
+                            esc = skill_phase(screen)
                             if esc == -1:
                                 pass
-                    # 적 체력 확인
+                            
+                        elif action == 1: # 아이템 사용
+                            turn += 1
+                            if not any(i.name != "빈 슬롯" for i in player.items):
+                                display_status(screen, detail=True)
+                                draw_text(screen, f"  아이템이 없다!", stX, stY, WHITE)
+                                pygame.display.flip()
+                                wait_for_key()
+                            else:
+                                esc = item_phase(screen)
+                                if esc == -1:
+                                    pass
+                        # 적 체력 확인
+                        enemy_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
+                        if enemy_hp <= 0:
+                            display_status(screen, detail=True)
+                            draw_text(screen, f"  {enemyCSmon.name}이/가 쓰러졌다!", stX, stY, WHITE)
+                            pygame.display.flip()
+                            wait_for_key()
+                            
+                            battle_end = True
+                            return "실패"
+                        
+                    # 3턴 종료 후 체력 체크
                     enemy_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
                     if enemy_hp <= 0:
                         display_status(screen, detail=True)
                         draw_text(screen, f"  {enemyCSmon.name}이/가 쓰러졌다!", stX, stY, WHITE)
                         pygame.display.flip()
                         wait_for_key()
-                        
+
                         battle_end = True
                         return "실패"
-                    
-                # 3턴 종료 후 체력 체크
-                enemy_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
-                if enemy_hp <= 0:
-                    display_status(screen, detail=True)
-                    draw_text(screen, f"  {enemyCSmon.name}이/가 쓰러졌다!", stX, stY, WHITE)
-                    pygame.display.flip()
-                    wait_for_key()
+                    elif enemy_hp <= int(enemyCSmon.HP * 0.50):
+                        display_status(screen, detail=True)
+                        draw_text(screen, f"  {enemyCSmon.name}의 체력이 충분히 낮아졌다!", stX, stY, WHITE)
+                        pygame.display.flip()
+                        wait_for_key()
+                        player.event_success = True
 
-                    battle_end = True
-                    return "실패"
-                elif enemy_hp <= int(enemyCSmon.HP * 0.1):
-                    display_status(screen, detail=True)
-                    draw_text(screen, f"  {enemyCSmon.name}의 체력이 충분히 낮아졌다!", stX, stY, WHITE)
-                    pygame.display.flip()
-                    wait_for_key()
+                        battle_end = True
+                        return "성공"
+                    else:
+                        display_status(screen, detail=True)
+                        draw_text(screen, f"  {enemyCSmon.name}의 체력이 충분히 낮아지지 않았다...", stX, stY, WHITE)
+                        pygame.display.flip()
+                        wait_for_key()
 
-                    battle_end = True
-                    return "성공"
-                else:
-                    display_status(screen, detail=True)
-                    draw_text(screen, f"  {enemyCSmon.name}의 체력이 충분히 낮아지지 않았다...", stX, stY, WHITE)
-                    pygame.display.flip()
-                    wait_for_key()
-
-                    battle_end = True
-                    return "실패"
+                        battle_end = True
+                        return "실패"
                            
     
 
@@ -1830,6 +1895,12 @@ def battle(getplayer, getenemy, screen=None):
                     player.molcam = lup_amt
                     return "승리"
 
+                else:
+                    return "드랍"
+
+            if enemyCSmon.Num == 888 or enemyCSmon.Num == 999:   # 코옵 or 개별연구
+                if do_event:
+                    return "승리"
                 else:
                     return "드랍"
                 
@@ -1937,20 +2008,35 @@ def battle(getplayer, getenemy, screen=None):
 
         if enemyCSmon.Num == 777:     # 몰캠
             draw_text(screen, f"  몰캠을 수료했다!", stX, stY, WHITE)
+        elif enemyCSmon.Num == 888 or enemyCSmon.Num == 999:
+            draw_text(screen, f"  {enemyCSmon.name} 도전에 성공했다!", stX, stY, WHITE) 
+
+
+            display_status(screen)
+            Heal()
+            animate_health_bar(screen, psY+121, psX+122, player.nowhp, player.HP, player.HP)
+            draw_text(screen, f"  {player.name}의 체력이 전부 회복되었다!", stX, stY, GREEN)
+            pygame.display.flip()
+            wait_for_key()
+
+
         else:
             draw_text(screen, f"  승리했다!", stX, stY, WHITE)
+    
         pygame.display.flip()
         wait_for_key()
         gpa = gpaCalculator(enemyCSmon, hap_num, item_num, False)
-        heal_amount = max(1, int(player.HP * 0.10))
-        playerCurrentHP = player.nowhp
-        player.heal(heal_amount)
-        display_status(screen)
-        Heal()
-        animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
-        draw_text(screen, f"  {player.name}의 체력이 회복되었다!", stX, stY, GREEN)
-        pygame.display.flip()
-        wait_for_key()
+
+        if player.nowhp != player.HP:
+            heal_amount = max(1, int(player.HP * 0.10))
+            playerCurrentHP = player.nowhp
+            player.heal(heal_amount)
+            display_status(screen)
+            Heal()
+            animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
+            draw_text(screen, f"  {player.name}의 체력이 회복되었다!", stX, stY, GREEN)
+            pygame.display.flip()
+            wait_for_key()
 
         reward_items = get_random_reward_items(3)
         selected_item = select_reward_item(screen, reward_items)
