@@ -1561,7 +1561,7 @@ def battle(getplayer, getenemy, screen=None):
         Battle_win()
         display_status(screen)
 
-        if player.molcam != None:
+        if enemyCSmon.Num == 777:     # 몰캠
             draw_text(screen, f"  몰캠을 수료했다!", stX, stY, WHITE)
         else:
             draw_text(screen, f"  승리했다!", stX, stY, WHITE)
