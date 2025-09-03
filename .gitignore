@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-
-
-__pycache__/
-*.py[cod]
-=======
 __pycache__/
 *.py[cod]
 *$py.class
@@ -16,4 +10,4 @@ game.log
 **/.DS_Store
 CLAUDE.md
 /.claude/
->>>>>>> 4a7682b924a26c238dafc5c50270af06484424f4
+.DS_Store
