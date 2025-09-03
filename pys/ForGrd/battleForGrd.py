@@ -462,7 +462,7 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
     skill_frames = [] 
     if skill["animation"] != "none":    
         for i in range(len(os.listdir(f"../img/animations/{skill['animation']}"))):
-            img = pygame.image.load(f"../img/animations/{skill['animation']}/{i - 1}.png")
+            img = pygame.image.load(f"../img/animations/{skill['animation']}/{i}.png")
             img = pygame.transform.scale_by(img, 11/3)
             skill_frames.append(img)
     
