@@ -1,4 +1,3 @@
-from turtle import color
 from game_menu import *
 from ForGrd.playerForGrd import *
 from ForGrd.itemForGrd import get_item_color_by_grade
@@ -53,11 +52,12 @@ ME = pygame.image.load("../img/monsters/ME.png")
 ATK = pygame.image.load("../img/ATK.png")
 SPATK = pygame.image.load("../img/SP.ATK.png")
 ETC = pygame.image.load("../img/ETC.png")
-SPEC_TEXT = pygame.image.load("../img/special_txt.png")
+SPEC_TEXT = pygame.image.load("../img/spc_text.png")
 SKILL = pygame.image.load("../img/skill.png")
 
 BACKGROUND = pygame.transform.scale_by(BACKGROUND, 11)
 TEXT = pygame.transform.scale_by(TEXT, 5)
+SPEC_TEXT = pygame.transform.scale_by(SPEC_TEXT, 5)
 SKILL = pygame.transform.scale_by(SKILL, 4)
 RANK = pygame.transform.scale_by(RANK, 4)
 ME = pygame.transform.scale_by(ME, 10)
@@ -136,7 +136,7 @@ def get_best_enemy_skill(enemy, player):
         
         # 1. 자신의 현재 HP를 기반으로 점수 계산
         if enemy.nowhp < enemy.HP * 0.6 and skill_type == "heal":
-            score += 50
+            score += 40
         if enemy.nowhp == enemy.HP and skill_type == "heal":
             score = 0
         # 2. 상대방의 HP를 기반으로 점수 계산
@@ -226,6 +226,12 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
             "animation": monsterskill.animation,
             "bonus_effect": getattr(monsterskill, "bonus_effect", None)
         }
+        if isinstance(monster.skW, str):
+            if monster.skW == "DEF":
+                monsterskill_dict["skW"] = 10+40*(max(1, monster.Rank[1]))
+            elif monster.skW == "SPD":
+                monsterskill_dict["skW"] = 10+50*(max(1, monster.Rank[2]))
+                
     if attackerType == "monster":
         user, target, skill, counter_skill = monster, player, monsterskill_dict, playerskill_dict
     else:  # player
@@ -460,17 +466,6 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp, Mul=1)
     ENEMY = pygame.transform.scale_by(ENEMY, 10)
     active_stance = getattr(enemyCSmon if target == player else player, 'defensive_stance', None)
     skill_frames = []
-    if active_stance == "shield":
-        if attacker != player:
-            for i in range(len(os.listdir(f"../img/animations/skill/default_player"))):
-                img = pygame.image.load(f"../img/animations/skill/default_player/{i}.png")
-                img = pygame.transform.scale_by(img, 11/3)
-                skill_frames.append(img)
-        else:
-            for i in range(len(os.listdir(f"../img/animations/skill/default_enemy"))):
-                img = pygame.image.load(f"../img/animations/skill/default_enemy/{i}.png")
-                img = pygame.transform.scale_by(img, 11/3)
-                skill_frames.append(img)
     if active_stance == "mirror":
         if target != enemyCSmon:
             for i in range(len(os.listdir(f"../img/animations/skill/default_enemy"))):
@@ -1086,6 +1081,11 @@ def skill_message(screen, AttackerType, player, enemyCSmon, Pskill, Mskill, dama
             "effect_type": Mskill.effect_type, 
             "skW": Mskill.skW
         }
+        if isinstance(Mskill.skW, str):
+            if Mskill.skW == "DEF":
+                monsterskill_dict["skW"] = 10+40*(max(1, Mskill.Rank[1]))
+            elif Mskill.skW == "SPD":
+                monsterskill_dict["skW"] = 10+50*(max(1, Mskill.Rank[2]))
 
     """스킬 메시지를 출력하기 전에 상태를 먼저 출력 (pygame)"""
     if damage != None:
@@ -1220,9 +1220,6 @@ def player_skill_phase(screen, selected_skill, enemy_skill):
     return stop
 
 def enemy_attack_phase(screen, selected_skill, enemy_skill):
-    playerCurrentHP = getattr(player, 'nowhp', getattr(player, 'HP', 100))
-    enemyCurrentHP = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
-    
     # 스킬 사용 메시지
     display_status(screen, True)
     draw_text(screen, f"  {enemyCSmon.name}의 {enemy_skill.name}!", stX, stY, WHITE)
@@ -1526,7 +1523,7 @@ def option_accept_challenge_molcamp(screen, options, y_offset = 30):
     while True:
 
         display_status(screen)
-        screen.blit(SPEC_TEXT, (sX+8, sY+536 - 300))
+        screen.blit(SPEC_TEXT, (sX+11, sY+536 - 300))
         draw_text(screen, "몰입 캠프! 코드 문해력 퀴즈!", sX+8 + 300, sY+536 - 300 + 30, ORANGE, size = 32, align='center')
         draw_wrapped_text(screen, "수락한다면 주어진 파이썬 코드의 실행 결과(출력값)를 맞추는 미니게임에 도전하게 된다. ", sX+ 20 , sY+536 - 300 + 50 + y_offset, WHITE, max_width= 600, font_size=16)
         draw_wrapped_text(screen, "플레이어가 문제의 정답을 맞히면, 몰입 캠프에서 많은 경험치를 얻게 되어 빠르게 성장할 수 있다. 정답을 맞히지 못하면, 패널티 없이 전투가 계속 진행된다.", sX+20, sY+536 - 300 + 50 + y_offset * 3, WHITE, max_width= 600, font_size=16)
@@ -1565,7 +1562,7 @@ def option_accept_challenge_2(screen, options, y_offset = 30, num = 888):
     while True:
 
         display_status(screen)
-        screen.blit(SPEC_TEXT, (sX+8, sY+536 - 300))
+        screen.blit(SPEC_TEXT, (sX+11, sY+536 - 300))
         draw_text(screen, f"{name}! 마구마구 때려라!", sX+8 + 300, sY+536 - 300 + 30, ORANGE, size = 32, align='center')
         draw_wrapped_text(screen, f"수락한다면 {name} 몬스터를 상대하게 된다. ", sX+ 20 , sY+536 - 300 + 50 + y_offset, WHITE, max_width= 600, font_size=16)
         draw_wrapped_text(screen, f"{name} 몬스터를 3턴 동안 체력을 10% 이내로 만들면 성공이다. 만약 몬스터가 죽거나 10% 이상의 체력을 가지게 되면 실패하게 된다.", sX+20, sY+536 - 300 + 50 + y_offset * 3, WHITE, max_width= 600, font_size=16)

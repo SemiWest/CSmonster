@@ -344,7 +344,7 @@ cs300.skills = {
         name='빅O', 
         effect_type="Pdamage",
         type="PS",
-        skW=80, 
+        skW="DEF", 
         priority=0,
         description="총 방어 수치가 높은 만큼 더 강하게 공격한다."),
     '이산화2': Monster.Skill(
@@ -379,17 +379,17 @@ cs311.skills = {
         skW=(1,2), 
         priority=0,
         description="CPU 파이프라인을 최적화해 방어력과 속도를 상승시킨다"),
-    'MultiThread': Monster.Skill(
-        name='MultiThread', 
+    '멀티쓰레드': Monster.Skill(
+        name='멀티쓰레드', 
         effect_type="Pdamage",
         type="SYS",
-        skW=70, 
+        skW="SPD", 
         priority=1,
         description="한 턴에 여러 차례의 연속공격을 퍼붓는다"), 
     'XOR': Monster.Skill(
         name='XOR',
         effect_type="reflect",
-        type="SYS-",
+        type="SYS",
         skW=0,
         priority=4,
         description="XOR 게이트로 상대 공격을 반전시켜 무효화시킨다."),
@@ -432,8 +432,8 @@ cs320.skills = {
         skW=1,
         priority=4,
         description="함수형 프로그래밍이 나를 거부한다. "),
-    'Type Error': Monster.Skill(
-       name='Type Error', 
+    '타입 에러': Monster.Skill(
+       name='타입 에러', 
        effect_type="Sdamage",
        type="CT",
        skW=80, 
@@ -450,14 +450,14 @@ cs341 = Monster(
     description="컴퓨터 네트워크와 관련된 기본적인 이론을 배우는 과목이다."
 )
 cs341.skills = {
-    'DDoS': Monster.Skill(
-        name='DDOS', 
+    '디도스': Monster.Skill(
+        name='디도스', 
         effect_type="Pdamage", 
         type="SYS", 
         skW=70, 
         description="다수의 공격을 여러 차례 퍼부어 데미지를 높인다."),
-    'ARP Spoofing': Monster.Skill(
-        name='ARP Spoofing',
+    'ARP 스푸핑': Monster.Skill(
+        name='ARP 스푸핑',
         effect_type="Sdamage",
         type="SYS",
         skW=50,
@@ -485,7 +485,7 @@ cs360 = Monster(
     description="데이터베이스의 기초를 넓고 얕게 배우는 과목이다. SQL과 컴퓨터의 데이터 저장 방식, 데이터베이스 구조를 주로 다룬다."
 )
 cs360.skills = {
-    'SQL Injection': Monster.Skill(
+    'SQL 인젝션': Monster.Skill(
         name='SQL Injection',
         effect_type="Pdamage",
         type="DS",
@@ -524,14 +524,14 @@ cs202 = Monster(
     description="문제해결기법"
 )
 cs202.skills = {
-    'Dynamic Programming': Monster.Skill(
-        name='Dynamic Programming',
+    '동적 프로그래밍': Monster.Skill(
+        name='동적 프로그래밍',
         effect_type="Pdamage",
         type="SYS",
         skW=70, 
         description="동적 할당 기법으로 공격을 최적화시킨다."),
-    'Greedy algorithm': Monster.Skill(
-        name='Greedy algorithm',
+    '그리디 알고리즘': Monster.Skill(
+        name='그리디 알고리즘',
         effect_type="buff",
         type="PS",
         skW=3, 
@@ -659,8 +659,8 @@ cs220.skills = {
 
 # 코옵	(이벤트)	야도란
 coop = Monster(
-    Num = 888, name="Co-op", credit = 123123, level = 3,
-    HP = 110, ATK = 100, DEF = 90, SPD = 80, 
+    Num = 888, name="Co-op", credit = 123123, level = 20,
+    HP = 100, ATK = 100, DEF = 100, SPD = 100, 
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/코옵.png",
     description="코옵설명",
@@ -668,23 +668,23 @@ coop = Monster(
     special=True
 )
 coop.skills = {
-    '업무 공격': Monster.Skill(
+    '커밋 충돌': Monster.Skill(
         name='업무 공격',
         effect_type="Pdamage",
         type="*",
-        skW=30,
+        skW=100,
         description="과다한 업무를 투척해 공격한다."),
-    '개발의 지옥': Monster.Skill(
+    '야근': Monster.Skill(
         name='개발의 지옥',
         effect_type="Pdamage",
         type="*",
-        skW=30,
+        skW=100,
         description="상대를 개발 지옥에 빠뜨려 공격한다."),
 }
 
 # 몰캠	(이벤트)	고라파덕
 madcamp = Monster(
-    Num = 777, name="몰입 캠프", credit = 234234, level = 3,
+    Num = 777, name="몰입 캠프", credit = 234234, level = 20,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/몰입캠프.png",
@@ -695,8 +695,8 @@ madcamp = Monster(
 
 # 개별연구	(이벤트)	폴리곤
 study = Monster(
-    Num = 999, name="개별 연구", credit = 345345, level = 3,
-    HP = 110, ATK = 100, DEF = 90, SPD = 80, 
+    Num = 999, name="개별 연구", credit = 345345, level = 20,
+    HP = 100, ATK = 100, DEF = 100, SPD = 100, 
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/개별연구.png",
     description="개별연구설명",
@@ -704,17 +704,17 @@ study = Monster(
     special=True
 )
 study.skills = {
-    '논문 공격': Monster.Skill(
+    '페이퍼 리딩 과제': Monster.Skill(
         name='논문 공격', 
         effect_type="Pdamage",
         type="*",
-        skW=30,
+        skW=100,
         description="논문으로 공격한다."),
     '랩미팅': Monster.Skill(
         name='랩미팅', 
         effect_type="Pdamage",
         type="*",
-        skW=30,
+        skW=100,
         description="랩미팅으로 공격한다."),
 }
 
