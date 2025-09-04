@@ -219,20 +219,25 @@ cs206 = Monster(
     description="데이타구조설명"
 )
 cs206.skills = {
-    'StackOverflow': Monster.Skill(
+    ''''StackOverflow': Monster.Skill(
         name='StackOverflow', 
         effect_type="Sdamage",
         type="CT",
         skW=100,
         priority=1,
-        description="스택 오버플로우를 일으켜 공격한다."),
+        description="스택 오버플로우를 일으켜 공격한다."),'''
+
     'FIFO': Monster.Skill(
         name='FIFO', 
         effect_type="reflect", 
         type="DS",
         skW=0.5,
         priority=2, 
-        description="큐를 U자로 만들어 상대를 향하게 한다. 상대의 공격을 절반의 피해로 상대에게 출력한다."),
+        description="큐를 U자로 만들어 상대를 향하게 한다. 상대의 공격을 절반의 피해로 상대에게 출력한다.")
+    
+}
+
+'''
     '트리 파괴': Monster.Skill(
         name='트리 파괴', 
         effect_type="Sdamage",
@@ -247,7 +252,7 @@ cs206.skills = {
         skW=0,
         priority=0,
         description="해시맵을 사용하여 최적의 공격 방법을 찾는다. 공격을 올린다."),
-}
+        '''
 
 # 시프	시 넽	레츠고이브이
 cs230 = Monster(
