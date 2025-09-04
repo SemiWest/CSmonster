@@ -822,7 +822,7 @@ def semester_intro_screen(player, screen):
         while True:
             screen.fill(BLACK)
             
-            draw_wrapped_text(screen, text, SCREEN_WIDTH//2, SCREEN_HEIGHT//2-300, alartColor, 1300, align='center')
+            draw_wrapped_text(screen, text, SCREEN_WIDTH//2, SCREEN_HEIGHT//2-500, alartColor, 1300, align='center')
             
             if player.cheatmode :
                 for i, monster_name in enumerate(player.canBeMetMonsters):
@@ -1275,7 +1275,7 @@ def get_player_info(screen, prompts):
                     active_field = (active_field + 1) % len(prompts)
                 elif event.key == pygame.K_BACKSPACE:
                     inputs[active_field] = inputs[active_field][:-1]
-                elif event.unicode.isprintable():
+                elif event.unicode and len(event.unicode) > 0:
                     # 필드별 글자 수 제한
                     if active_field == 0 and len(inputs[active_field]) < 10: # 이름
                         inputs[active_field] += event.unicode
@@ -1395,7 +1395,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
             # 몬스터 생성
             if monster_name in monsters:
                 enemy_monster = copy.deepcopy(monsters[monster_name])
-                enemy_monster.level = random.randint(player.level-1+player.level//10, player.level+1+(player.level//10)*2) - mol_lev
+                enemy_monster.level = random.randint(monsters[monster_name]-1+player.level//10, monsters[monster_name]+1+(player.level//10)*2) - mol_lev
                 enemy_monster.update_fullreset()
             else:
                 # 기본 몬스터 생성
@@ -1573,8 +1573,7 @@ def show_skill_change(screen, player):
         display_status(screen)
 
         player.current_skills[replace_skill['type']] = 0
-
-    
+   
 def display_skill_change(screen, newskill, player):
     current_index = 0
 

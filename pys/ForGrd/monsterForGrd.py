@@ -132,7 +132,7 @@ Nonemonster = Monster(
 
 # 프밍기	전산이론	팽도리
 cs101 = Monster(
-    Num = 101, name="프로그래밍 기초", credit= 3,
+    Num = 101, name="프로그래밍 기초", credit= 3, level = 3,
     HP = 53, ATK = 55, DEF = 54, SPD = 40, 
     type=["CT"], SeonSu=[206, 204, 230], 
     image="../img/monsters/프밍기.png", 
@@ -172,7 +172,7 @@ cs101.skills = {
 
 # 이산	전산이론	이상해씨
 cs204 = Monster(
-    Num = 204, name="이산구조", credit = 3,
+    Num = 204, name="이산구조", credit = 3, level = 5,
     HP = 45, ATK = 57, DEF = 57, SPD = 45, 
     type=["CT"], SeonSu=[300, 320],
     image="../img/monsters/이산구조.png",
@@ -211,7 +211,7 @@ cs204.skills = {
 
 # 데구	데이터 과학	파이리
 cs206 = Monster(
-    Num = 206, name="데이타구조", credit = 3,
+    Num = 206, name="데이타구조", credit = 3,  level = 4,
     HP = 39, ATK = 58, DEF = 47, SPD = 65, 
     type=["DS"], SeonSu=[360],
     image="../img/monsters/데이타구조.png",
@@ -250,7 +250,7 @@ cs206.skills = {
 
 # 시프	시 넽	레츠고이브이
 cs230 = Monster(
-    Num = 230, name="시스템 프로그래밍", credit = 3,
+    Num = 230, name="시스템 프로그래밍", credit = 3, level = 7,
     HP = 65, ATK = 70, DEF = 77, SPD = 75, 
     type=["SYS"], SeonSu=[311, 341],
     image="../img/monsters/시프.png",
@@ -289,7 +289,7 @@ cs230.skills = {
 
 # OS	시 넽	거북왕
 cs330 = Monster(
-    Num = 330, name="운영체제 및 실험", credit = 4,
+    Num = 330, name="운영체제 및 실험", credit = 4, level = 13,
     HP =79, ATK = 119, DEF = 117, SPD = 78, 
     type = ["SYS"], SeonSu=[],
     image="../img/monsters/OS.png",  
@@ -327,7 +327,7 @@ cs330.skills = {
 
 # 알고개	PS	피카츄
 cs300 = Monster(
-    Num = 300, name = "알고리즘 개론", credit = 3,
+    Num = 300, name = "알고리즘 개론", credit = 3, level = 9,
     HP = 45, ATK = 77, DEF = 55, SPD = 120, 
     type = ["PS"], SeonSu=[202],
     image="../img/monsters/알고개.png",
@@ -365,7 +365,7 @@ cs300.skills = {
 
 # 아키	시 넽	꼬부기
 cs311 = Monster(
-    Num = 311, name="전산기조직", credit = 3,
+    Num = 311, name="전산기조직", credit = 3, level = 11,
     HP = 79, ATK = 84, DEF = 103, SPD = 78, 
     type=["SYS"], SeonSu=[330],
     image="../img/monsters/전산기조직.png",
@@ -404,7 +404,7 @@ cs311.skills = {
 
 # PL	전산이론	메타몽
 cs320 = Monster(
-    Num = 320, name="프로그래밍 언어", credit = 3,
+    Num = 320, name="프로그래밍 언어", credit = 3, level = 13,
     HP = 85, ATK = 85, DEF = 85, SPD = 85, 
     type=["CT"], SeonSu=[220],
     image="../img/monsters/프로그래밍언어.png",
@@ -441,10 +441,9 @@ cs320.skills = {
        description="타입 에러를 일으켜 상대의 행동을 취소한다.")
 }
 
-
 # 네떡	시 넽	잠만보
 cs341 = Monster(
-    Num = 341, name="전산망개론", credit = 3,
+    Num = 341, name="전산망개론", credit = 3, level = 13,
     HP = 160, ATK = 87, DEF = 87, SPD = 30, 
     type=["SYS"], SeonSu=[],
     image="../img/monsters/전산망개론.png",
@@ -476,9 +475,10 @@ cs341.skills = {
         skW=(0,-5),
         description="패킷을 훔쳐 공격력을 올리고 대신 방여력을 낮춘다."),
 }
+
 # 디비개	데이터 과학	리자몽
 cs360 = Monster(
-    Num = 360, name="데이타베이스 개론", credit = 3,
+    Num = 360, name="데이타베이스 개론", credit = 3, level = 9,
     HP = 78, ATK = 96, DEF = 81, SPD = 100, 
     type=["DS"], SeonSu=[],
     image="../img/monsters/데이터베이스개론.png",
@@ -515,10 +515,9 @@ cs360.skills = {
     ),
 }
 
-
 # 문해기	PS	마자용
 cs202 = Monster(
-    Num = 202, name="문제해결기법", credit = 3,
+    Num = 202, name="문제해결기법", credit = 3, level = 11,
     HP = 190, ATK = 33, DEF = 58, SPD = 33, 
     type=["PS"], SeonSu=[],
     image="../img/monsters/문제해결기법.png",
@@ -553,7 +552,7 @@ cs202.skills = {
 
 # 딥러개	인공지능	망나뇽
 cs371 = Monster(
-    Num = 371, name="딥러닝개론", credit = 3,
+    Num = 371, name="딥러닝개론", credit = 3, level = 12,
     HP = 91, ATK = 117, DEF = 97, SPD = 80, 
     type=["AI"], SeonSu=[],
     image="../img/monsters/딥러닝개론.png",
@@ -589,7 +588,7 @@ cs371.skills = {
 
 # 기계학습	인공지능	라티오스
 cs376 = Monster(
-    Num = 376, name="기계학습", credit = 3,
+    Num = 376, name="기계학습", credit = 3, level = 11,
     HP = 80, ATK = 110, DEF = 95, SPD = 110, 
     type=["AI"], SeonSu=[371],
     image="../img/monsters/기계학습.png",
@@ -625,7 +624,7 @@ cs376.skills = {
 
 # 프밍이	PS	치코리타
 cs220 = Monster(
-    Num = 220, name="프로그래밍의 이해", credit = 3,
+    Num = 220, name="프로그래밍의 이해", credit = 3, level = 12,
     HP = 80, ATK = 82, DEF = 100, SPD = 80, 
     type=["PS"], SeonSu=[],
     image="../img/monsters/프로그래밍의이해.png",

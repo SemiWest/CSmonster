@@ -135,60 +135,59 @@ def get_best_enemy_skill(enemy, player):
         skill_type = skill_data.effect_type
         
         # 1. 자신의 현재 HP를 기반으로 점수 계산
-        if enemy.nowhp < enemy.HP * 0.3 and skill_type == "heal":
+        if enemy.nowhp < enemy.HP * 0.6 and skill_type == "heal":
             score += 50
-            
+        if enemy.nowhp == enemy.HP and skill_type == "heal":
+            score = 0
         # 2. 상대방의 HP를 기반으로 점수 계산
         if player.nowhp < player.HP * 0.5 and skill_type in ["Pdamage", "Sdamage", "halve_hp"]:
             score += 30
-
         # 3. 자신의 스탯 버프 필요성에 따라 점수 계산
         if skill_type == "buff":
-            if enemy.Rank[0] < 2:
+            if enemy.Rank[0] < 0:
                 if isinstance(skill_data.skW, tuple):
                     if 0 in [b % 3 for b in skill_data.skW]:
-                        score += 20
+                        score += 30
                 else:
                     if skill_data.skW % 3 == 0:
-                        score += 20
-            if enemy.Rank[1] < 2:
+                        score += 30
+            if enemy.Rank[1] < 0:
                 if isinstance(skill_data.skW, tuple):
                     if 1 in [b % 3 for b in skill_data.skW]:
-                        score += 20
+                        score += 30
                 else:
                     if skill_data.skW % 3 == 1:
-                        score += 20
-            if enemy.Rank[2] < 2:
+                        score += 30
+            if enemy.Rank[2] < 0:
                 if isinstance(skill_data.skW, tuple):
                     if 2 in [b % 3 for b in skill_data.skW]:
-                        score += 20
+                        score += 30
                 else:
                     if skill_data.skW % 3 == 2:
-                        score += 20
-        # 4. 자신의 스탯이 최대치면 가중치 제거
-            if enemy.Rank[0] == 6:
-                if not isinstance(skill_data.skW, tuple):
-                    if 0 in [b % 3 for b in skill_data.skW]:
-                        score -= 3
-                else:
-                    if skill_data.skW % 3 == 0:
-                        score = -10
-            if enemy.Rank[1] == 6:
-                if isinstance(skill_data.skW, tuple):
-                    if 1 in [b % 3 for b in skill_data.skW]:
-                        score -= 3
-                else:
-                    if skill_data.skW % 3 == 1:
-                        score = -10
-            if enemy.Rank[2] == 6:
-                if isinstance(skill_data.skW, tuple):
-                    if 2 in [b % 3 for b in skill_data.skW]:
-                        score -= 3
-                else:
-                    if skill_data.skW % 3 == 2:
-                        score = -10
+                        score += 30
 
-        skill_scores[skill_name] = score + 10 # 기본 점수 추가
+        # 4. 자신의 스탯이 최대치면 가중치 제거
+            if enemy.Rank[0] != 6:
+                if isinstance(skill_data.skW, tuple):
+                    if 0 in [b % 3 for b in skill_data.skW]:
+                        score += 5
+                else:
+                    if skill_data.skW % 3 == 0:
+                        score += 10
+            if enemy.Rank[1] != 6:
+                if isinstance(skill_data.skW, tuple):
+                    if 1 in [b % 3 for b in skill_data.skW]:
+                        score += 5
+                else:
+                    if skill_data.skW % 3 == 1:
+                        score += 10
+            if enemy.Rank[2] != 6:
+                if isinstance(skill_data.skW, tuple):
+                    if 2 in [b % 3 for b in skill_data.skW]:
+                        score += 5
+                else:
+                    if skill_data.skW % 3 == 2:
+                        score += 10
         
     total_score = sum(skill_scores.values())
     
@@ -743,7 +742,7 @@ def display_status(screen, detail=True, skill_frame_to_draw=None):
         screen.blit(RANK, (esX+470+160, esY))
         for i, rank in enumerate(enemyCSmon.Rank):
             draw_text(screen, "ATK" if i==0 else "DEF" if i==1 else "SPD", esX+470+160+20, esY+30+i*44, WHITE)
-            draw_text(screen, f"{'+' if rank>=0 else '-'}{rank}", esX+470+160+80, esY+30+i*44, RED if rank<0 else GREEN if rank>0 else WHITE)
+            draw_text(screen, f"{'+' if rank>=0 else ''}{rank}", esX+470+160+80, esY+30+i*44, RED if rank<0 else GREEN if rank>0 else WHITE)
 
     # 디버그/치트모드 시 상대 능력치 표시
     dbg = getattr(player, "debug_config", None)
@@ -1207,7 +1206,7 @@ def player_skill_phase(screen, selected_skill, enemy_skill):
             "name": selected_skill["name"],
             "type": selected_skill["type"],
             "effect_type": selected_skill["bonus_effect"][0],
-            "skW": selected_skill["bonus_effect"][1]
+            "skW": selected_skill["bonus_effect"][1] if not isinstance(selected_skill["bonus_effect"][1], str) else selected_skill["bonus_effect"][2]
         }
         skill_message(screen, "player", player, enemyCSmon, bonusskilldict, enemy_skill, None, Mul[0])
     else: skill_message(screen, "player", player, enemyCSmon, selected_skill, enemy_skill, damage, Mul)
