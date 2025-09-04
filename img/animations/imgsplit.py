@@ -2,11 +2,11 @@ from PIL import Image
 import os
 
 # 스프라이트 시트 이미지 경로
-SPRITE_PATH = "c:/Users/Owner/Documents/코딩/CSmonster/img/animations/스프라이트시트.png"
-OUT_DIR = "c:/Users/Owner/Documents/코딩/CSmonster/img/animations/split_frames"
-FRAME_WIDTH = 336
-FRAME_HEIGHT = 190
-FRAME_COUNT = 22
+SPRITE_PATH = "C:/Users/user/문서/코딩/CSmonster-main/CSmonster/img/animations/sheet.png"
+OUT_DIR = "C:/Users/user/문서/코딩/CSmonster-main/CSmonster/img/animations/split_frames"
+FRAME_WIDTH = 19
+FRAME_HEIGHT = 17
+FRAME_COUNT = 14
 
 os.makedirs(OUT_DIR, exist_ok=True)
 

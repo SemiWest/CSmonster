@@ -197,41 +197,6 @@ def get_best_enemy_skill(enemy, player):
         selected_skill_name = random.choices(skill_list, weights=probabilities, k=1)[0]
         return enemy_skills[selected_skill_name]
 
-def play_reflect_animation(screen, user, skill):
-    """'reflect' 타입 스킬 사용 시 방패 또는 거울 이미지를 사용자 앞에 표시합니다."""
-    # 1. 사용할 원본 이미지 결정
-    reflect_img_original = SHIELD if skill["skW"] == 0 else MIRROR
-
-    # 2. 이미지 최적화 및 크기 조절
-    # 화면에 맞게 최적화한 후, 요청하신 대로 20% 크기로 줄입니다.
-    reflect_img = reflect_img_original.convert_alpha()
-    reflect_img = pygame.transform.scale_by(reflect_img, 0.20) # <-- 크기를 55%로 수정
-
-    # 3. 이미지 표시 기준점 (캐릭터의 발밑 중앙) 좌표 설정
-    anchor_x, anchor_y = 0, 0
-    if user == player:
-        # 플레이어의 기준점 (sX + 320, sY + 536)
-        anchor_x, anchor_y = sX + 320, sY + 536
-    else: # 몬스터일 경우
-        # 몬스터의 기준점 (esX + 900, esY + 305)
-        anchor_x, anchor_y = esX + 900, esY + 305
-
-    # 4. 기준점을 바탕으로 방패/거울 이미지의 최종 위치 계산
-    # X축: 기준점(anchor_x)을 중앙으로 하여 이미지 너비의 절반만큼 왼쪽으로 이동
-    img_pos_x = anchor_x - reflect_img.get_width() // 2
-    # Y축: 기준점(anchor_y)에서 이미지의 높이만큼 위로 이동시키고, 10픽셀 아래로 내립니다.
-    img_pos_y = anchor_y - reflect_img.get_height() + 10 # <-- 10픽셀 아래로 내리기 위해 +10 추가
-
-    # 5. 애니메이션 루프 (0.8초 동안 표시)
-    duration = 800
-    start_time = pygame.time.get_ticks()
-
-    while pygame.time.get_ticks() - start_time < duration:
-        display_status(screen, detail=True) # 배경과 캐릭터를 계속 다시 그림
-        screen.blit(reflect_img, (img_pos_x, img_pos_y)) # 계산된 위치에 방패/거울 표시
-        pygame.display.flip()
-        pygame.time.Clock().tick(60)
-
 def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
     # --- 1. 초기 설정: 변수 준비 ---
     if playerskill is None:
@@ -297,9 +262,8 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         heal_amount = int(skill["skW"] * user.HP)
         new_hp = min(user.HP, old_hp + heal_amount)
         
-        Heal() # 회복 사운드 재생
         play_damage_sequence(screen, skill, target, user, old_hp, new_hp)
-
+        
         user.nowhp = new_hp
         return False, 0, False
 
@@ -434,7 +398,6 @@ def healAnimation(targettype="player"):
         pygame.display.flip()
         time.sleep(0.03)
 
-
 def buffAnimation(is_increase, targettype="player"):
     """버프 애니메이션 재생"""
     if targettype=="player":
@@ -460,7 +423,6 @@ def buffAnimation(is_increase, targettype="player"):
             time.sleep(0.03)
 
 # useskillAnimation 함수 전체를 이 코드로 교체하세요.
-
 def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
     """[최종 수정] 스킬 렌더링 순서 및 변수 할당 오류를 수정한 최종 버전입니다."""
 
@@ -469,8 +431,8 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
     
     skill_frames = [] 
     if skill["animation"] != "none":    
-        for i in range(len(os.listdir(f"../img/animations/{skill['animation']}"))):
-            img = pygame.image.load(f"../img/animations/{skill['animation']}/{i}.png")
+        for i in range(len(os.listdir(f"../img/animations/skill/{skill['animation']}"))):
+            img = pygame.image.load(f"../img/animations/skill/{skill['animation']}/{i}.png")
             img = pygame.transform.scale_by(img, 11/3)
             skill_frames.append(img)
     
@@ -624,39 +586,7 @@ def play_death_animation(target_character, screen):
 
         pygame.display.flip()
     # 마지막 프레임을 그리는 부분을 삭제하여 역할을 분리함
-
-def useskillAnimation(skill, old_hp=None, new_hp=None, attacker_type=None): # ◀◀ 여기 인자 이름을 attacker_type으로 수정
-    if skill["animation"]!="none":
-        x, y = sX, sY
-        screen = pygame.display.get_surface()
-        frames = [] 
-        for i in range(len(os.listdir(f"../img/animations/{skill['animation']}"))):
-            img = pygame.image.load(f"../img/animations/{skill['animation']}/{i}.png")
-            img = pygame.transform.scale_by(img, 11/3)
-            frames.append(img)
-        if hasattr(enemyCSmon, 'image'):
-            enemyimage = pygame.image.load(enemyCSmon.image)
-            enemyimage = pygame.transform.scale_by(enemyimage, 10)
-
-        play_effect(f"../sound/skills/{skill['animation']}.mp3")
-
-        anim_start_time = pygame.time.get_ticks()
-        anim_duration = 500  # 체력바 애니메이션 지속 시간 (ms)
-
-        for i in range(len(frames)):
-            display_status(screen, forskill1=True)
-
-            screen.blit(frames[i], (x, y))
-            
-            display_status(screen, forskill=True)
-            pygame.display.flip()
-            time.sleep(0.02)
-        display_status(screen, detail=True)
-        pygame.display.flip()
-        time.sleep(0.3)
-    else:
-        return
-    
+   
 def flash_red(target_character, screen):
     """지정한 캐릭터를 붉은색으로 깜빡이게 만듭니다. ('player' 또는 'monster')"""
     
@@ -2124,7 +2054,7 @@ def battle(getplayer, getenemy, screen=None):
         playerCurrentHP = player.nowhp
         player.heal(heal_amount)
         display_status(screen)
-        Heal()
+        healAnimation()
         animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
         draw_text(screen, f"  {player.name}의 체력이 회복되었다!", stX, stY, GREEN)
         pygame.display.flip()
