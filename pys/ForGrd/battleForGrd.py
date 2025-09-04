@@ -79,6 +79,13 @@ for i in range(len(os.listdir(path))):
     img = pygame.image.load(f"{path}/{i}.png")
     img = pygame.transform.scale_by(img, 10)
     DEBUFF.append(img)
+HEAL = []
+path = "../img/animations/heal"
+for i in range(len(os.listdir(path))):
+    img = pygame.image.load(f"{path}/{i}.png")
+    img = pygame.transform.scale_by(img, 10)
+    HEAL.append(img)
+
 # 반사 스킬용 이미지 로드
 SHIELD = pygame.image.load("../img/animations/items/shield.png")
 SHIELD = pygame.transform.scale_by(SHIELD, 8)
@@ -426,6 +433,22 @@ def animate_health_bar(screen, y, x, current_hp, target_hp, max_hp):
         pygame.display.flip()
         time.sleep(0.666/steps)
 
+def healAnimation(targettype="player"):
+    """회복 애니메이션 재생"""
+    if targettype=="player":
+        x, y = sX+320, sY+536
+    else:
+        x, y = esX+900, esY+305
+    screen = pygame.display.get_surface()
+    Heal()
+    for i in range(len(HEAL)):
+        display_status(screen, detail=True)
+        image = HEAL[i]
+        screen.blit(image, (x-image.get_width()//2, y-image.get_height()))
+        pygame.display.flip()
+        time.sleep(0.03)
+
+
 def buffAnimation(is_increase, targettype="player"):
     """버프 애니메이션 재생"""
     if targettype=="player":
@@ -471,9 +494,9 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
     # --- 2. 애니메이션 시간 설정 (오류 수정) ---
     SKILL_ANIM_END_TIME = 1100
     IMPACT_START_TIME = 1500
-    FLASH_DURATION = 500
+    FLASH_DURATION = 800
     HP_BAR_START_TIME = IMPACT_START_TIME
-    HP_BAR_DURATION = 500
+    HP_BAR_DURATION = 800
     TOTAL_DURATION = HP_BAR_START_TIME + HP_BAR_DURATION
     
     start_time = pygame.time.get_ticks()
@@ -498,7 +521,7 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
             screen.blit(ENEMY, (esX + 900 - ENEMY.get_width() // 2, esY + 305 - ENEMY.get_height()))
 
         # [레이어 2.5] 방패/거울
-        active_stance = getattr(enemyCSmon if target == player else player, 'defensive_stance', None)
+        active_stance = getattr(enemyCSmon if target != player else player, 'defensive_stance', None)
         if active_stance:
             defense_img = SHIELD if active_stance == 'shield' else MIRROR
             if target == player:
@@ -551,13 +574,13 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
         screen.blit(TEXT, (sX+11, sY+535))
 
         # [레이어 7] 체력바 애니메이션
-        
         if target == player:
             progress = min(1.0, (elapsed_time - HP_BAR_START_TIME) / HP_BAR_DURATION) if elapsed_time >= HP_BAR_START_TIME else 0
             animated_hp = old_hp - (old_hp - new_hp) * progress
             # ▼▼▼ [수정 3] 체력바 위치를 display_status와 동일하게 변경 (y+104, x+135 -> y+121, x+122) ▼▼▼
             draw_health_bar(screen, psY + 121, psX + 122, animated_hp, player.HP)
             draw_health_bar(screen, esY + 121, esX + 122, enemyCSmon.nowhp, enemyCSmon.HP)
+
         else:
             progress = min(1.0, (elapsed_time - HP_BAR_START_TIME) / HP_BAR_DURATION) if elapsed_time >= HP_BAR_START_TIME else 0
             animated_hp = old_hp - (old_hp - new_hp) * progress
@@ -1348,7 +1371,7 @@ def item_phase(screen):
             heal_amount_req = int(player.HP * selected_item.varied)
             
         healed = player.heal(heal_amount_req, allow_revive=getattr(selected_item, "canuse_on_fainted", False))
-        Heal()
+        healAnimation()
         animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
         display_status(screen)
         draw_text(screen, f"  {player.name}의 체력이 {healed} 회복되었다!", stX, stY, WHITE)
@@ -2012,7 +2035,7 @@ def battle(getplayer, getenemy, screen=None):
 
 
             display_status(screen)
-            Heal()
+            healAnimation()
             animate_health_bar(screen, psY+121, psX+122, player.nowhp, player.HP, player.HP)
             draw_text(screen, f"  {player.name}의 체력이 전부 회복되었다!", stX, stY, GREEN)
             pygame.display.flip()
@@ -2027,11 +2050,11 @@ def battle(getplayer, getenemy, screen=None):
         gpa = gpaCalculator(enemyCSmon, hap_num, item_num, False)
 
         if player.nowhp != player.HP:
-            heal_amount = max(1, int(player.HP * 0.10))
+            heal_amount = max(1, int(player.HP * 0.20))
             playerCurrentHP = player.nowhp
             player.heal(heal_amount)
             display_status(screen)
-            Heal()
+            healAnimation()
             animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
             draw_text(screen, f"  {player.name}의 체력이 회복되었다!", stX, stY, GREEN)
             pygame.display.flip()

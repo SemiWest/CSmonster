@@ -370,7 +370,7 @@ cs311 = Monster(
     HP = 79, ATK = 84, DEF = 103, SPD = 78, 
     type=["SYS"], SeonSu=[330],
     image="../img/monsters/전산기조직.png",
-    description="전산기조직설명"
+    description="시프를 수강한 후에 들어야 하는 과목이다. 컴퓨터의 하드웨어적인 구조를 배운다."
 )
 cs311.skills = {
     '파이프라인': Monster.Skill(
@@ -386,7 +386,7 @@ cs311.skills = {
         type="CT",
         skW=70, 
         priority=2,
-        description="한 턴에 여러 차례의 연속 공격을 한다."), # TODO: 연속 공격 구현 가능한지 확인
+        description="한 턴에 여러 차례의 연속공격을 퍼붓는다"), 
     'XOR': Monster.Skill(
         name='XOR',
         effect_type="reflect",
@@ -402,7 +402,7 @@ cs320 = Monster(
     HP = 85, ATK = 85, DEF = 85, SPD = 85, 
     type=["CT"], SeonSu=[220],
     image="../img/monsters/프로그래밍언어.png",
-    description="프로그래밍 언어설명"
+    description="프로그래밍언어의 본질적인 요소를 배우는 과목이다. 난해한 수업 내용과 펜파인애플팬이라는 비유로 유명하다."
 )
 cs320.skills = {
     'PPAP': Monster.Skill(
@@ -426,13 +426,13 @@ cs320.skills = {
         skW=1,
         priority=1,
         description="함수형 프로그래밍이 나를 거부한다. "),
-    'Type Error': Monster.Skill(
-        name='Type Error', 
-        effect_type="disable",
-        type="CT",
-        skW=0, 
-        priority=2,
-        description="타입 에러를 일으켜 상대의 행동을 취소한다."), #TODO: 구현 가능한지 확인해야함
+    #'Type Error': Monster.Skill(
+     #   name='Type Error', 
+      #  effect_type="disable",
+      #  type="CT",
+      #  skW=0, 
+       # priority=2,
+       # description="타입 에러를 일으켜 상대의 행동을 취소한다."), #TODO: 구현 가능한지 확인해야함
 }
 
 
@@ -442,7 +442,7 @@ cs341 = Monster(
     HP = 160, ATK = 87, DEF = 87, SPD = 30, 
     type=["SYS"], SeonSu=[],
     image="../img/monsters/전산망개론.png",
-    description="네트워크설명"
+    description="컴퓨터 네트워크와 관련된 기본적인 이론을 배우는 과목이다."
 )
 cs341.skills = {
     'DDoS': Monster.Skill(
@@ -450,7 +450,7 @@ cs341.skills = {
         effect_type="Pdamage", 
         type="SYS", 
         skW=70, 
-        description="다수의 공격을 여러 차례 퍼붓는다."),
+        description="다수의 공격을 여러 차례 퍼부어 데미지를 높인다."),
 }
 # 디비개	데이터 과학	리자몽
 cs360 = Monster(
@@ -458,7 +458,7 @@ cs360 = Monster(
     HP = 78, ATK = 96, DEF = 81, SPD = 100, 
     type=["DS"], SeonSu=[],
     image="../img/monsters/데이터베이스개론.png",
-    description="데이터베이스개론설명"
+    description="데이터베이스의 기초를 넓고 얕게 배우는 과목이다. SQL과 컴퓨터의 데이터 저장 방식, 데이터베이스 구조를 주로 다룬다."
 )
 cs360.skills = {
     'SQL Injection': Monster.Skill(
@@ -494,12 +494,18 @@ cs202 = Monster(
     description="문제해결기법"
 )
 cs202.skills = {
-    '문제해결 공격': Monster.Skill(
-        name='문제해결 공격', 
+    'Dynamic Programming': Monster.Skill(
+        name='Dynamic Programming',
         effect_type="Pdamage",
         type="PS",
         skW=70, 
-        description="문제해결 기법을 사용해 상대에게 강력한 공격을 한다."),
+        description="동적 할당 기법으로 공격을 최적화시킨다."),
+    'Greedy algorithm': Monster.Skill(
+        name='Greedy algorithm',
+        effect_type="buff",
+        type="PS",
+        skW=0, 
+        description="그리디 알고리즘을 사용해 공격력을 높인다."),
 }
 
 # 딥러개	인공지능	망나뇽
@@ -518,11 +524,11 @@ cs371.skills = {
         skW=70,
         description="지속적으로 학습하며 강력한 공격을 가한다."),
     'Overfitting': Monster.Skill(
-        name='Backpropagation', 
+        name='Overfitting',
         effect_type="Pdamage",
         type="AI",
         skW=100,
-        description="한 차례 강력한 공격을 가하지만 이후 가하는 공격이 크게 약해진다."), # TODO: 추가적인 구현 필요
+        description="한 차례 강력한 공격을 가하지만 이후 가하는 공격이 크게 약해진다."), 
     
 }
 
@@ -535,18 +541,18 @@ cs376 = Monster(
     description="기계학습설명"
 )
 cs376.skills = {
-    '기계 공격': Monster.Skill(
-        name='기계 공격', 
+    'Gradient descent': Monster.Skill(
+        name='Gradient descent',
         effect_type="Pdamage",
         type="AI",
         skW=70,
-        description="기계학습 기법을 사용해 상대에게 강력한 공격을 한다."),
-    '기계 공격': Monster.Skill(
-        name='기계 공격', 
-        effect_type="Pdamage",
+        description="경사하강법으로 최적의 공격을 찾아낸다."),
+    'Reinforcement learning': Monster.Skill(
+        name='Reinforcement learning',
+        effect_type="buff",
         type="AI",
-        skW=70,
-        description="기계학습 기법을 사용해 상대에게 강력한 공격을 한다."),
+        skW=3,
+        description="강화학습으로 공격력을 강화한다.."),
 }
 
 # 프밍이	전산이론	치코리타
@@ -564,6 +570,12 @@ cs220.skills = {
         type="PS",
         skW=70,
         description="이해한다."),
+    'F#': Monster.Skill(
+        name='F#', 
+        effect_type="Pdamage",
+        type="PS",
+        skW=70,
+        description="F#으로 공격한다."),
 }
 
 # 코옵	(이벤트)	야도란
@@ -577,12 +589,18 @@ coop = Monster(
     special=True
 )
 coop.skills = {
-    '코옵 공격': Monster.Skill(
-        name='코옵 공격', 
+    '업무 공격': Monster.Skill(
+        name='업무 공격',
         effect_type="Pdamage",
         type="*",
-        skW=70,
-        description="코옵 기법을 사용해 상대에게 강력한 공격을 한다."),
+        skW=30,
+        description="과다한 업무를 투척해 공격한다."),
+    '개발의 지옥': Monster.Skill(
+        name='개발의 지옥',
+        effect_type="Pdamage",
+        type="*",
+        skW=30,
+        description="상대를 개발 지옥에 빠뜨려 공격한다."),
 }
 
 # 몰캠	(이벤트)	고라파덕
@@ -595,14 +613,6 @@ madcamp = Monster(
     reward = "멘트 변동 예정",  # 실패시 멘트
     special=True
 )
-madcamp.skills = {
-    '딥러닝 공격': Monster.Skill(
-        name='딥러닝 공격', 
-        effect_type="Pdamage",
-        type="AI",
-        skW=70,
-        description="딥러닝 기법을 사용해 상대에게 강력한 공격을 한다."),
-}
 
 # 개별연구	(이벤트)	폴리곤
 study = Monster(
@@ -615,12 +625,18 @@ study = Monster(
     special=True
 )
 study.skills = {
-    '연구 공격': Monster.Skill(
-        name='연구 공격', 
+    '논문 공격': Monster.Skill(
+        name='논문 공격', 
         effect_type="Pdamage",
         type="*",
-        skW=70,
-        description="개별연구 기법을 사용해 상대에게 강력한 공격을 한다."),
+        skW=30,
+        description="논문으로 공격한다."),
+    '랩미팅': Monster.Skill(
+        name='랩미팅', 
+        effect_type="Pdamage",
+        type="*",
+        skW=30,
+        description="랩미팅으로 공격한다."),
 }
 
 monsters = {
