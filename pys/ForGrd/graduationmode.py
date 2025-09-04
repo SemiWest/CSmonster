@@ -780,42 +780,6 @@ def semester_intro_screen(player, screen):
     pygame.display.flip()
     wait_for_key()
 
-    if semester_name == "1-1":
-        # 이산구조, 데이타구조, 시스템 프로그래밍 중 한 과목을 직접 선택
-        options = ["이산구조", "데이타구조", "시스템 프로그래밍"]
-        selected = 0
-        while True:
-            screen.fill(BLACK)
-            draw_text(screen, "수강할 과목을 선택하세요", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-200, WHITE, align='center')
-            for i, option in enumerate(options):
-                color = typecolor_dict[monsters[option].type[0]] if i == selected else WHITE
-                draw_text(screen, option, SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*80, color, align='center', size=64)
-                if i == selected:
-                    display_Monster_Imge(screen, monsters[option], SCREEN_WIDTH//2 + len(option)*32+96, SCREEN_HEIGHT//2 - 68 + i*80, size=4)
-            
-            draw_text(screen, "방향키로 조작, Enter로 선택", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, GRAY, align='center')
-            draw_text(screen, f"현재까지 받은 학사경고 횟수 {player.warning_count} / 3", SCREEN_WIDTH//2, SCREEN_HEIGHT - 120, align='center', color = RED, size=48)
-            pygame.display.flip()
-            key = wait_for_key()
-            if key == 'enter':
-                player.thisSemesterMonsters =  [options[selected]]
-                player.canBeMetMonsters.remove(options[selected])
-                player.starting = monsters[options[selected]].type[0]
-                return
-            elif key == 'up' and selected > 0:
-                selected -= 1
-                option_change_sound()
-            elif key == 'down' and selected < len(options)-1:
-                selected += 1
-                option_change_sound()
-
-    if semester_name == "3-여름방학":
-        player.thisSemesterMonsters = ["몰입캠프"]
-        return
-    if semester_name == "4-여름방학":
-        player.thisSemesterMonsters = random.choice([["코옵"],["개별연구"]])
-        return
-
     if "시프" in player.clearedMonsters and "2-1" in player.completed_semesters and "기계학습" not in player.clearedMonsters and "기계학습" not in player.canBeMetMonsters:
         player.canBeMetMonsters.append("기계학습")
     
@@ -841,7 +805,59 @@ def semester_intro_screen(player, screen):
     pygame.display.flip()
     wait_for_key()
 
-    get_current_semester_monsters(player)
+    # 이번 학기 수강 과목 선택
+    player.thisSemesterMonsters = []
+    if semester_name == "3-여름방학":
+        player.thisSemesterMonsters = ["몰입캠프"]
+        return
+    elif semester_name == "4-여름방학":
+        player.thisSemesterMonsters = random.choice([["코옵"],["개별연구"]])
+        return
+    elif len(player.canBeMetMonsters) >= 1:
+        # 이산구조, 데이타구조, 시스템 프로그래밍 중 한 과목을 직접 선택
+        options = player.canBeMetMonsters
+        selected = 0
+        while True:
+            screen.fill(BLACK)
+            
+            if len(player.thisSemesterMonsters) >= 1 or len(player.canBeMetMonsters) < 1: text = "수강할 과목 선택이 완료되었다면 오른쪽 방향키를 입력해주세요."
+            else: text = "수강할 과목을 선택하세요. 최대 세 개의 과목을 선택할 수 있으며, 선택했던 과목을 다시 선택해 취소할 수 있습니다."
+            draw_wrapped_text(screen, text, SCREEN_WIDTH//2, SCREEN_HEIGHT//2-200, WHITE, 1000, line_spacing = 40, align='center')
+            
+            for i, option in enumerate(options):
+                color = GRAY if option in player.thisSemesterMonsters else typecolor_dict[monsters[option].type[0]] if i == selected else WHITE
+                draw_text(screen, option, SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*80, color, align='center', size=64)
+                if i == selected or option in player.thisSemesterMonsters:
+                    display_Monster_Imge(screen, monsters[option], SCREEN_WIDTH//2 + len(option)*32+96, SCREEN_HEIGHT//2 - 68 + i*80, size=4)
+            
+            draw_text(screen, "방향키로 조작, Enter로 선택", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, GRAY, align='center')
+            draw_text(screen, f"현재까지 받은 학사경고 횟수 {player.warning_count} / 3", SCREEN_WIDTH//2, SCREEN_HEIGHT - 120, align='center', color = RED, size=48)
+            pygame.display.flip()
+            key = wait_for_key()
+            if key == 'enter':
+                if options[selected] in player.thisSemesterMonsters:
+                    option_escape_sound()
+                    # 옵션을 canBeMetMonsters의 원래 위치에 다시 삽입
+                    player.canBeMetMonsters=options
+                    player.thisSemesterMonsters.remove(options[selected])
+                    for mon in player.thisSemesterMonsters:
+                        player.canBeMetMonsters.remove(mon)
+                else:
+                    if len(player.thisSemesterMonsters) >= 3:
+                        catching()
+                        continue
+                    player.thisSemesterMonsters.append(options[selected])
+                    player.canBeMetMonsters.remove(options[selected])
+            elif key == 'up' and selected > 0:
+                selected -= 1
+                option_change_sound()
+            elif key == 'down' and selected < len(options)-1:
+                selected += 1
+                option_change_sound()
+            elif key == 'right' and len(player.thisSemesterMonsters) >= 1:
+                if player.current_semester == "1-1":
+                    player.starting = player.thisSemesterMonsters[0].type[0]
+                break
 
     screen.fill(WHITE)
     draw_text(screen, "이번 학기에 수강할 과목", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-200, BLACK, align='center')    

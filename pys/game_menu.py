@@ -234,7 +234,7 @@ def draw_text(surface, text, x, y, color=BLACK, highlight=None, size=32, align='
     surface.blit(text_surface, text_rect.topleft)
     return text_rect
 
-def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=32, line_spacing=10):
+def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=32, line_spacing=10, align='left'):
     """설명 텍스트가 max_width를 넘지 않게 자동 줄바꿈해서 출력"""
     font_obj = font
     if font_size != 32:
@@ -250,8 +250,16 @@ def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=32, line_
             lines.append(current_line)
             current_line = word + " "
     lines.append(current_line)
+    
     for i, line in enumerate(lines):
-        surface.blit(font_obj.render(line.strip(), True, color), (x, y + i * (font_size + line_spacing)))
+        text_surface = font_obj.render(line.strip(), True, color)
+        if align == 'center':
+            text_rect = text_surface.get_rect(centerx=x, top=y)
+        elif align == 'right':
+            text_rect = text_surface.get_rect(right=x, top=y)
+        else:  # 'left' 또는 기타
+            text_rect = text_surface.get_rect(topleft=(x, y))
+        surface.blit(text_surface, (text_rect.topleft + (0, i * (font_size + line_spacing))))
 
 
 def apply_alpha_overlay(screen, rect, alpha=180, color=(0,0,0)):

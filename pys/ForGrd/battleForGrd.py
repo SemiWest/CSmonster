@@ -441,23 +441,8 @@ def buffAnimation(is_increase, targettype="player"):
 def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
     """[최종 수정] 스킬 렌더링 순서 및 변수 할당 오류를 수정한 최종 버전입니다."""
 
-    # --- 1. 초기 설정: 시전자(Caster)와 타겟(Target)의 정보 설정 ---
-    is_player_target = (target == player)
-    
-    if is_player_target: 
-        caster_char, target_char = enemyCSmon, player
-        caster_img_surface = pygame.image.load(caster_char.image).convert_alpha()
-        caster_img_surface = pygame.transform.scale_by(caster_img_surface, 10)
-        # ▼▼▼ [수정 1] 몬스터 위치를 display_status와 동일하게 변경 (900, 305 -> 900, 305) ▼▼▼
-        caster_pos = (esX + 900 - caster_img_surface.get_width() // 2, esY + 305 - caster_img_surface.get_height())
-        target_img_surface, target_pos = ME, (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height())
-    else: 
-        caster_char, target_char = player, enemyCSmon
-        caster_img_surface, caster_pos = ME, (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height())
-        target_img_surface = pygame.image.load(target_char.image).convert_alpha()
-        target_img_surface = pygame.transform.scale_by(target_img_surface, 10)
-        # ▼▼▼ [수정 1] 몬스터 위치를 display_status와 동일하게 변경 (900, 305 -> 900, 305) ▼▼▼
-        target_pos = (esX + 900 - target_img_surface.get_width() // 2, esY + 305 - target_img_surface.get_height())
+    ENEMY = pygame.image.load(enemyCSmon.image).convert_alpha()
+    ENEMY = pygame.transform.scale_by(ENEMY, 10)
     
     skill_frames = [] 
     if skill["animation"] != "none":    
@@ -466,11 +451,11 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
             img = pygame.transform.scale_by(img, 11/3)
             skill_frames.append(img)
     
-    red_surface = target_img_surface.copy()
+    red_surface = ENEMY.copy() if target != player else ME.copy()
     red_surface.fill((255, 60, 60, 150), special_flags=pygame.BLEND_RGBA_MULT)
 
     # --- 2. 애니메이션 시간 설정 (오류 수정) ---
-    SKILL_ANIM_END_TIME = 1500
+    SKILL_ANIM_END_TIME = 1100
     IMPACT_START_TIME = 1500
     FLASH_DURATION = 500
     HP_BAR_START_TIME = IMPACT_START_TIME
@@ -491,47 +476,47 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
         # [레이어 1] 배경
         screen.blit(BACKGROUND, (sX, sY))
 
-        # [레이어 2] 타겟 캐릭터
-        if getattr(target_char, 'is_defeated', False):
-            silhouette = target_img_surface.copy(); silhouette.fill((30, 30, 30), special_flags=pygame.BLEND_RGB_MULT)
-            screen.blit(silhouette, target_pos)
+        # [레이어 2] 몹
+        if getattr(enemyCSmon, 'is_defeated', False):
+            silhouette = ENEMY.copy(); silhouette.fill((30, 30, 30), special_flags=pygame.BLEND_RGB_MULT)
+            screen.blit(silhouette, (esX + 900 - ENEMY.get_width() // 2, esY + 305 - ENEMY.get_height()))
         else:
-            screen.blit(target_img_surface, target_pos)
+            screen.blit(ENEMY, (esX + 900 - ENEMY.get_width() // 2, esY + 305 - ENEMY.get_height()))
 
         # [레이어 2.5] 방패/거울
-        active_stance = getattr(target_char, 'defensive_stance', None)
+        active_stance = getattr(enemyCSmon if target == player else player, 'defensive_stance', None)
         if active_stance:
             defense_img = SHIELD if active_stance == 'shield' else MIRROR
-            if target_char == player:
+            if target == player:
                 anchor_x, anchor_y = sX + 320, sY + 536
             else:
                 # ▼▼▼ [수정 1] 방패/거울 기준점도 몬스터 위치에 맞게 변경 (900, 305 -> 900, 305) ▼▼▼
-                anchor_x, anchor_y = esX + 900, esY + 305
-            
-            img_pos_x = anchor_x - defense_img.get_width() // 2
-            img_pos_y = anchor_y - defense_img.get_height() + 10
+                anchor_x, anchor_y = esX + 880, esY + 305
+            img_pos_x = anchor_x - defense_img.get_width()//2
+            img_pos_y = anchor_y - defense_img.get_height()
             screen.blit(defense_img, (img_pos_x, img_pos_y))
 
         # [레이어 3] 스킬 애니메이션
         if elapsed_time < SKILL_ANIM_END_TIME and skill_frames:
             frame_index = int((elapsed_time / SKILL_ANIM_END_TIME) * len(skill_frames))
             frame_index = min(frame_index, len(skill_frames) - 1)
+            if active_stance == 'mirror':
+                frame_index = len(skill_frames) - 1 - frame_index
             screen.blit(skill_frames[frame_index], (sX, sY))
-            pygame.time.wait(20)
 
-        # [레이어 4] 시전자 캐릭터
-        if getattr(caster_char, 'is_defeated', False):
-            silhouette = caster_img_surface.copy(); silhouette.fill((30, 30, 30), special_flags=pygame.BLEND_RGB_MULT)
-            screen.blit(silhouette, caster_pos)
+        # [레이어 4] 플레이어
+        if getattr(player, 'is_defeated', False):
+            silhouette = ME.copy(); silhouette.fill((30, 30, 30), special_flags=pygame.BLEND_RGB_MULT)
+            screen.blit(silhouette, (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height()))
         else:
-            screen.blit(caster_img_surface, caster_pos)
+            screen.blit(ME, (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height()))
         
         # [레이어 5] 피격 점멸 효과
         if elapsed_time >= IMPACT_START_TIME:
             if not hurt_sound_played and new_hp < old_hp: NormalDamage(); hurt_sound_played = True
             flash_elapsed = elapsed_time - IMPACT_START_TIME
             if flash_elapsed < FLASH_DURATION and new_hp < old_hp:
-                if (int(flash_elapsed / 100)) % 2 == 0: screen.blit(red_surface, target_pos)
+                if (int(flash_elapsed / 100)) % 2 == 0: screen.blit(red_surface, (esX + 900 - ENEMY.get_width() // 2, esY + 305 - ENEMY.get_height())) if target != player else screen.blit(red_surface, (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height()))
 
         # [레이어 6] UI
         screen.blit(STAT, (esX, esY))
@@ -553,7 +538,7 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
 
         # [레이어 7] 체력바 애니메이션
         
-        if is_player_target:
+        if target == player:
             progress = min(1.0, (elapsed_time - HP_BAR_START_TIME) / HP_BAR_DURATION) if elapsed_time >= HP_BAR_START_TIME else 0
             animated_hp = old_hp - (old_hp - new_hp) * progress
             # ▼▼▼ [수정 3] 체력바 위치를 display_status와 동일하게 변경 (y+104, x+135 -> y+121, x+122) ▼▼▼
