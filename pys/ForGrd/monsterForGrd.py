@@ -76,6 +76,7 @@ class Monster:
         self.participated = False  # 전투에 참여했는지 여부
         self.hpShield = False
         self.usedskill = None
+        self.reflect_success_rate = 1.0
         self.update_fullreset()
 
     def update_battle(self):        

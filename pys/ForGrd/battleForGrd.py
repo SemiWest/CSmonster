@@ -335,17 +335,31 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
             
             return True, 0, 1 # 상대 턴 종료
         else:  # 반사 (mirror)
-            damage, Mul = Damage(target, user, counter_skill)
-            damage = int(damage * skill["skW"])
-            
-            old_hp = target.nowhp
-            new_hp = max(0, old_hp - damage)
+            cur_rate = getattr(user, "reflect_success_rate", 1.0)
+            if random.random() > cur_rate:
+                # 반사 실패: 데미지를 받음
+                old_hp = user.nowhp
+                damage, Mul = Damage(user, target, counter_skill)
+                new_hp = max(0, old_hp - damage)
+                play_damage_sequence(screen, counter_skill, target, user, old_hp, new_hp)
+                user.reflect_success_rate = cur_rate * 0.5 
+                
+                return False, -121, False
+            else:
+                # 반사 성공: 상대에게 데미지를 줌
+                damage, Mul = Damage(target, user, counter_skill)
+                damage = int(damage * skill["skW"])
+                
+                old_hp = target.nowhp
+                new_hp = max(0, old_hp - damage)
 
-            # 반사 데미지 애니메이션 재생 (이제 거울과 함께 표시됩니다)
-            play_damage_sequence(screen, counter_skill, user, target, old_hp, new_hp)
-            
-            target.nowhp = new_hp
-            return True, damage, Mul # 상대 턴 종료
+                # 반사 데미지 애니메이션 재생 (이제 거울과 함께 표시됩니다)
+                play_damage_sequence(screen, counter_skill, user, target, old_hp, new_hp)
+                
+                target.nowhp = new_hp
+
+                user.reflect_success_rate = cur_rate * 0.5 
+                return True, damage, Mul # 상대 턴 종료
 
     # E. 그 외 모든 스킬
     else:
@@ -1867,7 +1881,8 @@ def battle(getplayer, getenemy, screen=None):
                         battle_end = True
                         return "실패"
                            
-    
+        # 새로운 전투가 시작할 때마다 몬스터의 반사 성공률을 100%로 초기화
+        enemyCSmon.reflect_success_rate = 1.0
 
         while not battle_end:
             if enemyCSmon.Num == 777:     # 몰캠

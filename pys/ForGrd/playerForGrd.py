@@ -181,6 +181,8 @@ class Player:
         self.molcam = None      # None / 0 / 1 / 2 / 3
         self.event_success = False  # 코옵 / 개별 True / False (성공하면 true)
 
+        self.reflect_success_rate = 1.0
+
     
     def playertype(self):
         """플레이어의 주력 스킬 타입 반환"""
