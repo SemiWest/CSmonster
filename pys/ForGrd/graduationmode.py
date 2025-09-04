@@ -760,7 +760,7 @@ def semester_intro_screen(player, screen):
         title = "2-1"
         description = ("당신은 드디어 2학년이 되어 전산학부를 주전공으로 선택했습니다.", "이제부터 진짜 대학 생활의 시작입니다. 행운을 빕니다.")
     elif semester_name == "3-여름방학":
-        title = "몰입캠프"
+        title = "몰입 캠프"
         description = "당신은 몰입캠프 참가에 성공했습니다. 한달 간 코딩 실력을 키워봅시다."
     elif semester_name == "4-여름방학":
         title = "4-여름방학"
@@ -808,16 +808,16 @@ def semester_intro_screen(player, screen):
     # 이번 학기 수강 과목 선택
     player.thisSemesterMonsters = []
     if semester_name == "3-여름방학":
-        player.thisSemesterMonsters = ["몰입캠프"]
+        player.thisSemesterMonsters = ["몰입 캠프"]
         return
     elif semester_name == "4-여름방학":
-        player.thisSemesterMonsters = random.choice([["코옵"],["개별연구"]])
+        player.thisSemesterMonsters = random.choice([["Co-op"],["개별 연구"]])
         return
     else:
         # 수강신청
         options = player.canBeMetMonsters.copy()
         selected = 0
-        text = "수강할 과목을 선택하세요. \n 최대 세 개의 과목을 선택할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
+        text = "수강할 과목을 선택하세요. \n 최대 두 개의 과목을 선택할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
         alartColor = WHITE
         while True:
             screen.fill(BLACK)
@@ -855,8 +855,8 @@ def semester_intro_screen(player, screen):
                         player.canBeMetMonsters.remove(mon)
                 else:
                     option_select_sound()
-                    if len(player.thisSemesterMonsters) >= 3:
-                        text = "최대 세 개의 과목까지만 선택할 수 있습니다!"
+                    if len(player.thisSemesterMonsters) >= 2:
+                        text = "최대 두 개의 과목까지만 선택할 수 있습니다!"
                         alartColor = RED
                         catching()
                         continue
@@ -1250,6 +1250,7 @@ def show_final_result(player, screen):
 
     pygame.display.flip()
     wait_for_key()
+
 def get_player_info(screen, prompts):
     """
     pygame에서 이름과 인스타그램 ID 입력을 함께 받는 함수.
@@ -1409,7 +1410,8 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                 player.ending_type = "프밍기 패배"
                 game_running = False
                 break
-        
+            
+            need_skill_change = False  # 각 전투 후에 초기화
 
             if battle_result == 1:  # 승리
                 if monster_name in player.clearedMonsters:

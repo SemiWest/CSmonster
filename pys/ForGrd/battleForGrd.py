@@ -39,6 +39,7 @@ HPLEN = 64
 BACKGROUND = pygame.image.load("../img/background.png")
 STAT = pygame.image.load("../img/stat.png")
 TEXT = pygame.image.load("../img/text.png")
+RANK = pygame.image.load("../img/rank.png")
 
 CT = pygame.image.load("../img/CT.png")
 DS = pygame.image.load("../img/DS.png")
@@ -58,6 +59,7 @@ SKILL = pygame.image.load("../img/skill.png")
 BACKGROUND = pygame.transform.scale_by(BACKGROUND, 11)
 TEXT = pygame.transform.scale_by(TEXT, 5)
 SKILL = pygame.transform.scale_by(SKILL, 4)
+RANK = pygame.transform.scale_by(RANK, 4)
 ME = pygame.transform.scale_by(ME, 10)
 CT = pygame.transform.scale_by(CT, 4)
 DS = pygame.transform.scale_by(DS, 4)
@@ -79,12 +81,18 @@ for i in range(len(os.listdir(path))):
     img = pygame.image.load(f"{path}/{i}.png")
     img = pygame.transform.scale_by(img, 10)
     DEBUFF.append(img)
+HEALFORP = []
+HEALFORE = []
 HEAL = []
 path = "../img/animations/heal"
 for i in range(len(os.listdir(path))):
     img = pygame.image.load(f"{path}/{i}.png")
     img = pygame.transform.scale_by(img, 10)
     HEAL.append(img)
+HEALFORE = HEAL
+for i in range(len(HEAL)):
+    HEALFORP.append(pygame.transform.scale_by(HEAL[i], 2))
+
 
 # 반사 스킬용 이미지 로드
 SHIELD = pygame.image.load("../img/animations/items/shield.png")
@@ -206,7 +214,8 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
             "type": playerskill["type"],
             "effect_type": playerskill["effect_type"],
             "skW": playerskill["skW"],
-            "animation": playerskill["animation"]
+            "animation": playerskill["animation"],
+            "bonus_effect": playerskill.get("bonus_effect", None)
         }
     if monsterskill is None:
         monsterskill_dict = None
@@ -215,9 +224,9 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
             "type": monsterskill.skill_type,
             "effect_type": monsterskill.effect_type,
             "skW": monsterskill.skW,
-            "animation": monsterskill.animation
+            "animation": monsterskill.animation,
+            "bonus_effect": getattr(monsterskill, "bonus_effect", None)
         }
-
     if attackerType == "monster":
         user, target, skill, counter_skill = monster, player, monsterskill_dict, playerskill_dict
     else:  # player
@@ -228,7 +237,6 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         return False, 0, False
         
     effect = skill["effect_type"]
-
     # --- 2. 스킬 효과별 로직 분기 ---
 
     # A. 데미지를 주거나 체력을 직접 변경하는 스킬 (Damage, Halve HP)
@@ -249,11 +257,33 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
                 new_hp = old_hp - damage
         
         # 애니메이션을 먼저 재생
-        play_damage_sequence(screen, skill, user, target, old_hp, new_hp)
+        play_damage_sequence(screen, skill, user, target, old_hp, new_hp, Mul)
         
         # 애니메이션 종료 후 실제 데이터 반영
         target.nowhp = new_hp
-        
+
+        if skill["bonus_effect"] != None:
+            if skill["bonus_effect"][0] == "buff":
+                if isinstance(skill["bonus_effect"][1], tuple):
+                    for B in skill["bonus_effect"][1]:
+                        user.Rank[B % 3] = max(-6, min(6, user.Rank[B % 3] + B // 3 + 1))
+                else:
+                    user.Rank[skill["bonus_effect"][1] % 3] = max(-6, min(6, user.Rank[skill["bonus_effect"][1] % 3] + skill["bonus_effect"][1] // 3 + 1))
+                
+                user.update_battle()
+            elif skill["bonus_effect"][0] == "heal":
+                if skill["bonus_effect"][1] =="absorb":
+                    heal_amount = int(damage * skill["bonus_effect"][2])
+                else:
+                    heal_amount = int(skill["bonus_effect"][1] * user.HP)
+                new_user_hp = min(user.HP, user.nowhp + heal_amount)
+
+                healAnimation("player" if attackerType == "player" else "enemy")
+                animate_health_bar(screen, psY + 121 if attackerType == "player" else esY+121, psX+122 if attackerType == "player" else esX+122, user.nowhp, new_user_hp, user.HP)
+                user.nowhp = new_user_hp
+            
+            return False, damage, (Mul, skill["bonus_effect"])
+
         return False, damage, Mul
 
     # B. 회복 스킬 (Heal)
@@ -262,8 +292,8 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         heal_amount = int(skill["skW"] * user.HP)
         new_hp = min(user.HP, old_hp + heal_amount)
         
-        play_damage_sequence(screen, skill, target, user, old_hp, new_hp)
-        
+        healAnimation("player" if attackerType == "player" else "enemy")
+        animate_health_bar(screen, psY + 121 if attackerType == "player" else esY+121, psX+122 if attackerType == "player" else esX+122, old_hp, new_hp, user.HP)
         user.nowhp = new_hp
         return False, 0, False
 
@@ -284,23 +314,18 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         # 1. 애니메이션을 재생하는 대신, 캐릭터에게 '방어 중' 상태를 부여합니다.
         stance = 'shield' if skill["skW"] == 0 else 'mirror'
         setattr(user, 'defensive_stance', stance)
-        # play_reflect_animation(screen, user, skill)  <- 이 줄은 삭제되었습니다.
 
         # 2. 상대방이 공격 스킬을 사용했는지 확인
         if counter_skill is None or counter_skill["effect_type"] not in ["Pdamage", "Sdamage"]:
-            # 공격을 받지 않았으므로 아무 일도 일어나지 않고 턴이 종료됩니다.
-            # 메시지 출력을 위해 damage 값을 -121(실패)로 설정합니다.
             return False, -121, False
 
         # 3. 스킬 효과 분기: 방어(skW=0) 또는 반사(skW>0)
         if skill["skW"] == 0:  # 방어 (shield)
-            # 이제 공격 애니메이션은 play_damage_sequence에서 방패와 '함께' 재생됩니다.
-            # 데미지는 주지 않으므로 old_hp와 new_hp를 같게 전달합니다.
-            play_damage_sequence(screen, counter_skill, target, user, user.nowhp, user.nowhp)
+            play_damage_sequence(screen, counter_skill, user, target, target.nowhp, target.nowhp, 1)
             
             # 공격을 막았다는 메시지를 출력합니다.
             display_status(screen, True)
-            draw_text(screen, f"  {user.name}이(가) 공격을 막아냈다!", stX, stY, WHITE)
+            draw_text(screen, f"  {target.name}이(가) 공격을 막아냈다!", stX, stY, WHITE)
             pygame.display.flip()
             wait_for_key()
             
@@ -313,14 +338,14 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
             new_hp = max(0, old_hp - damage)
 
             # 반사 데미지 애니메이션 재생 (이제 거울과 함께 표시됩니다)
-            play_damage_sequence(screen, counter_skill, user, target, old_hp, new_hp)
+            play_damage_sequence(screen, counter_skill, user, target, old_hp, new_hp, Mul)
             
             target.nowhp = new_hp
             return True, damage, Mul # 상대 턴 종료
 
     # E. 그 외 모든 스킬
     else:
-        return False, 0, False
+        return False, 0, False        
 
 # 기존 함수들 그대로 유지
 def display_type(screen, y, x, type):
@@ -387,17 +412,25 @@ def healAnimation(targettype="player"):
     """회복 애니메이션 재생"""
     if targettype=="player":
         x, y = sX+320, sY+536
+        screen = pygame.display.get_surface()
+        Heal()
+        for i in range(len(HEALFORP)):
+            display_status(screen, detail=True)
+            image = HEALFORP[i]
+            screen.blit(image, (x-image.get_width()//2, y-image.get_height()))
+            pygame.display.flip()
+            time.sleep(0.03)
     else:
         x, y = esX+900, esY+305
-    screen = pygame.display.get_surface()
-    Heal()
-    for i in range(len(HEAL)):
-        display_status(screen, detail=True)
-        image = HEAL[i]
-        screen.blit(image, (x-image.get_width()//2, y-image.get_height()))
-        pygame.display.flip()
-        time.sleep(0.03)
-
+        screen = pygame.display.get_surface()
+        Heal()
+        for i in range(len(HEALFORE)):
+            display_status(screen, detail=True)
+            image = HEALFORE[i]
+            screen.blit(image, (x-image.get_width()//2, y-image.get_height()))
+            pygame.display.flip()
+            time.sleep(0.03)
+    
 def buffAnimation(is_increase, targettype="player"):
     """버프 애니메이션 재생"""
     if targettype=="player":
@@ -422,26 +455,57 @@ def buffAnimation(is_increase, targettype="player"):
             pygame.display.flip()
             time.sleep(0.03)
 
-# useskillAnimation 함수 전체를 이 코드로 교체하세요.
-def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
+def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp, Mul=1):
     """[최종 수정] 스킬 렌더링 순서 및 변수 할당 오류를 수정한 최종 버전입니다."""
-
     ENEMY = pygame.image.load(enemyCSmon.image).convert_alpha()
     ENEMY = pygame.transform.scale_by(ENEMY, 10)
-    
-    skill_frames = [] 
-    if skill["animation"] != "none":    
+    active_stance = getattr(enemyCSmon if target == player else player, 'defensive_stance', None)
+    skill_frames = []
+    if active_stance == "shield":
+        if attacker != player:
+            for i in range(len(os.listdir(f"../img/animations/skill/default_player"))):
+                img = pygame.image.load(f"../img/animations/skill/default_player/{i}.png")
+                img = pygame.transform.scale_by(img, 11/3)
+                skill_frames.append(img)
+        else:
+            for i in range(len(os.listdir(f"../img/animations/skill/default_enemy"))):
+                img = pygame.image.load(f"../img/animations/skill/default_enemy/{i}.png")
+                img = pygame.transform.scale_by(img, 11/3)
+                skill_frames.append(img)
+    if active_stance == "mirror":
+        if target != enemyCSmon:
+            for i in range(len(os.listdir(f"../img/animations/skill/default_enemy"))):
+                img = pygame.image.load(f"../img/animations/skill/default_enemy/{i}.png")
+                img = pygame.transform.scale_by(img, 11/3)
+                skill_frames.append(img)
+        else:
+            for i in range(len(os.listdir(f"../img/animations/skill/default_player"))):
+                img = pygame.image.load(f"../img/animations/skill/default_player/{i}.png")
+                img = pygame.transform.scale_by(img, 11/3)
+                skill_frames.append(img)
+    elif skill["animation"] != "none":    
         for i in range(len(os.listdir(f"../img/animations/skill/{skill['animation']}"))):
             img = pygame.image.load(f"../img/animations/skill/{skill['animation']}/{i}.png")
             img = pygame.transform.scale_by(img, 11/3)
             skill_frames.append(img)
+    else:
+        if attacker == player:
+            for i in range(len(os.listdir(f"../img/animations/skill/default_player"))):
+                img = pygame.image.load(f"../img/animations/skill/default_player/{i}.png")
+                img = pygame.transform.scale_by(img, 11/3)
+                skill_frames.append(img)
+        else:
+            for i in range(len(os.listdir(f"../img/animations/skill/default_enemy"))):
+                img = pygame.image.load(f"../img/animations/skill/default_enemy/{i}.png")
+                img = pygame.transform.scale_by(img, 11/3)
+                skill_frames.append(img)
     
     red_surface = ENEMY.copy() if target != player else ME.copy()
     red_surface.fill((255, 60, 60, 150), special_flags=pygame.BLEND_RGBA_MULT)
 
     # --- 2. 애니메이션 시간 설정 (오류 수정) ---
     SKILL_ANIM_END_TIME = 1100
-    IMPACT_START_TIME = 1500
+    IMPACT_START_TIME = 1300
     FLASH_DURATION = 800
     HP_BAR_START_TIME = IMPACT_START_TIME
     HP_BAR_DURATION = 800
@@ -449,8 +513,8 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
     
     start_time = pygame.time.get_ticks()
     hurt_sound_played = False
-    if skill_frames: play_effect(f"../sound/skills/{skill['animation']}.mp3")
-
+    if skill["animation"] != "none": play_effect(f"../sound/skills/{skill['animation']}.mp3")
+    else: play_effect("../sound/skills/default.mp3")
     # --- 3. 통합 애니메이션 루프 ---
     while True:
         elapsed_time = pygame.time.get_ticks() - start_time
@@ -469,10 +533,9 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
             screen.blit(ENEMY, (esX + 900 - ENEMY.get_width() // 2, esY + 305 - ENEMY.get_height()))
 
         # [레이어 2.5] 방패/거울
-        active_stance = getattr(enemyCSmon if target != player else player, 'defensive_stance', None)
         if active_stance:
             defense_img = SHIELD if active_stance == 'shield' else MIRROR
-            if target == player:
+            if target != player:
                 anchor_x, anchor_y = sX + 320, sY + 536
             else:
                 # ▼▼▼ [수정 1] 방패/거울 기준점도 몬스터 위치에 맞게 변경 (900, 305 -> 900, 305) ▼▼▼
@@ -485,8 +548,6 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
         if elapsed_time < SKILL_ANIM_END_TIME and skill_frames:
             frame_index = int((elapsed_time / SKILL_ANIM_END_TIME) * len(skill_frames))
             frame_index = min(frame_index, len(skill_frames) - 1)
-            if active_stance == 'mirror':
-                frame_index = len(skill_frames) - 1 - frame_index
             screen.blit(skill_frames[frame_index], (sX, sY))
 
         # [레이어 4] 플레이어
@@ -498,7 +559,7 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
         
         # [레이어 5] 피격 점멸 효과
         if elapsed_time >= IMPACT_START_TIME:
-            if not hurt_sound_played and new_hp < old_hp: NormalDamage(); hurt_sound_played = True
+            if not hurt_sound_played and new_hp < old_hp: Effective() if Mul > 1.7 else NotEffective() if Mul<0.8 else NormalDamage(); hurt_sound_played = True
             flash_elapsed = elapsed_time - IMPACT_START_TIME
             if flash_elapsed < FLASH_DURATION and new_hp < old_hp:
                 if (int(flash_elapsed / 100)) % 2 == 0: screen.blit(red_surface, (esX + 900 - ENEMY.get_width() // 2, esY + 305 - ENEMY.get_height())) if target != player else screen.blit(red_surface, (sX + 320 - ME.get_width() // 2, sY + 536 - ME.get_height()))
@@ -671,14 +732,19 @@ def display_status(screen, detail=True, skill_frame_to_draw=None):
     draw_text(screen, f"{enemyCSmon.name}", esX+64, esY+70, WHITE)
     draw_text(screen, f"lv {enemyCSmon.level}", esX+384, esY+70, WHITE)
     animate_health_bar(screen, esY+121, esX+122, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
-
+    
     # 적 타입 표시
     enemy_types = getattr(enemyCSmon, 'type', ['전산이론'])
     if isinstance(enemy_types, str):
         enemy_types = [enemy_types]
     for i, enemy_type in enumerate(enemy_types[:2]):
-        display_type(screen, esY, esX+470+i*124, enemy_type)
-    
+        display_type(screen, esY, esX+470, enemy_type)
+    if any(rank != 0 for rank in enemyCSmon.Rank):
+        screen.blit(RANK, (esX+470+160, esY))
+        for i, rank in enumerate(enemyCSmon.Rank):
+            draw_text(screen, "ATK" if i==0 else "DEF" if i==1 else "SPD", esX+470+160+20, esY+30+i*44, WHITE)
+            draw_text(screen, f"{'+' if rank>=0 else '-'}{rank}", esX+470+160+80, esY+30+i*44, RED if rank<0 else GREEN if rank>0 else WHITE)
+
     # 디버그/치트모드 시 상대 능력치 표시
     dbg = getattr(player, "debug_config", None)
     show_debug_overlay = player.cheatmode or (dbg and dbg.debug)
@@ -958,10 +1024,10 @@ def show_pnr_result(screen, success):
     pygame.display.flip()
     wait_for_key()
 
-def gpaCalculator(enemy, hap_num, item_num, first_time=True):
+def gpaCalculator(enemy, hap_num, item_num):
     score = max(0, (17-hap_num)/16) * 0.3 + max(0, (3-item_num)/3) * 0.3 + (1-(startBattleHp-player.nowhp)/player.HP)*0.4
-    if score >= 0.90: gpa = "A+" if first_time else "A-"
-    elif score >= 0.80: gpa = "A0" if first_time else "A-"
+    if score >= 0.90: gpa = "A+"
+    elif score >= 0.80: gpa = "A0"
     elif score >= 0.70: gpa = "A-"
     elif score >= 0.60: gpa = "B+"
     elif score >= 0.40: gpa = "B0"
@@ -1122,7 +1188,7 @@ def skill_message(screen, AttackerType, player, enemyCSmon, Pskill, Mskill, dama
             elif skill['skW'] % 3 == 2:
                 draw_text(screen, f"  {user.name}의 스피드가 " + (f"{skill['skW']//3 + 1}랭크 증가했다!" if skill['skW']//3 >= 0 else f"{-(skill['skW']//3 + 1)}랭크 감소했다!"), stX, stY, WHITE)
     pygame.display.flip()
-    wait_for_key()  # 메시지를 잠시 보여줌
+    wait_for_key(sound=False)  # 메시지를 잠시 보여줌
 
 def player_skill_phase(screen, selected_skill, enemy_skill):
     # playerCurrentHP, enemyCurrentHP 변수는 이제 필요 없습니다.
@@ -1134,13 +1200,18 @@ def player_skill_phase(screen, selected_skill, enemy_skill):
     wait_for_key(False)
 
     # 스킬 효과 적용
-    # display_status(screen, True)  <-- use_skill 내부에서 처리하므로 이것도 제거 가능
     stop, damage, Mul = use_skill("player", player, enemyCSmon, selected_skill, enemy_skill, screen)
-    
-    # animate_health_bar 호출 삭제
-    
-    skill_message(screen, "player", player, enemyCSmon, selected_skill, enemy_skill, damage, Mul)
-
+    if isinstance(Mul, tuple):
+        skill_message(screen, "player", player, enemyCSmon, selected_skill, enemy_skill, damage, Mul[0])
+        bonusskilldict = {
+            "name": selected_skill["name"],
+            "type": selected_skill["type"],
+            "effect_type": selected_skill["bonus_effect"][0],
+            "skW": selected_skill["bonus_effect"][1]
+        }
+        skill_message(screen, "player", player, enemyCSmon, bonusskilldict, enemy_skill, None, Mul[0])
+    else: skill_message(screen, "player", player, enemyCSmon, selected_skill, enemy_skill, damage, Mul)
+    option_select_sound()
     return stop
 
 def enemy_attack_phase(screen, selected_skill, enemy_skill):
@@ -1260,9 +1331,9 @@ def item_phase(screen):
     if selected_item.special:
         if selected_item.name == "GPT":
             enemyCSmon.nowhp = 1
+            Effective()
             animate_health_bar(screen, esY+121, esX+122, enemyCurrentHP, 1, getattr(enemyCSmon, 'HP', 100))
             display_status(screen)
-            Effective()
             draw_text(screen, f"  {enemyCSmon.name}의 체력이 1이 되었다!", stX, stY, WHITE)
     
     elif selected_item.effect == "heal":
@@ -1285,9 +1356,8 @@ def item_phase(screen):
         # 그 외 varied만 있는 경우 (에너지바의 varied=0.1처럼)
         elif selected_item.varied > 0:
             heal_amount_req = int(player.HP * selected_item.varied)
-            
-        healed = player.heal(heal_amount_req, allow_revive=getattr(selected_item, "canuse_on_fainted", False))
         healAnimation()
+        healed = player.heal(heal_amount_req, allow_revive=getattr(selected_item, "canuse_on_fainted", False))
         animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
         display_status(screen)
         draw_text(screen, f"  {player.name}의 체력이 {healed} 회복되었다!", stX, stY, WHITE)
@@ -1700,7 +1770,6 @@ def battle(getplayer, getenemy, screen=None):
 
             if enemyCSmon.Num == 777:     # 몰캠
                 # print("Debug: 몰캠 전투 시작")
-
                 current_index = option_accept_challenge_molcamp(screen, options=["수락한다", "거절한다"], y_offset=y_offset)
                 do_event = False
 
@@ -1820,8 +1889,6 @@ def battle(getplayer, getenemy, screen=None):
                         battle_end = True
                         return "실패"
                            
-    
-
         while not battle_end:
             if enemyCSmon.Num == 777:     # 몰캠
                 if do_event:
@@ -1962,14 +2029,14 @@ def battle(getplayer, getenemy, screen=None):
     
         pygame.display.flip()
         wait_for_key()
-        gpa = gpaCalculator(enemyCSmon, hap_num, item_num, False)
+        gpa = gpaCalculator(enemyCSmon, hap_num, item_num)
 
         if player.nowhp != player.HP:
             heal_amount = max(1, int(player.HP * 0.20))
+            healAnimation()
             playerCurrentHP = player.nowhp
             player.heal(heal_amount)
             display_status(screen)
-            healAnimation()
             animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
             draw_text(screen, f"  {player.name}의 체력이 회복되었다!", stX, stY, GREEN)
             pygame.display.flip()
@@ -2050,11 +2117,11 @@ def battle(getplayer, getenemy, screen=None):
         wait_for_key()
         
         # 아이템 보상 로직은 그대로 유지
+        healAnimation()
         heal_amount = max(1, int(player.HP * 0.05))
         playerCurrentHP = player.nowhp
         player.heal(heal_amount)
         display_status(screen)
-        healAnimation()
         animate_health_bar(screen, psY+121, psX+122, playerCurrentHP, player.nowhp, player.HP)
         draw_text(screen, f"  {player.name}의 체력이 회복되었다!", stX, stY, GREEN)
         pygame.display.flip()

@@ -4,9 +4,9 @@ import os
 # 스프라이트 시트 이미지 경로
 SPRITE_PATH = "C:/Users/user/문서/코딩/CSmonster-main/CSmonster/img/animations/sheet.png"
 OUT_DIR = "C:/Users/user/문서/코딩/CSmonster-main/CSmonster/img/animations/split_frames"
-FRAME_WIDTH = 19
-FRAME_HEIGHT = 17
-FRAME_COUNT = 14
+FRAME_WIDTH = 336
+FRAME_HEIGHT = 190
+FRAME_COUNT = 22
 
 os.makedirs(OUT_DIR, exist_ok=True)
 

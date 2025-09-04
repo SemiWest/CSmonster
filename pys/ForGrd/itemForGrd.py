@@ -57,7 +57,7 @@ GPT = Items(
 )
 
 ProfSoul = Items(
-    name="교수의 영혼",
+    name="교수의영혼",
     description="교수님의 영혼이 강림했다. 공격력을 최대로 올린다.",
     effect="buff",
     grade="레전더리",
@@ -65,7 +65,7 @@ ProfSoul = Items(
 )
 
 PGSSoul = Items(
-    name="원생의 영혼",
+    name="원생의영혼",
     description="대학원생?의 영혼을 깃들게 해 방어력을 최대로 올린다.",
     effect="buff",
     grade="레전더리",
@@ -75,11 +75,11 @@ PGSSoul = Items(
 # 에픽
 Americano = Items(
     name="아메리카노", 
-    description="카페인의 힘으로 체력을 회복한다. 50 또는 최대 체력의 50% 중 큰 값을 회복한다.", 
+    description="카페인의 힘으로 체력을 회복한다. 25 또는 최대 체력의 50% 중 큰 값을 회복한다.", 
     effect="heal",
     varied=0.5,
     grade="에픽",
-    fixed=50
+    fixed=25
 )
 
 LectureNote = Items(
@@ -90,7 +90,32 @@ LectureNote = Items(
     varied=0.5
 )
 
+Jokbo = Items(
+    name="족보",
+    description="족보를 통해 상대의 약점을 파악한다. 상대의 방어력과 속도를 3랭크 감소시킨다.",
+    effect="debuff",
+    grade="에픽",
+    fixed=(-11,-10)
+)
+
+Subway = Items(
+    name="서브웨이",
+    description="서브웨이를 먹고 힘을 낸다. 모든 스탯을 각 2랭크 상승시킨다.",
+    effect="buff",
+    grade="에픽",
+    fixed=(3,4,5),
+)
+
 # 레어 (새로 2개 추가)
+Pokari = Items(
+    name="포카리",
+    description="포카리를 마신다. 15 또는 최대 체력의 30% 중 큰 값만큼 회복한다.", 
+    effect="heal",
+    grade="레어",
+    fixed=15,
+    varied=0.3
+)
+
 AirPods = Items(
     name="에어팟",
     description="에어팟을 주고 노동요를 틀어준다. 흥이 올라 속도가 2랭크 오른다.", 
@@ -118,10 +143,10 @@ Protein = Items(
 # 노말 (새로 2개 추가)
 SnackBar = Items(
     name="에너지바",
-    description="에너지바를 먹는다. 체력을 10만큼 회복한다.", 
+    description="에너지바를 먹는다. 5 또는 최대 체력의 10% 중 큰 값을 회복한다.", 
     effect="heal",
     grade="노말",
-    fixed=10,
+    fixed=5,
     varied=0.1
 )
 
@@ -165,9 +190,12 @@ items = {
     "바이러스": Virus,
     "알코올": Alcohol,
     "구글링": Google,
-    "교수의 영혼": ProfSoul,
-    "원생의 영혼": PGSSoul,
-    "프로틴": Protein
+    "교수의영혼": ProfSoul,
+    "원생의영혼": PGSSoul,
+    "프로틴": Protein,
+    "포카리": Pokari,
+    "족보": Jokbo,
+    "서브웨이": Subway
 }
 
 item_list = [
@@ -183,6 +211,9 @@ item_list = [
     Google,
     ProfSoul,
     PGSSoul,
-    Protein
+    Protein,
+    Pokari,
+    Jokbo,
+    Subway
 ]
 
