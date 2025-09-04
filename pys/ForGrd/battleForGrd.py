@@ -484,7 +484,7 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
             screen.blit(ENEMY, (esX + 900 - ENEMY.get_width() // 2, esY + 305 - ENEMY.get_height()))
 
         # [레이어 2.5] 방패/거울
-        active_stance = getattr(enemyCSmon if target == player else player, 'defensive_stance', None)
+        active_stance = getattr(enemyCSmon if target != player else player, 'defensive_stance', None)
         if active_stance:
             defense_img = SHIELD if active_stance == 'shield' else MIRROR
             if target == player:

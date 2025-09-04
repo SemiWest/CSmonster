@@ -243,6 +243,10 @@ def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=32, line_
     lines = []
     current_line = ""
     for word in words:
+        if word == '\n':
+            lines.append(current_line)
+            current_line = ""
+            continue
         test_line = current_line + word + " "
         if font_obj.size(test_line)[0] <= max_width:
             current_line = test_line
@@ -259,7 +263,8 @@ def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=32, line_
             text_rect = text_surface.get_rect(right=x, top=y)
         else:  # 'left' 또는 기타
             text_rect = text_surface.get_rect(topleft=(x, y))
-        surface.blit(text_surface, (text_rect.topleft + (0, i * (font_size + line_spacing))))
+        finalXY = (text_rect.topleft[0], text_rect.topleft[1] + i * (font_size + line_spacing))
+        surface.blit(text_surface, finalXY)
 
 
 def apply_alpha_overlay(screen, rect, alpha=180, color=(0,0,0)):
