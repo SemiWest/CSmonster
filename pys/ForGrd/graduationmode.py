@@ -12,6 +12,7 @@ import json
 import os
 import dropbox
 import numpy as np
+from hangulInputBox import *
 
 logger = logging.getLogger(__name__)
 
@@ -1253,69 +1254,104 @@ def show_final_result(player, screen):
 
 def get_player_info(screen, prompts):
     """
-    pygame에서 이름과 인스타그램 ID 입력을 함께 받는 함수.
+    닉네임(모든 문자 허용)과 인스타그램 ID(영문/숫자/기호만 허용) 입력을 받는 함수.
+    출력: (A, B) = (닉네임, 인스타그램ID)
     """
-    inputs = [""] * len(prompts)
+    inputs = ["", ""]
     active_field = 0
     font_size = 32
+    max_lengths = [10, 30]  # 닉네임, 인스타그램ID 최대 길이
+
+    box_name = HangulInputBox('../neodgm.ttf', font_size, 10, 'white', 'black')
+    box_name.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 70)
+    box_instagram = HangulInputBox('../neodgm.ttf', font_size, 15, 'white', 'black')
+    box_instagram.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 70)
 
     while True:
+        keyevent = None
+        text = ""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return (None,) * len(prompts) # 종료 시 None 튜플 반환
+                return None, None
             if event.type == pygame.KEYDOWN:
+                keyevent = event
                 if event.key == pygame.K_ESCAPE:
-                    return (None,) * len(prompts)
+                    return None, None
                 elif event.key == pygame.K_RETURN:
-                    if inputs[0].strip():  # 이름은 필수 항목
-                        return tuple(i.strip() for i in inputs)
+                    if inputs[0].strip():
+                        return inputs[0].strip(), inputs[1].strip()
                 elif event.key in (pygame.K_UP, pygame.K_TAB):
-                    active_field = (active_field - 1) % len(prompts)
+                    active_field = (active_field - 1) % 2
                 elif event.key == pygame.K_DOWN:
-                    active_field = (active_field + 1) % len(prompts)
+                    active_field = (active_field + 1) % 2
                 elif event.key == pygame.K_BACKSPACE:
-                    inputs[active_field] = inputs[active_field][:-1]
-                elif event.unicode and len(event.unicode) > 0:
-                    # 필드별 글자 수 제한
-                    if active_field == 0 and len(inputs[active_field]) < 10: # 이름
-                        inputs[active_field] += event.unicode
-                    elif active_field == 1 and len(inputs[active_field]) < 30: # 인스타그램 ID
-                        inputs[active_field] += event.unicode
+                    if active_field == 0:
+                        box_name.update(keyevent)
+                        text = box_name.text + HangulInputBox.engkor(box_name.hanText)
+                        inputs[0] = text
+                    elif active_field == 1:
+                        box_instagram.update(keyevent)
+                        inputs[1] = inputs[1][:-1]
+                else:
+                    # 입력 처리
+                    if active_field == 0 and event.unicode:
+                        box_name.update(keyevent, max_length=max_lengths[0])
+                        if len(box_name.text + HangulInputBox.engkor(box_name.hanText)) <= max_lengths[0]:
+                            text = box_name.text + HangulInputBox.engkor(box_name.hanText)
+                            inputs[0] = text
+                        else:
+                            if box_name.hanMode and len(box_name.hanText) > 0:
+                                box_name.hanText = box_name.hanText[:-1]
+                            elif len(box_name.text) > 0:
+                                box_name.text = box_name.text[:-1]
+                            
+                    else:
+                        box_name.update(None)
+                    if active_field == 1 and event.unicode and len(inputs[1]) < max_lengths[1] and event.unicode.isascii() and (event.unicode.isalnum() or event.unicode in "_-."):
+                        inputs[1] += event.unicode
+                        box_instagram.update(keyevent)
+                    else:
+                        box_instagram.update(None)
+
+            if event.type == pygame.USEREVENT:
+                if event.name == 'enterEvent':
+                    if active_field == 0:
+                        text = box_name.text + HangulInputBox.engkor(box_name.hanText)
+                        if len(text) <= max_lengths[0]:
+                            inputs[0] = text
+                    elif active_field == 1:
+                        text = box_instagram.text + HangulInputBox.engkor(box_instagram.hanText)
+                        filtered = ''.join([c for c in text if c.isascii() and (c.isalnum() or c in "_-.")])
+                        if len(filtered) <= max_lengths[1]:
+                            inputs[1] = filtered
 
         screen.fill(BLACK)
         draw_text(screen, "플레이어 정보를 입력하세요", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 200, WHITE, size=40, align='center')
+        draw_text(screen, prompts[0], SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 140, WHITE, size=font_size, align='center')
+        draw_text(screen, prompts[1], SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, WHITE, size=font_size, align='center')
 
-        box_width = 400
-        box_height = 40
-        start_y = SCREEN_HEIGHT // 2 - 100
+        screen.blit(box_name.image, box_name.rect)
+        screen.blit(box_instagram.image, box_instagram.rect)
 
-        for i, prompt in enumerate(prompts):
-            is_active = (i == active_field)
-            prompt_y = start_y + i * 100
-            box_y = prompt_y + 30
+        # 박스 테두리 파란색으로 그리기
+        boxnamerect = pygame.Surface((box_name.rect.width+20, box_name.rect.height+20))
+        instagramrect = pygame.Surface((box_instagram.rect.width+20, box_instagram.rect.height+20))
+        pygame.draw.rect(screen, (0, 120, 255), boxnamerect.get_rect(center=box_name.rect.center), 4)
+        pygame.draw.rect(screen, (0, 120, 255), instagramrect.get_rect(center=box_instagram.rect.center), 4)
 
-            # 프롬프트 텍스트
-            draw_text(screen, prompt, SCREEN_WIDTH // 2, prompt_y, WHITE, size=font_size, align='center')
-
-            # 입력 박스
-            box_x = SCREEN_WIDTH // 2 - box_width // 2
-            border_color = BLUE if is_active else WHITE
-            pygame.draw.rect(screen, WHITE, (box_x, box_y, box_width, box_height))
-            pygame.draw.rect(screen, border_color, (box_x, box_y, box_width, box_height), 2)
-
-            # 입력된 텍스트와 커서
-            text_to_show = inputs[i]
-            if is_active:
-                text_to_show += "_"
-            
-            if text_to_show:
-                draw_text(screen, text_to_show, box_x + 8, box_y + (box_height - font_size)//2 + 2, BLACK, size=font_size)
-            elif not is_active and i == 1: # 인스타그램 필드가 비활성 상태일 때
-                 draw_text(screen, "선택사항", box_x + 8, box_y + (box_height - font_size)//2 + 2, GRAY, size=font_size)
+        # # 입력값 표시
+        # draw_text(screen, f"입력: {inputs[0]}", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 10, WHITE, size=font_size, align='center')
+        # draw_text(screen, f"입력: {inputs[1]}", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 90, WHITE, size=font_size, align='center')
+        
+        # 인스타 아이디가 비어있을 때 박스에 '선택사항' 회색 표시
+        if not inputs[1]:
+            font = pygame.font.Font('../neodgm.ttf', font_size)
+            text_surface = font.render("선택사항", True, (128, 128, 128))
+            text_rect = text_surface.get_rect(center=box_instagram.rect.center)
+            screen.blit(text_surface, text_rect)
 
         draw_text(screen, "방향키(혹은 Tab)로 이동, Enter로 확인, ESC로 뒤로가기", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100, GRAY, size=24, align='center')
         pygame.display.flip()
-        pygame.time.wait(30)
 
 def _remove_cleared_entry(player, monster_name):
     # 같은 과목이 중복으로 들어간 경우까지 안전하게 모두 제거
@@ -1395,7 +1431,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
             # 몬스터 생성
             if monster_name in monsters:
                 enemy_monster = copy.deepcopy(monsters[monster_name])
-                enemy_monster.level = random.randint(monsters[monster_name]-1+player.level//10, monsters[monster_name]+1+(player.level//10)*2) - mol_lev
+                enemy_monster.level = random.randint(monsters[monster_name].level-1+player.level//10, monsters[monster_name].level+1+(player.level//10)*2) - mol_lev
                 enemy_monster.update_fullreset()
             else:
                 # 기본 몬스터 생성

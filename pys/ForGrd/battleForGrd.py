@@ -574,6 +574,12 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp, Mul=1)
             display_type(screen, esY, esX + 470 + i * 124, enemy_type)
         
         screen.blit(STAT, (psX, psY))
+        if any(rank != 0 for rank in enemyCSmon.Rank):
+            screen.blit(RANK, (esX+470+160, esY))
+            for i, rank in enumerate(enemyCSmon.Rank):
+                draw_text(screen, "ATK" if i==0 else "DEF" if i==1 else "SPD", esX+470+160+20, esY+30+i*44, WHITE)
+                draw_text(screen, f"{'+' if rank>=0 else ''}{rank}", esX+470+160+80, esY+30+i*44, RED if rank<0 else GREEN if rank>0 else WHITE)
+
         # ▼▼▼ [수정 2] 이름/레벨 y좌표를 display_status와 동일하게 변경 (52 -> 70) ▼▼▼
         draw_text(screen, f"{player.name}", psX + 64, psY + 70, WHITE)
         draw_text(screen, f"lv {player.level}", psX + 384, psY + 70, WHITE)

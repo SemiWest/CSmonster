@@ -46,12 +46,12 @@ def NumToName(mon_num):
         return "error"
 
 class Monster:
-    def __init__(self, Num, name, credit, HP, ATK, DEF, SPD, type=["CT"], SeonSu = [], image="../img/monsters/데이타구조.png", description="", reward="", special = False, re = False):
+    def __init__(self, Num, name, credit, level, HP, ATK, DEF, SPD, type=["CT"], SeonSu = [], image="../img/monsters/데이타구조.png", description="", reward="", special = False, re = False):
         self.reward = reward
         self.Num = Num  # 몬스터 번호
         self.name = name
         self.credit = credit
-        self.level = 5
+        self.level = level  # 레벨
         self.type = type  # 타입 (데이터 과학, 시스템-네트워크, 전산이론, 시큐어컴퓨팅, 인공지능)
         self.SeonSu = SeonSu  # 이 과목을 선수과목으로 하는 과목들
         self.image = image
@@ -124,7 +124,7 @@ class Monster:
 
 # 플레이어와 적 전산몬스터 생성
 Nonemonster = Monster(
-    Num = -1, name="빈 슬롯", credit = 3,
+    Num = -1, name="빈 슬롯", credit = 3, level = 3,
     HP = 0, ATK = 0, DEF = 0, SPD = 0,
     type=["CT"], SeonSu=[],
     image="../img/monsters/데이타구조.png",
@@ -659,7 +659,7 @@ cs220.skills = {
 
 # 코옵	(이벤트)	야도란
 coop = Monster(
-    Num = 888, name="Co-op", credit = 123123,
+    Num = 888, name="Co-op", credit = 123123, level = 3,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/코옵.png",
@@ -684,7 +684,7 @@ coop.skills = {
 
 # 몰캠	(이벤트)	고라파덕
 madcamp = Monster(
-    Num = 777, name="몰입 캠프", credit = 234234,
+    Num = 777, name="몰입 캠프", credit = 234234, level = 3,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/몰입캠프.png",
@@ -695,7 +695,7 @@ madcamp = Monster(
 
 # 개별연구	(이벤트)	폴리곤
 study = Monster(
-    Num = 999, name="개별 연구", credit = 345345,
+    Num = 999, name="개별 연구", credit = 345345, level = 3,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/개별연구.png",
