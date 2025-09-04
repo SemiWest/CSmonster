@@ -49,7 +49,7 @@ PLAYER_SKILLS = {
          "description": "한글은 100타, 영어는 독수리타법",  
          "level": 1,  
          "priority": 0,  
-         "animation": "Typing"},
+         "animation": "none"},
         {"name": "파이썬",  
          "effect_type": "Sdamage",  
          "skW": 35,  

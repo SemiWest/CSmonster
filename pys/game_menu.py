@@ -404,7 +404,7 @@ def main_menu():
             screen.blit(title_image, (image_x, image_y))
             
             # 메뉴 옵션들
-            options = ["졸업 모드", "기록 보기", "모험 모드", "스태프 롤", "환경 설정", " *도움말 "]
+            options = ["졸업 모드", "기록 보기", "스태프 롤", "환경 설정"]
             
             # 메뉴 옵션들을 2x3 격자로 배치
             for i, option in enumerate(options):
@@ -538,11 +538,11 @@ def show_credits():
     
     y_center = SCREEN_HEIGHT // 2 - (210+120*4-40)/2
 
-    draw_text(screen, "배급", SCREEN_WIDTH // 2 - (32*4)/2, y_center, BLACK, highlight=False, size=64)
+    draw_text(screen, "배급", SCREEN_WIDTH // 2 - (32*4)/2, y_center, BLACK, size=64)
     y_center += 70
     startingpoint = SCREEN_WIDTH // 2
-    draw_text(screen, "전산학부           ", startingpoint, y_center, BLUE, highlight=False, size=64, align='center')
-    draw_text(screen, "         집행위원회", startingpoint, y_center, SOCBLUE, highlight=False, size=64, align='center')
+    draw_text(screen, "전산학부           ", startingpoint, y_center, BLUE, size=64, align='center')
+    draw_text(screen, "         집행위원회", startingpoint, y_center, SOCBLUE, size=64, align='center')
     
     y_center = SCREEN_HEIGHT // 2 - 80
     draw_text(screen, "김민범", startingpoint-450, y_center, MINBEOM, align='center', size=64)
@@ -570,85 +570,3 @@ def show_credits():
     #엔터 키를 눌러 메뉴로 돌아가기
     wait_for_key()
 
-def show_help():
-    """도움말을 pygame으로 표시"""
-    init_pygame_screen()
-    
-    # 첫 번째 페이지
-    screen.fill(WHITE)
-    
-    y_pos = 50
-    draw_text(screen, "도움말", 50, y_pos, BLACK)
-    y_pos += 80
-    
-    help_texts = [
-        "전산몬스터는 포켓몬스터의 패러디 게임입니다.",
-        "졸업 모드는 30턴의 전투를 거쳐 좋은 성적으로 졸업하는 것이 목표입니다.",
-        "무한 모드는 무한으로 전투를 진행하는 모드입니다.",
-        "기록 보기에서는 졸업 모드에서 클리어한 기록을 보여줍니다.",
-        "",
-        "폰트 설정: D2coding, 폰트 크기: 32",
-        "조작키 정보: 방향키로 조작, enter키로 선택, esc키/q키/backspace키로 종료 및 취소",
-        "스크립트 넘기기: 아무 키나 누르기"
-    ]
-    
-    for text in help_texts:
-        if text:  # 빈 줄이 아닌 경우
-            draw_text(screen, text, 50, y_pos, BLACK)
-        y_pos += 40
-    
-    draw_text(screen, "아무 키나 눌러 다음 페이지로", 50, y_pos + 40, GRAY)
-    
-    pygame.display.flip()
-    wait_for_key()
-    
-    # 두 번째 페이지 - 상성표
-    screen.fill(WHITE)
-    
-    y_pos = 50
-    draw_text(screen, "상성표", 200, y_pos, BLACK)
-    y_pos += 80
-    
-    # 상성표 헤더
-    from monster import type_chart, type_dict
-    header_text = "     DTS SYS CST SWD SEC VSC AIS SOC INT"
-    draw_text(screen, header_text, 50, y_pos, BLACK)
-    y_pos += 40
-    
-    # 상성표 내용
-    for types in type_chart:
-        line_text = f"{type_dict[types]} "
-        for comps in type_chart[types]:
-            comp = type_chart[types][comps]
-            if comp == 4:
-                line_text += " ◎ "
-            elif comp == 1:
-                line_text += " △ "
-            elif comp == 0:
-                line_text += " × "
-            else:
-                line_text += "   "
-        draw_text(screen, line_text, 50, y_pos, BLACK)
-        y_pos += 40
-        
-        if types == "인터랙티브컴퓨팅":
-            break
-    
-    y_pos += 40
-    draw_text(screen, "가로: 공격 받는 전산몬 타입 | 세로: 스킬 타입", 50, y_pos, BLACK)
-    y_pos += 40
-    draw_text(screen, "◎: 효과가 굉장함 | △: 효과가 별로임 | ×: 효과가 없음", 50, y_pos, BLACK)
-    y_pos += 80
-    
-    # 타입 약어 설명
-    draw_text(screen, "DTS: 데이터 과학         | SYS: 시스템-네트워크  | CST: 전산이론", 50, y_pos, BLACK)
-    y_pos += 40
-    draw_text(screen, "SWD: 소프트웨어디자인    | SEC: 시큐어컴퓨팅     | VSC: 비주얼컴퓨팅", 50, y_pos, BLACK)
-    y_pos += 40
-    draw_text(screen, "AIS: 인공지능-정보서비스 | SOC: 소셜컴퓨팅       | INT: 인터랙티브컴퓨팅", 50, y_pos, BLACK)
-    y_pos += 40
-    
-    draw_text(screen, "아무 키나 눌러 메뉴로 돌아가기", 50, y_pos, GRAY)
-    
-    pygame.display.flip()
-    wait_for_key()

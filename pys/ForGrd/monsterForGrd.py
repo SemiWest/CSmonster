@@ -597,7 +597,7 @@ cs376 = Monster(
 cs376.skills = {
     '경사하강법': Monster.Skill(
         name='경사하강법',
-        effect_type="Buff",
+        effect_type="buff",
         type="AI",
         skW=0,
         description="경사하강법으로 최적의 공격법을 찾아내 공격력을 올린다."),

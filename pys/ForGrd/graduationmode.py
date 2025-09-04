@@ -671,7 +671,7 @@ def addSeonSus(player, monster):
 def display_Monster_Imge(screen, monster, x, y, size=1):
     img = pygame.image.load(monster.image)
     img = pygame.transform.scale_by(img, size)
-    screen.blit(img, (x-img.get_width//2, y-img.get_height//2))
+    screen.blit(img, (x-img.get_width()//2, y-img.get_height()//2))
 
 def save_game_log_csv(filename, player):
     """게임 결과를 CSV에 저장"""
@@ -1041,41 +1041,48 @@ def semester_result_screen(player, screen):
 def show_final_result(player, screen):
     """최종 결과 화면 (수정된 버전)"""
     # 졸업 또는 게임 오버 여부에 따라 적절한 사운드 재생
-    is_game_over = player.gameover() or player.ending_type == "프밍기 패배"
-    if is_game_over:
+    if player.gameover() or player.ending_type == "프밍기 패배":
+        screen.fill(WHITE)
         Lose()
-    else:
-        play_music("../music/ending.wav")
-    
-    screen.fill(BLACK)
-    pygame.display.flip()
-    pygame.time.wait(1000)
-    draw_text(screen, f"{player.name}은 졸업 조건을 모두 채웠습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, WHITE, size=64, align='center')
-    pygame.display.flip()
-    wait_for_key()
-    # 화면 전체 페이드 효과-검은색->흰색, 0.4초간 점점 빠르게
-    for flash_frame in range(160):
-        screen.fill((flash_frame**2//100, flash_frame**2//100, flash_frame**2//100))  # 흰색으로 페이드
+        draw_text(screen, "게임 오버", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, RED, size=64, align = 'center')
         pygame.display.flip()
-        pygame.time.wait(2)  # 0.01초 대기
+        pygame.time.wait(2000)
+        # '프밍기 패배' 엔딩 메시지 추가
+        if player.ending_type == "프밍기 패배":
+            draw_text(screen, "당신은 프밍기 학인시를 처참하게 실패했습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
+            draw_text(screen, "전산과로의 진학을 포기하였습니다...", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+140, BLACK, align='center')
+        elif player.warning_count >= 3:
+            draw_text(screen, "학사 경고 3회로 제적되었습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
 
-    play_music("../music/ending.wav")
-    screen.fill(WHITE)
-    draw_text(screen, f"{player.name}은/는 최종 학점 {player.calcGPA(2)}로 졸업했다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, BLACK, WHITE, 64, 'center')
-    pygame.display.flip()
-    wait_for_key()
+    else:
+        screen.fill(BLACK)
+        pygame.display.flip()
+        pygame.time.wait(1000)
+        draw_text(screen, f"{player.name}은 졸업 조건을 모두 채웠습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, WHITE, size=64, align='center')
+        pygame.display.flip()
+        wait_for_key()
+        # 화면 전체 페이드 효과-검은색->흰색, 0.4초간 점점 빠르게
+        for flash_frame in range(160):
+            screen.fill((flash_frame**2//100, flash_frame**2//100, flash_frame**2//100))  # 흰색으로 페이드
+            pygame.display.flip()
+            pygame.time.wait(2)  # 0.01초 대기
 
-    # 엔딩 화면 = Graduation.jpg * 8배 사이즈
-    graduation_image = pygame.image.load("../img/Graduation.png")
-    graduation_image = pygame.transform.scale(graduation_image, (graduation_image.get_width() * 8, graduation_image.get_height() * 8))
-    screen.blit(graduation_image, (0, 0))
-    pygame.display.flip()
-    wait_for_key()
-    
-    # 엔딩 타입 표시
-    screen.fill(WHITE)
-    ending = player.get_final_ending()
-    draw_text(screen, f"엔딩: {ending}", SCREEN_WIDTH//2 - len(ending)*16 - 32, 140, BLACK)
+        play_music("../music/ending.wav")
+        screen.fill(WHITE)
+        draw_text(screen, f"{player.name}은/는 최종 학점 {player.calcGPA(2)}로 졸업했다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, BLACK, WHITE, 64, 'center')
+        pygame.display.flip()
+        wait_for_key()
+
+        # 엔딩 화면 = Graduation.jpg * 8배 사이즈
+        graduation_image = pygame.image.load("../img/Graduation.png")
+        graduation_image = pygame.transform.scale(graduation_image, (graduation_image.get_width() * 8, graduation_image.get_height() * 8))
+        screen.blit(graduation_image, (0, 0))
+        pygame.display.flip()
+        wait_for_key()
+
+        # 엔딩 타입 표시
+        ending = player.get_final_ending()
+        draw_text(screen, f"{ending}", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, LIGHTBLUE, 48, 'center')
     pygame.display.flip()
     wait_for_key()
 
@@ -1129,13 +1136,16 @@ def show_final_result(player, screen):
     # 비고란 표시
     draw_text(screen, "비고", SCREEN_WIDTH//2, y_offset, BLACK, size=32, align='center')
     y_offset += 40
-    draw_text(screen, f"이름: {player.name}", SCREEN_WIDTH//2-450, y_offset, BLACK)
-    draw_text(screen, f"최종 레벨: {player.level}", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
-    draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2+450, y_offset, BLACK, align='right')
-    y_offset += 60 # 다음 텍스트를 위한 추가 간격
+    draw_text(screen, f"이름: {player.name}", SCREEN_WIDTH//2-500, y_offset, BLACK)
+    draw_text(screen, f"최종 레벨: {player.level}", SCREEN_WIDTH//2-300, y_offset, BLACK)
+    draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
+    draw_text(screen, f"장짤 횟수: {player.jangzal_count}회", SCREEN_WIDTH//2+300, y_offset + 40, BLACK, align='right')
+    draw_text(screen, f"학고 횟수: {player.warning_count}회", SCREEN_WIDTH//2+500, y_offset + 40, BLACK, align='right')
+    
+    y_offset += 60
 
     # 2. 게임 결과 (졸업/게임 오버 사유)를 성적표 아래에 추가
-    if is_game_over:
+    if player.gameover() or player.ending_type == "프밍기 패배":
         # 게임 오버 사유 표시
         if player.ending_type == "프밍기 패배":
             draw_text(screen, "프로그래밍 기초한테 졌습니다. 전산과로 진학하지 못했습니다.", SCREEN_WIDTH//2, y_offset, RED, size=32, align='center')
@@ -1149,7 +1159,7 @@ def show_final_result(player, screen):
         ending = player.get_final_ending()
         draw_text(screen, f"{player.name}은(는) 최종 학점 {player.calcGPA(2)}로 졸업했습니다.", SCREEN_WIDTH//2, y_offset, BLACK, size=32, align='center')
         y_offset += 40
-        draw_text(screen, f"엔딩: {ending}", SCREEN_WIDTH//2, y_offset, BLUE, size=32, align='center')
+        draw_wrapped_text(screen, f"{ending}", SCREEN_WIDTH//2, y_offset, BLUE, 1000, size=32, align='center')
         
     # --- 화면 표시 로직 종료 ---
 
@@ -1161,16 +1171,16 @@ def show_final_result(player, screen):
         if page_id:
             # 1. 가장 이상적인 성공 사례
             logger.info(f"Notion 기록 저장 성공. Page ID: {page_id}")
-            draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
+            draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2, SCREEN_HEIGHT - 120, GREEN, align='center')
         else:
             # 2. API는 성공했으나 ID를 받지 못한 예외 사례
             logger.warning("Notion API는 성공을 반환했으나 Page ID를 얻지 못했습니다. 확인이 필요합니다.")
             # 사용자에게는 성공으로 보이되, 개발자는 로그를 보고 문제를 인지할 수 있음
-            draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
+            draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2, SCREEN_HEIGHT - 120, GREEN, align='center')
     else:
         # 3. 명백한 실패 사례
         logger.error("Notion 기록 저장에 실패했습니다.")
-        draw_text(screen, "X 저장 실패", SCREEN_WIDTH//2 - 72, SCREEN_HEIGHT - 120, RED)
+        draw_text(screen, "X 저장 실패", SCREEN_WIDTH//2, SCREEN_HEIGHT - 120, RED, align='center')
     
     draw_text(screen, "아무 키나 눌러 다음으로...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, BLACK, align='center')
     

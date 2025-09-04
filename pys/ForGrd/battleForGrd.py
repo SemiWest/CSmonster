@@ -188,6 +188,8 @@ def get_best_enemy_skill(enemy, player):
                 else:
                     if skill_data.skW % 3 == 2:
                         score += 10
+        if skill_type == "reflect":
+            score += 20
         
     total_score = sum(skill_scores.values())
     
@@ -226,10 +228,10 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
             "animation": monsterskill.animation,
             "bonus_effect": getattr(monsterskill, "bonus_effect", None)
         }
-        if isinstance(monster.skW, str):
-            if monster.skW == "DEF":
+        if isinstance(monsterskill.skW, str):
+            if monsterskill.skW == "DEF":
                 monsterskill_dict["skW"] = 10+40*(max(1, monster.Rank[1]))
-            elif monster.skW == "SPD":
+            elif monsterskill.skW == "SPD":
                 monsterskill_dict["skW"] = 10+50*(max(1, monster.Rank[2]))
                 
     if attackerType == "monster":
@@ -467,12 +469,26 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp, Mul=1)
     active_stance = getattr(enemyCSmon if target == player else player, 'defensive_stance', None)
     skill_frames = []
     if active_stance == "mirror":
-        if target != enemyCSmon:
+        if attacker == enemyCSmon:
+            if skill["animation"] != "none":
+                for i in range(14):
+                    img = pygame.image.load(f"../img/animations/skill/{skill['animation']}/{i}.png")
+                    img = pygame.transform.scale_by(img, 11/3)
+                    skill_frames.append(img)
+            else:
+                for i in range(len(os.listdir(f"../img/animations/skill/default_player"))):
+                    img = pygame.image.load(f"../img/animations/skill/default_player/{i}.png")
+                    img = pygame.transform.scale_by(img, 11/3)
+                    skill_frames.append(img)
             for i in range(len(os.listdir(f"../img/animations/skill/default_enemy"))):
                 img = pygame.image.load(f"../img/animations/skill/default_enemy/{i}.png")
                 img = pygame.transform.scale_by(img, 11/3)
                 skill_frames.append(img)
         else:
+            for i in range(len(os.listdir(f"../img/animations/skill/default_enemy"))):
+                img = pygame.image.load(f"../img/animations/skill/default_enemy/{i}.png")
+                img = pygame.transform.scale_by(img, 11/3)
+                skill_frames.append(img)
             for i in range(len(os.listdir(f"../img/animations/skill/default_player"))):
                 img = pygame.image.load(f"../img/animations/skill/default_player/{i}.png")
                 img = pygame.transform.scale_by(img, 11/3)
@@ -482,6 +498,17 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp, Mul=1)
             img = pygame.image.load(f"../img/animations/skill/{skill['animation']}/{i}.png")
             img = pygame.transform.scale_by(img, 11/3)
             skill_frames.append(img)
+    elif active_stance == "shield":
+        if attacker == enemyCSmon:
+            for i in range(len(os.listdir(f"../img/animations/skill/default_player"))):
+                img = pygame.image.load(f"../img/animations/skill/default_player/{i}.png")
+                img = pygame.transform.scale_by(img, 11/3)
+                skill_frames.append(img)
+        else:
+            for i in range(len(os.listdir(f"../img/animations/skill/default_enemy"))):
+                img = pygame.image.load(f"../img/animations/skill/default_enemy/{i}.png")
+                img = pygame.transform.scale_by(img, 11/3)
+                skill_frames.append(img)
     else:
         if attacker == player:
             for i in range(len(os.listdir(f"../img/animations/skill/default_player"))):
@@ -498,8 +525,8 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp, Mul=1)
     red_surface.fill((255, 60, 60, 150), special_flags=pygame.BLEND_RGBA_MULT)
 
     # --- 2. 애니메이션 시간 설정 (오류 수정) ---
-    SKILL_ANIM_END_TIME = 1100
-    IMPACT_START_TIME = 1300
+    SKILL_ANIM_END_TIME = len(skill_frames) * 50 if skill_frames else 0
+    IMPACT_START_TIME = SKILL_ANIM_END_TIME + 200
     FLASH_DURATION = 800
     HP_BAR_START_TIME = IMPACT_START_TIME
     HP_BAR_DURATION = 800
@@ -1083,9 +1110,9 @@ def skill_message(screen, AttackerType, player, enemyCSmon, Pskill, Mskill, dama
         }
         if isinstance(Mskill.skW, str):
             if Mskill.skW == "DEF":
-                monsterskill_dict["skW"] = 10+40*(max(1, Mskill.Rank[1]))
+                monsterskill_dict["skW"] = 10+40*(max(1, enemyCSmon.Rank[1]))
             elif Mskill.skW == "SPD":
-                monsterskill_dict["skW"] = 10+50*(max(1, Mskill.Rank[2]))
+                monsterskill_dict["skW"] = 10+50*(max(1, enemyCSmon.Rank[2]))
 
     """스킬 메시지를 출력하기 전에 상태를 먼저 출력 (pygame)"""
     if damage != None:
@@ -2011,21 +2038,20 @@ def battle(getplayer, getenemy, screen=None):
     if result == "승리":
         Battle_win()
         display_status(screen)
-
-        if enemyCSmon.Num == 777:     # 몰캠
-            draw_text(screen, f"  몰캠을 수료했다!", stX, stY, WHITE)
-        elif enemyCSmon.Num == 888 or enemyCSmon.Num == 999:
-            draw_text(screen, f"  {enemyCSmon.name} 도전에 성공했다!", stX, stY, WHITE) 
-
-
+        if enemyCSmon.special:
+            if enemyCSmon.Num == 777:     # 몰캠
+                draw_text(screen, f"  몰캠을 수료했다!", stX, stY, WHITE)
+            elif enemyCSmon.Num == 888 or enemyCSmon.Num == 999:
+                draw_text(screen, f"  {enemyCSmon.name} 도전에 성공했다!", stX, stY, WHITE) 
+            pygame.display.flip()
+            wait_for_key()
             display_status(screen)
             healAnimation()
+            player.heal(player.HP)
             animate_health_bar(screen, psY+121, psX+122, player.nowhp, player.HP, player.HP)
             draw_text(screen, f"  {player.name}의 체력이 전부 회복되었다!", stX, stY, GREEN)
             pygame.display.flip()
             wait_for_key()
-
-
         else:
             draw_text(screen, f"  승리했다!", stX, stY, WHITE)
     
