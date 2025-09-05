@@ -1919,6 +1919,8 @@ def battle(getplayer, getenemy, screen=None):
                         return "실패"
                            
         while not battle_end:
+            if enemyCSmon.special:
+                player.update_fullreset()
             if enemyCSmon.Num == 777:     # 몰캠
                 if do_event:
                     lup_amt = molcamp_quiz(screen)
