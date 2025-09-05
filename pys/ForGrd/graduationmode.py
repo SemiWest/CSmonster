@@ -1142,10 +1142,8 @@ def show_final_result(player, screen):
     draw_text(screen, "비고", SCREEN_WIDTH//2, y_offset, BLACK, size=32, align='center')
     y_offset += 40
     draw_text(screen, f"이름: {player.name}", SCREEN_WIDTH//2-500, y_offset, BLACK)
-    draw_text(screen, f"최종 레벨: {player.level}", SCREEN_WIDTH//2-300, y_offset, BLACK)
-    draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
-    draw_text(screen, f"장짤 횟수: {player.jangzal_count}회", SCREEN_WIDTH//2+300, y_offset + 40, BLACK, align='right')
-    draw_text(screen, f"학고 횟수: {player.warning_count}회", SCREEN_WIDTH//2+500, y_offset + 40, BLACK, align='right')
+    draw_text(screen, f"최종 레벨: {player.level}", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
+    draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2+500, y_offset, BLACK, align='right')
     
     y_offset += 60
 
@@ -1164,7 +1162,7 @@ def show_final_result(player, screen):
         ending = player.get_final_ending()
         draw_text(screen, f"{player.name}은(는) 최종 학점 {player.calcGPA(2)}로 졸업했습니다.", SCREEN_WIDTH//2, y_offset, BLACK, size=32, align='center')
         y_offset += 40
-        draw_wrapped_text(screen, f"{ending}", SCREEN_WIDTH//2, y_offset, BLUE, 1000, size=32, align='center')
+        draw_wrapped_text(screen, f"{ending}", SCREEN_WIDTH//2, y_offset, BLUE, 1000, font_size=32, align='center')
         
     # --- 화면 표시 로직 종료 ---
 
@@ -1495,7 +1493,6 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                 break
             
             need_skill_change = False  # 각 전투 후에 초기화
-
             if battle_result == 1:  # 승리
                 if monster_name in player.clearedMonsters:
                     _remove_cleared_entry(player, monster_name)
@@ -1517,6 +1514,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                 player.thisSemesterGpas.append(gpa)
 
             elif battle_result == 4:  # 이벤트
+                player.update_fullreset()
                 player.thisSemesterGpas.append(gpa)
                 if gpa[1] == "성공!":
                     need_skill_change = player.complete_monster(monster_name, enemy_monster.drop_exp)

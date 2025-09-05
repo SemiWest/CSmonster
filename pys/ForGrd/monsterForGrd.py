@@ -660,7 +660,7 @@ cs220.skills = {
 # 코옵	(이벤트)	야도란
 coop = Monster(
     Num = 888, name="Co-op", credit = 123123, level = 20,
-    HP = 100, ATK = 100, DEF = 100, SPD = 100, 
+    HP = 100, ATK = 100, DEF = 60, SPD = 100, 
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/코옵.png",
     description="코옵설명",
@@ -672,13 +672,13 @@ coop.skills = {
         name='업무 공격',
         effect_type="Pdamage",
         type="*",
-        skW=100,
+        skW=0,
         description="과다한 업무를 투척해 공격한다."),
     '야근': Monster.Skill(
         name='개발의 지옥',
         effect_type="Pdamage",
         type="*",
-        skW=100,
+        skW=0,
         description="상대를 개발 지옥에 빠뜨려 공격한다."),
 }
 
@@ -696,7 +696,7 @@ madcamp = Monster(
 # 개별연구	(이벤트)	폴리곤
 study = Monster(
     Num = 999, name="개별 연구", credit = 345345, level = 20,
-    HP = 100, ATK = 100, DEF = 100, SPD = 100, 
+    HP = 100, ATK = 100, DEF = 60, SPD = 100, 
     type=["EVENT"], SeonSu=[],
     image="../img/monsters/개별연구.png",
     description="개별연구설명",
@@ -708,13 +708,13 @@ study.skills = {
         name='논문 공격', 
         effect_type="Pdamage",
         type="*",
-        skW=100,
+        skW=0,
         description="논문으로 공격한다."),
     '랩미팅': Monster.Skill(
         name='랩미팅', 
         effect_type="Pdamage",
         type="*",
-        skW=100,
+        skW=0,
         description="랩미팅으로 공격한다."),
 }
 
