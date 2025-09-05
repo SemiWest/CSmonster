@@ -98,7 +98,7 @@ class Monster:
         self.DEF = int((self.D * 2 + self.IV[2]) * (self.level / 100)) + 5
         self.SPD = int((self.SP * 2 + self.IV[3]) * (self.level / 100)) + 5
         
-        self.drop_exp = int((self.level ** 2 * 0.8) * (30-10*difficulty))  # 드랍 경험치
+        self.drop_exp = int((self.level * 8) * (30-10*difficulty))  # 드랍 경험치
         self.Rank = [0]*3  # 버프/디버프 랭크 초기화
 
         # 교체: update 마지막 줄 근처
