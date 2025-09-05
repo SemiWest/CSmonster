@@ -839,6 +839,8 @@ def semester_intro_screen(player, screen):
                 draw_text(screen, option, SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 32 - (len(options)-1)*40 + i*80, color, highlight = DARKGRAY if option in player.thisSemesterMonsters else None, align='center', size=64)
                 if i == selected:
                     draw_text(screen, ">", SCREEN_WIDTH//2 - 400, SCREEN_HEIGHT//2 - 32 - (len(options)-1)*40 + i*80, WHITE, size=64)
+                if option in player.thisSemesterMonsters:
+                    draw_text(screen, f"{player.thisSemesterMonsters.index(option)+1}", SCREEN_WIDTH//2 -320, SCREEN_HEIGHT//2 - 32 - (len(options)-1)*40 + i*80, WHITE, size=64)
                 if i == selected or option in player.thisSemesterMonsters:
                     display_Monster_Imge(screen, monsters[option], SCREEN_WIDTH//2 + len(option)*32+96, SCREEN_HEIGHT//2 - (len(options)-1) * 40 + i*80, size=4)
             
@@ -886,7 +888,7 @@ def semester_intro_screen(player, screen):
                     catching()
                     continue
                 option_select_sound()
-                draw_wrapped_text(screen, "\n 정말로 수강 신청을 확정하시겠습니까? \n (예: 오른쪽 방향키 / 아니요: 왼쪽 방향키)", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-300, WHITE, 1300, align='center')
+                draw_wrapped_text(screen, "\n 정말로 수강 신청을 확정하시겠습니까? \n (예: 오른쪽 방향키 / 아니요: 왼쪽 방향키)", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-500, WHITE, 1300, align='center')
                 pygame.display.flip()
                 checkkey = wait_for_key(sound = False)
                 if checkkey == 'right':
@@ -1052,7 +1054,10 @@ def show_final_result(player, screen):
             draw_text(screen, "당신은 프밍기 학인시를 처참하게 실패했습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
             draw_text(screen, "전산과로의 진학을 포기하였습니다...", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+140, BLACK, align='center')
         elif player.warning_count >= 3:
-            draw_text(screen, "학사 경고 3회로 제적되었습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
+            if player.warning_count == 7 :
+                draw_text(screen, "연차 초과로 제적되었습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
+            else: 
+                draw_text(screen, "학사 경고 3회로 제적되었습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
 
     else:
         screen.fill(BLACK)
@@ -1428,7 +1433,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
             debug: bool
             damage: bool
             skip: bool
-        debug_config = DebugConfig(debug=False, damage=True, skip=False)
+        debug_config = DebugConfig(debug=False, damage=True, skip=True)
     
     # 이름 입력
     prompts = ["이름 (최대 10자)", "인스타그램 ID (선택사항)"]
@@ -1496,7 +1501,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                     _remove_cleared_entry(player, monster_name)
                 _add_cleared_entry(player, monster_name, player.current_semester, gpa)
                 player.thisSemesterGpas.append(gpa)
-                need_skill_change = player.complete_monster(monster_name)
+                need_skill_change = player.complete_monster(monster_name, enemy_monster.drop_exp)
                 addSeonSus(player, enemy_monster)
 
             elif battle_result == 2:  # P (패스)
@@ -1504,7 +1509,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                     _remove_cleared_entry(player, monster_name)
                 _add_cleared_entry(player, monster_name, player.current_semester, gpa)
                 player.thisSemesterGpas.append(gpa)
-                need_skill_change = player.complete_monster(monster_name)
+                need_skill_change = player.complete_monster(monster_name, enemy_monster.drop_exp)
                 addSeonSus(player, enemy_monster)
 
             elif battle_result == 3:  # 드랍
@@ -1514,7 +1519,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
             elif battle_result == 4:  # 이벤트
                 player.thisSemesterGpas.append(gpa)
                 if gpa[1] == "성공!":
-                    need_skill_change = player.complete_monster(monster_name)
+                    need_skill_change = player.complete_monster(monster_name, enemy_monster.drop_exp)
 
             elif battle_result == 5:  # NR
                 player.canBeMetMonsters.append(monster_name)
@@ -1542,10 +1547,15 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
         logger.info(f"Debug: 현재 진행도 {player.semester_progress}/{len(player.semester_order)}")
         
         # 남은 몬스터 수가 0인 경우
-        if len(player.clearedMonsters) >= 14:
-            if player.current_semester in ["4-1", "4-여름방학", "4-2"]:
+        # gpa 중 f가 있으면 clearedMonsters가 14개라도 졸업 불가
+        if len(player.clearedMonsters) >= 14 and "F" not in [gpa[1] for gpa in player.gpas]:
+            if player.current_semester in ["4-여름방학", "4-2"]:
                 logger.info("Debug: 모든 학점 취득 완료. 정상 졸업.")
                 break # 게임 루프 종료
+            elif player.current_semester in ["5-1", "5-2", "6-1", "6-2"]:
+                player.ending_type = "연차초과"
+                logger.info("Debug: 모든 학점 취득 완료. 연차초과 졸업.")
+                break
             else:
                 logger.info("Debug: 모든 학점 취득 완료. 조기 졸업!")
                 player.ending_type = "조기"
@@ -1556,11 +1566,10 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
             # 모든 학기(4-2) 완료 후에도 몬스터가 남았을 때
             if len(player.canBeMetMonsters) > 0:
                 logger.info("Debug: 연차초과! 추가 학기 시작.")
-                player.ending_type = "연차초과"
                 # 추가 학기 로직을 여기에 구현
                 # 예: 5-1, 5-2, 6-1, 6-2 학기를 직접 추가
-                player.semester_order = player.semester_order + ["5-1", "5-2", "6-1", "6-2"]
-                player.current_semester = player.semester_order[-4] # 5-1 학기로 설정
+                player.semester_order = player.semester_order + ["5-1", "5-2", "졸업"]
+                player.current_semester = player.semester_order[-2] # 5-1 학기로 설정
                 continue
             else:
                 logger.info("Debug: 모든 학기 완료!")
@@ -1569,7 +1578,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
         # 6-2 학기까지 왔는데도 몬스터가 남았을 경우 제적
         if player.current_semester == "졸업" and len(player.canBeMetMonsters) > 0:
             logger.info("Debug: 모든 추가 학기 실패. 제적!")
-            player.warning_count = 3 # 제적 조건 충족
+            player.warning_count = 7 # 제적 조건 충족
             break # 게임 루프 종료
     
     # 음악 정지

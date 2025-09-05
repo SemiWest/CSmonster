@@ -98,7 +98,7 @@ class Monster:
         self.DEF = int((self.D * 2 + self.IV[2]) * (self.level / 100)) + 5
         self.SPD = int((self.SP * 2 + self.IV[3]) * (self.level / 100)) + 5
         
-        self.drop_exp = int((self.level * 5) * (30-10*difficulty))  # 드랍 경험치
+        self.drop_exp = int((self.level ** 2 * 0.8) * (30-10*difficulty))  # 드랍 경험치
         self.Rank = [0]*3  # 버프/디버프 랭크 초기화
 
         # 교체: update 마지막 줄 근처
@@ -172,7 +172,7 @@ cs101.skills = {
 
 # 이산	전산이론	이상해씨
 cs204 = Monster(
-    Num = 204, name="이산구조", credit = 3, level = 5,
+    Num = 204, name="이산구조", credit = 3, level = 6,
     HP = 45, ATK = 57, DEF = 57, SPD = 45, 
     type=["CT"], SeonSu=[300, 320],
     image="../img/monsters/이산구조.png",
@@ -211,7 +211,7 @@ cs204.skills = {
 
 # 데구	데이터 과학	파이리
 cs206 = Monster(
-    Num = 206, name="데이타구조", credit = 3,  level = 4,
+    Num = 206, name="데이타구조", credit = 3,  level = 6,
     HP = 39, ATK = 58, DEF = 47, SPD = 65, 
     type=["DS"], SeonSu=[360],
     image="../img/monsters/데이타구조.png",
@@ -250,7 +250,7 @@ cs206.skills = {
 
 # 시프	시 넽	레츠고이브이
 cs230 = Monster(
-    Num = 230, name="시스템 프로그래밍", credit = 3, level = 7,
+    Num = 230, name="시스템 프로그래밍", credit = 3, level = 8,
     HP = 65, ATK = 70, DEF = 77, SPD = 75, 
     type=["SYS"], SeonSu=[311, 341],
     image="../img/monsters/시프.png",
@@ -478,7 +478,7 @@ cs341.skills = {
 
 # 디비개	데이터 과학	리자몽
 cs360 = Monster(
-    Num = 360, name="데이타베이스 개론", credit = 3, level = 9,
+    Num = 360, name="데이타베이스 개론", credit = 3, level = 10,
     HP = 78, ATK = 96, DEF = 81, SPD = 100, 
     type=["DS"], SeonSu=[],
     image="../img/monsters/데이터베이스개론.png",

@@ -1752,8 +1752,8 @@ def battle(getplayer, getenemy, screen=None):
     else:
         enemyCSmon = enemy.nowCSmon if hasattr(enemy, 'nowCSmon') else enemy
     
-    player.update()
-    enemyCSmon.update()
+    player.update_fullreset()
+    enemyCSmon.update_fullreset()
     
     setattr(player, 'defensive_stance', None)
     setattr(enemyCSmon, 'defensive_stance', None)

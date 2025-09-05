@@ -1,6 +1,6 @@
 import random
 
-difficulty = 1  # 난이도 조정 (0: 쉬움, 1: 보통, 2: 어려움)
+difficulty = 2  # 난이도 조정 (0: 쉬움, 1: 보통, 2: 어려움)
 def set_difficulty(difficulty_level):
     global difficulty
     difficulty = difficulty_level

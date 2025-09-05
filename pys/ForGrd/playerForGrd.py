@@ -405,7 +405,7 @@ class Player:
             return "-"
         return f"{(sum1 / sum2):.2f}"
 
-    def complete_monster(self, monster_name):
+    def complete_monster(self, monster_name, drop_exp):
         """몬스터(과목) 처치 완료"""
         self.semester_progress += 1
         self.mylevelup = 0
@@ -416,20 +416,20 @@ class Player:
             if self.molcam != 0:
                 self.update_fullreset()
             print("Debug: 몰입캠프 클리어!")
-        if monster_name == "코옵":
+        elif monster_name == "코옵":
             self.update_fullreset()
             self.titles.append("회사원")
             print("Debug: 코옵 클리어! 체력이 완전히 회복되고 취업 루트가 해금되었습니다.")
-        if monster_name == "개별연구":
+        elif monster_name == "개별연구":
             self.update_fullreset()
             self.titles.append("대학원생")
             print("Debug: 개별연구 클리어! 체력이 완전히 회복되고 대학원 진학 루트가 해금되었습니다.")
         
         # 경험치 획득
-        self.mylevelup = self.gain_exp(monsters[monster_name].drop_exp)
-        
-        # 과목별 스킬 성장
-        self.skilllevelup, need_skill_change  = self.grow_skill_from_monster(monster_name)
+        else: 
+            self.mylevelup = self.gain_exp(drop_exp)
+            # 과목별 스킬 성장
+            self.skilllevelup, need_skill_change  = self.grow_skill_from_monster(monster_name)
 
         return need_skill_change
 
