@@ -174,7 +174,7 @@ while True:
 
         # 플레이어 타입 표시
         display_type(screen, psY, psX+470, "EVENT")
-
+        
         screen.blit(TEXT, (sX+11, sY+536))
     pygame.display.flip()
 pygame.quit()   

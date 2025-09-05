@@ -52,7 +52,7 @@ music_volume = 50
 music_on = True
 ESVolume = 90
 effectsound = True
-difficulty = 2
+difficulty = 1
 
 def initialize_channels():
     """음악과 효과음을 위한 채널 초기화"""

@@ -801,7 +801,7 @@ def display_status(screen, detail=True, skill_frame_to_draw=None):
         display_player_details(screen, player, sX+1264)
 
     screen.blit(TEXT, (sX+11, sY+535))
-    draw_text(screen, "Enter를 눌러 확인", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, LIGHTGRAY, align='center')
+    draw_text(screen, "Enter를 눌러 확인, Backspace를 눌러 취소", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, LIGHTGRAY, align='center')
 
 def display_player_details(screen, player, x):
     """플레이어 상세 정보 출력"""
@@ -1052,7 +1052,7 @@ def show_pnr_result(screen, success):
     wait_for_key()
 
 def gpaCalculator(enemy, hap_num, item_num):
-    score = max(0, (17-hap_num)/16) * 0.3 + max(0, (3-item_num)/3) * 0.3 + (1-(startBattleHp-player.nowhp)/player.HP)*0.4
+    score = max(0, (17-hap_num)/16) * 0.5 + max(0, (3-item_num)/3) * 0.2 + max(1, (1-(startBattleHp-player.nowhp)/player.HP))*0.3
     if score >= 0.90: gpa = "A+"
     elif score >= 0.80: gpa = "A0"
     elif score >= 0.70: gpa = "A-"
@@ -1531,7 +1531,15 @@ def select_reward_item(screen, items):
         pygame.display.flip()
         key = wait_for_key()
         if key == 'enter':
-            return items[current_index]
+            draw_text(screen, f"  {items[current_index].name}을/를 선택하시겠습니까? (오른쪽 화살표로 확정)", stX, stY+40, RED)
+            pygame.display.flip()
+            subkey = wait_for_key()
+            if subkey == 'right':
+                option_select_sound()
+                return items[current_index]
+            else:
+                option_escape_sound()
+                continue
         elif key == 'up' and current_index > 0:
             current_index -= 1
             option_change_sound()
