@@ -362,6 +362,8 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp, Mul=1)
     ENEMY = pygame.image.load(enemyCSmon.image).convert_alpha()
     ENEMY = pygame.transform.scale_by(ENEMY, 10)
     active_stance = getattr(enemyCSmon if target == player else player, 'defensive_stance', None)
+    if active_stance is None:
+        active_stance = getattr(enemyCSmon if target != player else player, 'defensive_stance', None)
     skill_frames = []
     if active_stance == "mirror":
         if attacker == enemyCSmon:
@@ -431,6 +433,8 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp, Mul=1)
     hurt_sound_played = False
     if skill["animation"] != "none": play_effect(f"../sound/skills/{skill['animation']}.mp3")
     else: play_effect("../sound/skills/default.mp3")
+    print(active_stance, attacker, target)
+        
     # --- 3. 통합 애니메이션 루프 ---
     while True:
         elapsed_time = pygame.time.get_ticks() - start_time
@@ -447,11 +451,10 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp, Mul=1)
             screen.blit(silhouette, (esX + 900 - ENEMY.get_width() // 2, esY + 305 - ENEMY.get_height()))
         else:
             screen.blit(ENEMY, (esX + 900 - ENEMY.get_width() // 2, esY + 305 - ENEMY.get_height()))
-
         # [레이어 2.5] 방패/거울
         if active_stance:
             defense_img = SHIELD if active_stance == 'shield' else MIRROR
-            if target != player:
+            if attacker == player and active_stance == 'mirror' or attacker == enemyCSmon and active_stance == 'shield':
                 anchor_x, anchor_y = sX + 320, sY + 536
             else:
                 # ▼▼▼ [수정 1] 방패/거울 기준점도 몬스터 위치에 맞게 변경 (900, 305 -> 900, 305) ▼▼▼
@@ -1272,7 +1275,7 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         
         cur_rate = getattr(user, "reflect_success_rate", 1.0)
         is_success = random.random()
-        print(f"반사 확률: {cur_rate}, 난수: {is_success}")  # 디버그 출력
+        print(f"{user.defensive_stance} 반사 확률: {cur_rate}, 난수: {is_success}")  # 디버그 출력
         if is_success > cur_rate:
             # 반사 실패: 데미지를 받음
             old_hp = user.nowhp
@@ -1348,8 +1351,9 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         new_hp = min(user.HP, old_hp + heal_amount)
         
         Heal() # 회복 사운드 재생
-        play_damage_sequence(screen, skill, target, user, old_hp, new_hp)
-
+        healAnimation(attackerType)
+        animate_health_bar(screen, (psY+121 if attackerType=="player" else esY+121), (psX+122 if attackerType=="player" else esX+122), old_hp, new_hp, user.HP)
+        
         user.nowhp = new_hp
         return False, 0, False
 

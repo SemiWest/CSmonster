@@ -261,7 +261,7 @@ cs230.skills = {
         name='BufferOverflow', 
         effect_type="damage",
         type="SYS",
-        skW=100,
+        skW=80,
         priority=0,
         description="버퍼 오버플로우를 일으켜 공격한다."),
     '페이지 폴트': Monster.Skill(
