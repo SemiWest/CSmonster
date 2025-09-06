@@ -727,9 +727,11 @@ def select_player_skill(screen):
                 screen.blit(SKILL, (infoX+160, infoY))
                 draw_text(screen, "위력", infoText - 25, infoY+30, WHITE)
                 draw_text(screen,f"{skill['skW']}", infoText+376, infoY+30, WHITE, align='right')
-                if getattr(skill, 'beDescirp', None):
+                print(skill)
+                if skill['beDescrip'] != None:
+                    print(f"왜안됨 {skill['beDescrip']}")
                     draw_text(screen, "부가효과", infoText - 25, infoY+70, WHITE)
-                    draw_text(screen, f"{skill['beDescirp']}", infoText+376, infoY+70, WHITE, align='right')
+                    draw_text(screen, f"{skill['beDescrip']}", infoText+376, infoY+70, WHITE, align='right')
                 draw_wrapped_text(
                     screen,
                     skill['description'],

@@ -57,7 +57,7 @@ PLAYER_SKILLS = {
          "description": "프밍기를 수강한 당신, 이제 파이썬을 다룰 줄 안다",  
          "level": 2,  
          "priority": 0,  
-         "animation": "Python"}
+         "animation": "Python", "beDescrip":  None},
     ],
     "PS": [
         {"name": "논리왕",  
@@ -69,7 +69,7 @@ PLAYER_SKILLS = {
          "priority": 0,  
          "animation": "none",  
          "bonus_effect": ["buff", 0],
-         "beDescirp": "ATK +1"},
+         "beDescrip": "ATK +1"},
         {"name": "Master Theorem",  
          "effect_type": "damage",  
          "skW": 55,  
@@ -79,7 +79,7 @@ PLAYER_SKILLS = {
          "priority": 0,  
          "animation": "none",  
          "bonus_effect": ["buff", 3],
-         "beDescirp": "ATK +2"},
+         "beDescrip": "ATK +2"},
         {"name": "P/NP",  
          "effect_type": "damage",  
          "skW": 75,  
@@ -89,7 +89,7 @@ PLAYER_SKILLS = {
          "priority": 0,  
          "animation": "none",  
          "bonus_effect": ["buff", 6],
-         "beDescirp": "ATK +3"},
+         "beDescrip": "ATK +3"},
     ],
     "CT": [
         {"name": "논증",  
@@ -109,7 +109,7 @@ PLAYER_SKILLS = {
          "priority": 0,  
          "animation": "none",
          "bonus_effect": ["buff", 2],
-         "beDescirp": "SPD +1."},
+         "beDescrip": "SPD +1."},
         {"name": "RUST",  
          "effect_type": "damage",  
          "skW": 65,  
@@ -119,7 +119,7 @@ PLAYER_SKILLS = {
          "priority": 1,  
          "animation": "none",
          "bonus_effect": ["buff", 5],
-         "beDescirp": "SPD +2."},
+         "beDescrip": "SPD +2."},
         {"name": "팬파인애플애플팬",  
          "effect_type": "damage",  
          "skW": 80,  
@@ -129,7 +129,7 @@ PLAYER_SKILLS = {
          "priority": 1,  
          "animation": "none",
          "bonus_effect": ["buff", 17],
-         "beDescirp": "SPD +6."}
+         "beDescrip": "SPD +6."}
     ],
     "SYS": [
         {"name": "스택오버플로우",  
@@ -141,7 +141,7 @@ PLAYER_SKILLS = {
          "priority": 0,  
          "animation": "none",  
          "bonus_effect": ["heal", "absorb", 0.25],
-         "beDescirp": "DRAIN 1/4"},
+         "beDescrip": "DRAIN 1/4"},
         {"name": "CTRL^C",  
          "effect_type": "damage",  
          "skW": 50,  
@@ -151,7 +151,7 @@ PLAYER_SKILLS = {
          "priority": 0,  
          "animation": "none",  
          "bonus_effect": ["heal", "absorb", 0.5],
-         "beDescirp": "DRAIN 1/4"},
+         "beDescrip": "DRAIN 1/4"},
         {"name": "디도스",  
          "effect_type": "damage",  
          "skW": 60,  
@@ -161,7 +161,7 @@ PLAYER_SKILLS = {
          "priority": 1,  
          "animation": "none",  
          "bonus_effect": ["heal", "absorb", 0.5],
-         "beDescirp": "DRAIN 1/2"},
+         "beDescrip": "DRAIN 1/2"},
         {"name": "핀토스",  
          "effect_type": "damage",  
          "skW": 75,  
@@ -171,7 +171,7 @@ PLAYER_SKILLS = {
          "priority": 2,  
          "animation": "none",  
          "bonus_effect": ["heal", "absorb", 1.0],
-         "beDescirp": "DRAIN 1"},
+         "beDescrip": "DRAIN 1"},
     ],
     "DS": [
         {"name": "OOP",  
@@ -183,7 +183,7 @@ PLAYER_SKILLS = {
          "priority": 0,  
          "animation": "none",  
          "bonus_effect": ["buff", 1],
-         "beDescirp": "DEF +1"},
+         "beDescrip": "DEF +1"},
         {"name": "SQL 인젝션",  
          "effect_type": "damage",  
          "skW": 70,  
@@ -193,7 +193,7 @@ PLAYER_SKILLS = {
          "priority": 0,  
          "animation": "none",  
          "bonus_effect": ["buff", 4],
-         "beDescirp": "DEF +2"}
+         "beDescrip": "DEF +2"}
     ],
     "AI": [
         {"name": "오버피팅",  
@@ -205,7 +205,7 @@ PLAYER_SKILLS = {
          "priority": 2,  
          "animation": "none",
          "bonus_effect": ["buff", (0,1,2)],
-         "beDescirp": "ALL +1"},
+         "beDescrip": "ALL +1"},
         {"name": "샘 올트먼",  
          "effect_type": "damage",  
          "skW": 80,  
@@ -215,7 +215,7 @@ PLAYER_SKILLS = {
          "priority": 2,  
          "animation": "none",  
          "bonus_effect": ["buff", (3,4,5)],
-         "beDescirp": "ALL +2"}
+         "beDescrip": "ALL +2"}
         ]
     }
 
