@@ -87,6 +87,7 @@ EVENT = pygame.transform.scale_by(EVENT, 4)
 STAR = pygame.transform.scale_by(STAR, 4)
 SHIELD = pygame.transform.scale_by(SHIELD, 8)
 MIRROR = pygame.transform.scale_by(MIRROR, 8)
+RANK = pygame.transform.scale_by(RANK, 4)
 
 def is_invulnerable(target):
     """디버그 모드 무적 상태 확인 헬퍼 함수"""
@@ -722,9 +723,9 @@ def select_player_skill(screen):
                 screen.blit(SKILL, (infoX+160, infoY))
                 draw_text(screen, "위력", infoText - 25, infoY+30, WHITE)
                 draw_text(screen,f"{skill['skW']}", infoText+376, infoY+30, WHITE, align='right')
-                if skill['beDescip']:
+                if getattr(player, 'beDescirp', None):
                     draw_text(screen, "부가효과", infoText - 25, infoY+70, WHITE)
-                    draw_text(screen, f"{skill['beDescip']}", infoText+376, infoY+70, WHITE, align='right')
+                    draw_text(screen, f"{skill['beDescirp']}", infoText+376, infoY+70, WHITE, align='right')
                 draw_wrapped_text(
                     screen,
                     skill['description'],

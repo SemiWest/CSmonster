@@ -409,13 +409,13 @@ def show_deans_list(player, screen, leaderboard, stats):
     message_lines = []
     if player_rank is not None and player_rank <= 10:
         if player_rank == 1:
-            message_lines.append(("전설의 1위! 새로운 딘즈 리스트 정상에 올랐습니다!", (255, 215, 0)))
+            message_lines.append(("전설의 1위! 정상에 올랐습니다!", (255, 215, 0)))
         elif player_rank == 2:
             message_lines.append(("2위 달성! 환상적인 성적입니다!", (192, 192, 192)))
         elif player_rank == 3:
             message_lines.append(("3위 입성! 탑 티어에 합류했습니다!", (205, 127, 50)))
         else:
-            message_lines.append(("축하합니다! 새로운 딘즈 리스트 Top 10에 올랐습니다!", GREEN))
+            message_lines.append(("축하합니다! Top 10에 올랐습니다!", GREEN))
     elif player_entry is not None:
         bottom_count = min(3, len(combined))
         bottom_start_rank = len(combined) - bottom_count + 1
