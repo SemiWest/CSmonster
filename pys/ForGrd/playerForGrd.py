@@ -68,7 +68,8 @@ PLAYER_SKILLS = {
          "level": 1,  
          "priority": 0,  
          "animation": "none",  
-         "bonus_effect": ["buff", 0]},
+         "bonus_effect": ["buff", 0],
+         "beDescirp": "ATK +1"},
         {"name": "Master Theorem",  
          "effect_type": "damage",  
          "skW": 55,  
@@ -77,7 +78,8 @@ PLAYER_SKILLS = {
          "level": 2,  
          "priority": 0,  
          "animation": "none",  
-         "bonus_effect": ["buff", 3]},
+         "bonus_effect": ["buff", 3],
+         "beDescirp": "ATK +2"},
         {"name": "P/NP",  
          "effect_type": "damage",  
          "skW": 75,  
@@ -86,7 +88,8 @@ PLAYER_SKILLS = {
          "level": 3,  
          "priority": 0,  
          "animation": "none",  
-         "bonus_effect": ["buff", 6]},
+         "bonus_effect": ["buff", 6],
+         "beDescirp": "ATK +3"},
     ],
     "CT": [
         {"name": "논증",  
@@ -105,7 +108,8 @@ PLAYER_SKILLS = {
          "level": 2,  
          "priority": 0,  
          "animation": "none",
-         "bonus_effect": ["buff", 2]},
+         "bonus_effect": ["buff", 2],
+         "beDescirp": "SPD +1."},
         {"name": "RUST",  
          "effect_type": "damage",  
          "skW": 65,  
@@ -114,7 +118,8 @@ PLAYER_SKILLS = {
          "level": 3,  
          "priority": 1,  
          "animation": "none",
-         "bonus_effect": ["buff", 5]},
+         "bonus_effect": ["buff", 5],
+         "beDescirp": "SPD +2."},
         {"name": "팬파인애플애플팬",  
          "effect_type": "damage",  
          "skW": 80,  
@@ -123,7 +128,8 @@ PLAYER_SKILLS = {
          "level": 4,  
          "priority": 1,  
          "animation": "none",
-         "bonus_effect": ["buff", 17]}
+         "bonus_effect": ["buff", 17],
+         "beDescirp": "SPD +6."}
     ],
     "SYS": [
         {"name": "스택오버플로우",  
@@ -134,7 +140,8 @@ PLAYER_SKILLS = {
          "level": 1,  
          "priority": 0,  
          "animation": "none",  
-         "bonus_effect": ["heal", "absorb", 0.25]},
+         "bonus_effect": ["heal", "absorb", 0.25],
+         "beDescirp": "DRAIN 1/4"},
         {"name": "CTRL^C",  
          "effect_type": "damage",  
          "skW": 50,  
@@ -143,7 +150,8 @@ PLAYER_SKILLS = {
          "level": 2,  
          "priority": 0,  
          "animation": "none",  
-         "bonus_effect": ["heal", "absorb", 0.5]},
+         "bonus_effect": ["heal", "absorb", 0.5],
+         "beDescirp": "DRAIN 1/4"},
         {"name": "디도스",  
          "effect_type": "damage",  
          "skW": 60,  
@@ -152,7 +160,8 @@ PLAYER_SKILLS = {
          "level": 3,  
          "priority": 1,  
          "animation": "none",  
-         "bonus_effect": ["heal", "absorb", 0.5]},
+         "bonus_effect": ["heal", "absorb", 0.5],
+         "beDescirp": "DRAIN 1/2"},
         {"name": "핀토스",  
          "effect_type": "damage",  
          "skW": 75,  
@@ -161,7 +170,8 @@ PLAYER_SKILLS = {
          "level": 1,  
          "priority": 2,  
          "animation": "none",  
-         "bonus_effect": ["heal", "absorb", 1.0]},
+         "bonus_effect": ["heal", "absorb", 1.0],
+         "beDescirp": "DRAIN 1"},
     ],
     "DS": [
         {"name": "OOP",  
@@ -172,7 +182,8 @@ PLAYER_SKILLS = {
          "level": 1,  
          "priority": 0,  
          "animation": "none",  
-         "bonus_effect": ["buff", 1]},
+         "bonus_effect": ["buff", 1],
+         "beDescirp": "DEF +1"},
         {"name": "SQL 인젝션",  
          "effect_type": "damage",  
          "skW": 70,  
@@ -181,7 +192,8 @@ PLAYER_SKILLS = {
          "level": 2,  
          "priority": 0,  
          "animation": "none",  
-         "bonus_effect": ["buff", 4]}
+         "bonus_effect": ["buff", 4],
+         "beDescirp": "DEF +2"}
     ],
     "AI": [
         {"name": "오버피팅",  
@@ -191,7 +203,9 @@ PLAYER_SKILLS = {
          "description": "상대를 과적합 학습해 완벽하게 공격한다",  
          "level": 1,  
          "priority": 2,  
-         "animation": "none"},
+         "animation": "none",
+         "bonus_effect": ["buff", (0,1,2)],
+         "beDescirp": "ALL +1"},
         {"name": "샘 올트먼",  
          "effect_type": "damage",  
          "skW": 80,  
@@ -200,8 +214,9 @@ PLAYER_SKILLS = {
          "level": 2,  
          "priority": 2,  
          "animation": "none",  
-         "bonus_effect": ["buff", (0,1,2)]}
-       ]
+         "bonus_effect": ["buff", (3,4,5)],
+         "beDescirp": "ALL +2"}
+        ]
     }
 
 def gpaColor(gpa):

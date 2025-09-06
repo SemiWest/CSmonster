@@ -727,7 +727,7 @@ def select_player_skill(screen):
                 screen.blit(SKILL, (infoX+160, infoY))
                 draw_text(screen, "위력", infoText - 25, infoY+30, WHITE)
                 draw_text(screen,f"{skill['skW']}", infoText+376, infoY+30, WHITE, align='right')
-                if getattr(player, 'beDescirp', None):
+                if getattr(skill, 'beDescirp', None):
                     draw_text(screen, "부가효과", infoText - 25, infoY+70, WHITE)
                     draw_text(screen, f"{skill['beDescirp']}", infoText+376, infoY+70, WHITE, align='right')
                 draw_wrapped_text(
@@ -1231,6 +1231,7 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         playerskill_dict = None
     else:
         playerskill_dict = {
+            "name": playerskill["name"],
             "type": playerskill["type"],
             "effect_type": playerskill["effect_type"],
             "skW": playerskill["skW"],
@@ -1241,6 +1242,7 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         monsterskill_dict = None
     else:
         monsterskill_dict = {
+            "name": monsterskill.name,
             "type": monsterskill.skill_type,
             "effect_type": monsterskill.effect_type,
             "skW": monsterskill.skW,
