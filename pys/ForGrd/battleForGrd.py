@@ -83,8 +83,11 @@ SHIELD = pygame.transform.scale_by(SHIELD, 8)
 MIRROR = pygame.transform.scale_by(MIRROR, 8)
 
 def is_invulnerable(target):
-    if getattr(target, 'cheatmode', False):
-        return True
+    """디버그 모드 무적 상태 확인 헬퍼 함수"""
+    dbg = getattr(target, "debug_config", None)
+    if dbg and dbg.debug:
+        return dbg.damage  # True => 무적, False => 데미지 받음
+    return getattr(target, "cheatmode", False)
 
 # 디스플레이 함수
 def display_type(screen, y, x, type):
