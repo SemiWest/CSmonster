@@ -42,33 +42,165 @@ GPACOLOR = {
 
 PLAYER_SKILLS = {
     "*": [
-        {"name": "타자치기", "effect_type": "damage", "skW": round(25*DIFFICULTY_MULTIPLIER/5)*5, "type": "*", "description": "한글은 100타, 영어는 독수리타법", "level": 1, "priority": 0, "animation": "Typing"},
-        {"name": "Python", "effect_type": "damage", "skW": round(35*DIFFICULTY_MULTIPLIER/5)*5, "type": "*", "description": "프밍기를 수강한 당신, 이제 파이썬을 다룰 줄 안다", "level": 2, "priority": 0, "animation": "Python"}
+        {"name": "타자치기",           
+         "effect_type": "damage",  
+         "skW": 25,  
+         "type": "*",  
+         "description": "한글은 100타, 영어는 독수리타법",  
+         "level": 1,  
+         "priority": 0,  
+         "animation": "none"},
+        {"name": "파이썬",  
+         "effect_type": "damage",  
+         "skW": 35,  
+         "type": "*",  
+         "description": "프밍기를 수강한 당신, 이제 파이썬을 다룰 줄 안다",  
+         "level": 2,  
+         "priority": 0,  
+         "animation": "Python"}
     ],
     "PS": [
-        {"name": "논리왕", "effect_type": "damage", "skW": round(45*DIFFICULTY_MULTIPLIER/5)*5, "type": "PS", "description": "상대를 논리로 누른다", "level": 1, "priority": 0, "animation": "none"},
-        {"name": "Master Theorem", "effect_type": "damage", "skW": round(55*DIFFICULTY_MULTIPLIER/5)*5, "type": "PS", "description": "상대의 복잡도를 분석한다", "level": 2, "priority": 1, "animation": "none"},
-        {"name": "PNP", "effect_type": "damage", "skW": round(75*DIFFICULTY_MULTIPLIER/5)*5, "type": "PS", "description": "PNP문제를 해결했다. 전 세계 수학자들은 당신의 편이다", "level": 3, "priority": 1, "animation": "none"},
+        {"name": "논리왕",  
+         "effect_type": "damage",  
+         "skW": 45,  
+         "type": "PS",  
+         "description": "상대를 논리로 누른다. 공격력이 1랭크 오른다.",  
+         "level": 1,  
+         "priority": 0,  
+         "animation": "none",  
+         "bonus_effect": ["buff", 0]},
+        {"name": "Master Theorem",  
+         "effect_type": "damage",  
+         "skW": 55,  
+         "type": "PS",  
+         "description": "상대의 복잡도를 분석한다. 공격력이 2랭크 오른다.",  
+         "level": 2,  
+         "priority": 0,  
+         "animation": "none",  
+         "bonus_effect": ["buff", 3]},
+        {"name": "P/NP",  
+         "effect_type": "damage",  
+         "skW": 75,  
+         "type": "PS",  
+         "description": "P/NP문제를 해결해 수학계의 역사에 남는다. 공격력이 3랭크 오른다.",  
+         "level": 3,  
+         "priority": 0,  
+         "animation": "none",  
+         "bonus_effect": ["buff", 6]},
     ],
     "CT": [
-        {"name": "증명", "effect_type": "damage", "skW": round(40*DIFFICULTY_MULTIPLIER/5)*5, "type": "CT", "description": "상대는 약함을 증명해보자.", "level": 1, "priority": 0, "animation": "none"},
-        {"name": "이산화", "effect_type": "damage", "skW": round(50*DIFFICULTY_MULTIPLIER/5)*5, "type": "CT", "description": "상대를 이산화해 분해해버린다", "level": 2, "priority": 0, "animation": "none"},
-        {"name": "RUST", "effect_type": "damage", "skW": round(65*DIFFICULTY_MULTIPLIER/5)*5, "type": "CT", "description": "순수 함수를 배웠다. 어렵다.", "level": 3, "priority": 1, "animation": "none"},
-        {"name": "팬파인애플애플팬", "effect_type": "damage", "skW": round(80*DIFFICULTY_MULTIPLIER/5)*5, "type": "CT", "description": "학부장을 호출한다", "level": 4, "priority": 2, "animation": "none"}
+        {"name": "논증",  
+         "effect_type": "damage",  
+         "skW": 40,  
+         "type": "CT",  
+         "description": "상대의 약함을 논리적으로 증명한다.",  
+         "level": 1,  
+         "priority": 0,  
+         "animation": "none"},
+        {"name": "비트 연산",  
+         "effect_type": "damage",  
+         "skW": 50,  
+         "type": "CT",  
+         "description": "비트 연산으로 상대를 공격한다. 스피드가 1랭크 오른다.",  
+         "level": 2,  
+         "priority": 0,  
+         "animation": "none",
+         "bonus_effect": ["buff", 2]},
+        {"name": "RUST",  
+         "effect_type": "damage",  
+         "skW": 65,  
+         "type": "CT",  
+         "description": "순수 함수로 상대를 공격한다. 스피드가 2랭크 오른다.",  
+         "level": 3,  
+         "priority": 1,  
+         "animation": "none",
+         "bonus_effect": ["buff", 5]},
+        {"name": "팬파인애플애플팬",  
+         "effect_type": "damage",  
+         "skW": 80,  
+         "type": "CT",  
+         "description": "학부장님에게 도움을 청한다. 스피드가 최대로 오른다.",  
+         "level": 4,  
+         "priority": 1,  
+         "animation": "none",
+         "bonus_effect": ["buff", 17]}
     ],
     "SYS": [
-        {"name": "스택오버플로우", "effect_type": "damage", "skW": round(45*DIFFICULTY_MULTIPLIER/5)*5, "type": "SYS", "description": "상대의 머리를 과부화시킨다", "level": 1, "priority": 1, "animation": "none"},
-        {"name": "CTRL^C", "effect_type": "damage", "skW": round(50*DIFFICULTY_MULTIPLIER/5)*5, "type": "SYS", "description": "상대 쉘을 다운시키는 나만의 시그널", "level": 2, "priority": 0, "animation": "none"},
-        {"name": "DDOS", "effect_type": "damage", "skW": round(60*DIFFICULTY_MULTIPLIER/5)*5, "type": "SYS", "description": "상대에게 무한한 공격 요청을 보낸다", "level": 3, "priority": 3, "animation": "none"},
-        {"name": "핀토스", "effect_type": "damage", "skW": round(75*DIFFICULTY_MULTIPLIER/5)*5, "type": "SYS", "description": "핀토스를 끝낸 자. 어떤 과제가 와도 이겨낼 수 있다.", "level": 4, "priority": 2, "animation": "none"},
+        {"name": "스택오버플로우",  
+         "effect_type": "damage",  
+         "skW": 45,  
+         "type": "SYS",  
+         "description": "스택오버플로우를 유발해 과부화시킨다. 가한 피해량의 1/4을 회복한다.",  
+         "level": 1,  
+         "priority": 0,  
+         "animation": "none",  
+         "bonus_effect": ["heal", "absorb", 0.25]},
+        {"name": "CTRL^C",  
+         "effect_type": "damage",  
+         "skW": 50,  
+         "type": "SYS",  
+         "description": "상대 쉘을 다운시킨다. 가한 피해량의 절반을 회복한다.",  
+         "level": 2,  
+         "priority": 0,  
+         "animation": "none",  
+         "bonus_effect": ["heal", "absorb", 0.5]},
+        {"name": "디도스",  
+         "effect_type": "damage",  
+         "skW": 60,  
+         "type": "SYS",  
+         "description": "상대에게 무한한 공격 요청을 보내 다운시킨다. 가한 피해량의 절반을 회복한다.",  
+         "level": 3,  
+         "priority": 1,  
+         "animation": "none",  
+         "bonus_effect": ["heal", "absorb", 0.5]},
+        {"name": "핀토스",  
+         "effect_type": "damage",  
+         "skW": 75,  
+         "type": "SYS",  
+         "description": "핀토스를 끝낸 자, 어떤 과제가 와도 이겨낸다. 가한 피해량만큼 회복한다.",  
+         "level": 1,  
+         "priority": 2,  
+         "animation": "none",  
+         "bonus_effect": ["heal", "absorb", 1.0]},
     ],
     "DS": [
-        {"name": "OOP", "effect_type": "damage", "skW": round(45*DIFFICULTY_MULTIPLIER/5)*5, "type": "DS", "description": "상대를 객체화시킨다. 상대 메서드의 취약점을 파악해보자", "level": 1, "priority": 1, "animation": "none"},
-        {"name": "SQL 인젝션", "effect_type": "damage", "skW": round(70*DIFFICULTY_MULTIPLIER/5)*5, "type": "DS", "description": "상대에게 SQL 인젝션 공격을 가한다", "level": 2, "priority": 2, "animation": "none"}
+        {"name": "OOP",  
+         "effect_type": "damage",  
+         "skW": 45,  
+         "type": "DS",  
+         "description": "상대를 객체화시켜 취약점을 노린다. 방어력도 1랭크 오른다.",  
+         "level": 1,  
+         "priority": 0,  
+         "animation": "none",  
+         "bonus_effect": ["buff", 1]},
+        {"name": "SQL 인젝션",  
+         "effect_type": "damage",  
+         "skW": 70,  
+         "type": "DS",  
+         "description": "SQL 인젝션 공격을 가한다. 방어력도 2랭크 오른다.",  
+         "level": 2,  
+         "priority": 0,  
+         "animation": "none",  
+         "bonus_effect": ["buff", 4]}
     ],
     "AI": [
-        {"name": "오버피팅", "effect_type": "damage", "skW": round(70*DIFFICULTY_MULTIPLIER/5)*5, "type": "AI", "description": "상대를 과적합 학습 완벽하게 공격한다", "level": 1, "priority": 2, "animation": "none"},
-        {"name": "샘 올트먼", "effect_type": "damage", "skW": round(80*DIFFICULTY_MULTIPLIER/5)*5, "type": "AI", "description": "상대에게 특화된 GPT를 만든다", "level": 2, "priority": 4, "animation": "none"}
+        {"name": "오버피팅",  
+         "effect_type": "damage",  
+         "skW": 70,  
+         "type": "AI",  
+         "description": "상대를 과적합 학습해 완벽하게 공격한다",  
+         "level": 1,  
+         "priority": 2,  
+         "animation": "none"},
+        {"name": "샘 올트먼",  
+         "effect_type": "damage",  
+         "skW": 80,  
+         "type": "AI",  
+         "description": "상대에게 특화된 GPT를 만든다",  
+         "level": 2,  
+         "priority": 2,  
+         "animation": "none",  
+         "bonus_effect": ["buff", (0,1,2)]}
        ]
     }
 
@@ -161,6 +293,14 @@ class Player:
             "PS": 0,
             "AI": 0
         }
+        self.fulllev_skills = {
+            "*":2,
+            "CT":4,
+            "DS":2,
+            "SYS":4,
+            "PS":3,
+            "AI":2
+        }
         
         # 아이템 인벤토리
         self.items = [
@@ -193,15 +333,15 @@ class Player:
             max = 0
             maxkeys = []
             for k in newdict.keys():
-                if newdict[k] > max:
-                    max = newdict[k]
+                if self.starting == k:
+                    newdict[k] += 1  # 시작 타입 보정
+                if newdict[k]/self.fulllev_skills[k] > max:
+                    max = newdict[k]/self.fulllev_skills[k]
                     maxkeys = [k]
-                if newdict[k] == max and newdict[k] != 0:
+                if newdict[k]/self.fulllev_skills[k] == max and newdict[k]/self.fulllev_skills[k] != 0:
                     maxkeys.append(k)
             if len(maxkeys) == 0:
                 return ["*"]
-            if self.starting in maxkeys:
-                return [self.starting]
             return [random.choice(maxkeys)]
 
     def get_available_skills(self):
@@ -228,7 +368,7 @@ class Player:
         self.DEF = int((self.D * 2 + 16) * (self.level / 100)) + 5
         self.SPD = int((self.SP * 2 + 16) * (self.level / 100)) + 5
         
-        self.max_exp = int((self.level ** 3))  # 경험치 필요량
+        self.max_exp = int((self.level ** 3 * 1.25))  # 경험치 필요량
         self.Rank = [0]*3  # 버프/디버프 랭크 초기화
 
         self.update_battle()
@@ -267,7 +407,7 @@ class Player:
             return "-"
         return f"{(sum1 / sum2):.2f}"
 
-    def complete_monster(self, monster_name):
+    def complete_monster(self, monster_name, drop_exp):
         """몬스터(과목) 처치 완료"""
         self.semester_progress += 1
         self.mylevelup = 0
@@ -278,20 +418,20 @@ class Player:
             if self.molcam != 0:
                 self.update_fullreset()
             print("Debug: 몰입캠프 클리어!")
-        if monster_name == "코옵":
+        elif monster_name == "코옵":
             self.update_fullreset()
             self.titles.append("회사원")
             print("Debug: 코옵 클리어! 체력이 완전히 회복되고 취업 루트가 해금되었습니다.")
-        if monster_name == "개별연구":
+        elif monster_name == "개별연구":
             self.update_fullreset()
             self.titles.append("대학원생")
             print("Debug: 개별연구 클리어! 체력이 완전히 회복되고 대학원 진학 루트가 해금되었습니다.")
         
         # 경험치 획득
-        self.mylevelup = self.gain_exp(monsters[monster_name].drop_exp)
-        
-        # 과목별 스킬 성장
-        self.skilllevelup, need_skill_change  = self.grow_skill_from_monster(monster_name)
+        else: 
+            self.mylevelup = self.gain_exp(drop_exp)
+            # 과목별 스킬 성장
+            self.skilllevelup, need_skill_change  = self.grow_skill_from_monster(monster_name)
 
         return need_skill_change
 
@@ -402,12 +542,12 @@ class Player:
     
     def get_final_ending(self):
         """최종 엔딩 결정"""
-        if "회사원" in self.titles:
+        if self.deans_count >= 3:
+            return "당신은 우수한 성적을 기반으로 대학원에 진학했고 훗날 교수로 임명되었습니다!"
+        elif "회사원" in self.titles:
             return "당신은 코옵에서의 경험을 살려 프로그래머로 취업하였습니다!"
         elif "대학원생" in self.titles:
-            if self.deans_count >= 3:
-                return "당신은 우수한 성적을 기반으로 대학원에 진학했고 훗날 교수로 임명되었습니다!"
-            return "당신은 개별연구로 쌓은 경험을 바탕으로 대학원에 진학하였습니다!"
+            return "당신은 개별연구로 쌓은 경험을 바탕으로 대학원에 진학하여 학문의 길을 이어갔습니다!"
         else:
             return "당신은 졸업 후 꿈을 향해 나아갔습니다!"
         

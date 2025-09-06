@@ -109,17 +109,17 @@ while True:
         show_deans_list_from_notion(player=None)  # 플레이어 객체 있으면 넘기기
         clear_screen()
     
-    elif start == "모험 모드":
-        stop_music()
-        if logger.isEnabledFor(logging.INFO):
-            logger.info("모험 모드 시작")
-        Me = game_start(screen, 50)
+    # elif start == "모험 모드":
+    #     stop_music()
+    #     if logger.isEnabledFor(logging.INFO):
+    #         logger.info("모험 모드 시작")
+    #     Me = game_start(screen, 50)
     
     elif start == "환경 설정":
         if logger.isEnabledFor(logging.INFO):
             logger.info("환경 설정 진입")
         music_volume, music_on, effectsound, ESVolume, difficulty = option.set(music_volume, music_on, effectsound, ESVolume, difficulty)
-        change_options(music_on, music_volume, effectsound, ESVolume, effect_channel, music_channel)
+        change_options(music_on, music_volume, effectsound, ESVolume, effect_channel, music_channel, effect_channel_alt)
         set_difficulty(difficulty)
         pygame.mixer.music.set_volume(music_volume / 100)
         pygame.mixer.Channel(1).set_volume(ESVolume / 100)
@@ -133,11 +133,11 @@ while True:
         from game_menu import show_credits
         show_credits()
 
-    elif start == " *도움말 ":
-        if logger.isEnabledFor(logging.INFO):
-            logger.info("도움말 화면 진입")
-        from game_menu import show_help
-        show_help()
+    # elif start == " *도움말 ":
+    #     if logger.isEnabledFor(logging.INFO):
+    #         logger.info("도움말 화면 진입")
+    #     from game_menu import show_help
+    #     show_help()
 
     else:
         if logger.isEnabledFor(logging.DEBUG):

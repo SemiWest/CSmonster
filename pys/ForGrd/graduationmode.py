@@ -12,6 +12,7 @@ import json
 import os
 import dropbox
 import numpy as np
+from hangulInputBox import *
 
 logger = logging.getLogger(__name__)
 
@@ -670,8 +671,7 @@ def addSeonSus(player, monster):
 def display_Monster_Imge(screen, monster, x, y, size=1):
     img = pygame.image.load(monster.image)
     img = pygame.transform.scale_by(img, size)
-    height = img.get_height()
-    screen.blit(img, (x, y-height//2))
+    screen.blit(img, (x-img.get_width()//2, y-img.get_height()//2))
 
 def save_game_log_csv(filename, player):
     """게임 결과를 CSV에 저장"""
@@ -760,7 +760,7 @@ def semester_intro_screen(player, screen):
         title = "2-1"
         description = ("당신은 드디어 2학년이 되어 전산학부를 주전공으로 선택했습니다.", "이제부터 진짜 대학 생활의 시작입니다. 행운을 빕니다.")
     elif semester_name == "3-여름방학":
-        title = "몰입캠프"
+        title = "몰입 캠프"
         description = "당신은 몰입캠프 참가에 성공했습니다. 한달 간 코딩 실력을 키워봅시다."
     elif semester_name == "4-여름방학":
         title = "4-여름방학"
@@ -780,49 +780,53 @@ def semester_intro_screen(player, screen):
     pygame.display.flip()
     wait_for_key()
 
-    if "시프" in player.clearedMonsters and "2-1" in player.completed_semesters and "기계학습" not in player.clearedMonsters and "기계학습" not in player.canBeMetMonsters:
+    if "시스템 프로그래밍" in player.clearedMonsters and "2-1" in player.completed_semesters and "기계학습" not in player.clearedMonsters and "기계학습" not in player.canBeMetMonsters:
         player.canBeMetMonsters.append("기계학습")
     
     # 등장 과목 표시
-    screen.fill(WHITE)
-    draw_text(screen, f"현재 수강할 수 있는 과목들", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-200, BLACK, size=32, align='center')
-    for i, monster_name in enumerate(player.canBeMetMonsters):
-        if monster_name in player.clearedMonsters:
-            draw_text(screen, f"{monster_name} (재수강)  ", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*40, GRAY, size=32, align='center')
-            display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 + len(monster_name)*16+80, SCREEN_HEIGHT//2 - 84 + i*40, size=2)
-        else:
-            draw_text(screen, f"{monster_name}  ", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*40, BLACK, size=32, align='center')
-            display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 + len(monster_name)*16+16, SCREEN_HEIGHT//2 - 84 + i*40, size=2)
-    if player.cheatmode :
-        draw_text(screen, "현재 이미 클리어한 과목들", SCREEN_WIDTH//2 + 500, SCREEN_HEIGHT//2-200, BLACK, size=32, align='center')
-        for i, monster_name in enumerate(player.clearedMonsters):
-            draw_text(screen, f"{monster_name}", SCREEN_WIDTH//2 + 500, SCREEN_HEIGHT//2 - 100 + i*40, BLUE, size=32, align='center')
-            draw_text(screen, f"{player.gpas[i][0]}학점 {player.gpas[i][1]}", SCREEN_WIDTH//2 + 500 + 300, SCREEN_HEIGHT//2 - 100 + i*40, BLUE, size=32, align='right')
-    draw_text(screen, "아무 키나 눌러 넘어가기...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, align='center')
-    if semester_name != "새터":
-        draw_text(screen, f"현재까지 받은 학사경고 횟수 {player.warning_count} / 3", SCREEN_WIDTH//2, SCREEN_HEIGHT - 120, align='center', color = RED, size=48)
+    if semester_name != "3-여름방학" and semester_name != "4-여름방학":
+        screen.fill(WHITE)
+        draw_text(screen, f"현재 수강할 수 있는 과목들", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-200, BLACK, size=32, align='center')
+        for i, monster_name in enumerate(player.canBeMetMonsters):
+            if monster_name in player.clearedMonsters:
+                draw_text(screen, f"{monster_name} (재수강)  ", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*40, GRAY, size=32, align='center')
+                display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 + len(monster_name)*16+80, SCREEN_HEIGHT//2 - 84 + i*40, size=2)
+            else:
+                draw_text(screen, f"{monster_name}  ", SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 100 + i*40, BLACK, size=32, align='center')
+                display_Monster_Imge(screen, monsters[monster_name], SCREEN_WIDTH//2 + len(monster_name)*16+16, SCREEN_HEIGHT//2 - 84 + i*40, size=2)
+        if player.cheatmode :
+            draw_text(screen, "현재 이미 클리어한 과목들", SCREEN_WIDTH//2 + 500, SCREEN_HEIGHT//2-200, BLACK, size=32, align='center')
+            for i, monster_name in enumerate(player.clearedMonsters):
+                draw_text(screen, f"{monster_name}", SCREEN_WIDTH//2 + 500, SCREEN_HEIGHT//2 - 100 + i*40, BLUE, size=32, align='center')
+                draw_text(screen, f"{player.gpas[i][0]}학점 {player.gpas[i][1]}", SCREEN_WIDTH//2 + 500 + 300, SCREEN_HEIGHT//2 - 100 + i*40, BLUE, size=32, align='right')
+        draw_text(screen, "아무 키나 눌러 넘어가기...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, align='center')
+        if semester_name != "새터":
+            draw_text(screen, f"현재까지 받은 학사경고 횟수 {player.warning_count} / 3", SCREEN_WIDTH//2, SCREEN_HEIGHT - 120, align='center', color = RED, size=48)
 
-    pygame.display.flip()
-    wait_for_key()
+        pygame.display.flip()
+        wait_for_key()
 
     # 이번 학기 수강 과목 선택
     player.thisSemesterMonsters = []
     if semester_name == "3-여름방학":
-        player.thisSemesterMonsters = ["몰입캠프"]
+        player.thisSemesterMonsters = ["몰입 캠프"]
         return
     elif semester_name == "4-여름방학":
-        player.thisSemesterMonsters = random.choice([["코옵"],["개별연구"]])
+        player.thisSemesterMonsters = random.choice([["Co-op"],["개별 연구"]])
         return
     else:
         # 수강신청
         options = player.canBeMetMonsters.copy()
         selected = 0
-        text = "수강할 과목을 선택하세요. \n 최대 세 개의 과목을 선택할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
+        if player.current_semester == "1-1":
+            text = "수강할 과목을 선택하세요. \n 1-1학기에는 한 개의 과목만 선택할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
+        else:
+            text = "수강할 과목을 선택하세요. \n 최대 두 개의 과목을 선택할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
         alartColor = WHITE
         while True:
             screen.fill(BLACK)
             
-            draw_wrapped_text(screen, text, SCREEN_WIDTH//2, SCREEN_HEIGHT//2-300, alartColor, 1300, align='center')
+            draw_wrapped_text(screen, text, SCREEN_WIDTH//2, SCREEN_HEIGHT//2-500, alartColor, 1300, align='center')
             
             if player.cheatmode :
                 for i, monster_name in enumerate(player.canBeMetMonsters):
@@ -838,6 +842,8 @@ def semester_intro_screen(player, screen):
                 draw_text(screen, option, SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 32 - (len(options)-1)*40 + i*80, color, highlight = DARKGRAY if option in player.thisSemesterMonsters else None, align='center', size=64)
                 if i == selected:
                     draw_text(screen, ">", SCREEN_WIDTH//2 - 400, SCREEN_HEIGHT//2 - 32 - (len(options)-1)*40 + i*80, WHITE, size=64)
+                if option in player.thisSemesterMonsters:
+                    draw_text(screen, f"{player.thisSemesterMonsters.index(option)+1}", SCREEN_WIDTH//2 -320, SCREEN_HEIGHT//2 - 32 - (len(options)-1)*40 + i*80, WHITE, size=64)
                 if i == selected or option in player.thisSemesterMonsters:
                     display_Monster_Imge(screen, monsters[option], SCREEN_WIDTH//2 + len(option)*32+96, SCREEN_HEIGHT//2 - (len(options)-1) * 40 + i*80, size=4)
             
@@ -855,8 +861,8 @@ def semester_intro_screen(player, screen):
                         player.canBeMetMonsters.remove(mon)
                 else:
                     option_select_sound()
-                    if len(player.thisSemesterMonsters) >= 3:
-                        text = "최대 세 개의 과목까지만 선택할 수 있습니다!"
+                    if len(player.thisSemesterMonsters) >= 2:
+                        text = "최대 두 개의 과목까지만 선택할 수 있습니다!"
                         alartColor = RED
                         catching()
                         continue
@@ -885,7 +891,7 @@ def semester_intro_screen(player, screen):
                     catching()
                     continue
                 option_select_sound()
-                draw_wrapped_text(screen, "\n 정말로 수강 신청을 확정하시겠습니까? \n (예: 오른쪽 방향키 / 아니요: 왼쪽 방향키)", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-300, WHITE, 1300, align='center')
+                draw_wrapped_text(screen, "\n 정말로 수강 신청을 확정하시겠습니까? \n (예: 오른쪽 방향키 / 아니요: 왼쪽 방향키)", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-500, WHITE, 1300, align='center')
                 pygame.display.flip()
                 checkkey = wait_for_key(sound = False)
                 if checkkey == 'right':
@@ -900,7 +906,10 @@ def semester_intro_screen(player, screen):
                 text = "수강할 과목 선택이 완료되었다면 오른쪽 방향키를 입력해주세요."
                 alartColor = GREEN
             else: 
-                text = "수강할 과목을 선택하세요. \n 최대 세 개의 과목을 선택할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
+                if player.current_semester == "1-1":
+                    text = "수강할 과목을 선택하세요. \n 1-1학기에는 한 과목만 수강할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
+                else:
+                    text = "수강할 과목을 선택하세요. \n 최대 두 개의 과목을 선택할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
                 alartColor = WHITE
 
     screen.fill(WHITE)
@@ -1040,17 +1049,59 @@ def semester_result_screen(player, screen):
 def show_final_result(player, screen):
     """최종 결과 화면 (수정된 버전)"""
     # 졸업 또는 게임 오버 여부에 따라 적절한 사운드 재생
-    is_game_over = player.gameover() or player.ending_type == "프밍기 패배"
-    if is_game_over:
+    if player.gameover() or player.ending_type == "프밍기 패배":
+        screen.fill(WHITE)
         Lose()
+        draw_text(screen, "게임 오버", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, RED, size=64, align = 'center')
+        pygame.display.flip()
+        pygame.time.wait(2000)
+        # '프밍기 패배' 엔딩 메시지 추가
+        if player.ending_type == "프밍기 패배":
+            draw_text(screen, "당신은 프밍기 학인시를 처참하게 실패했습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
+            draw_text(screen, "전산과로의 진학을 포기하였습니다...", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+140, BLACK, align='center')
+        elif player.warning_count >= 3:
+            if player.warning_count == 7 :
+                draw_text(screen, "연차 초과로 제적되었습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
+            else: 
+                draw_text(screen, "학사 경고 3회로 제적되었습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2+100, BLACK, align='center')
+
     else:
+        screen.fill(BLACK)
+        pygame.display.flip()
+        pygame.time.wait(1000)
+        draw_text(screen, f"{player.name}은 졸업 조건을 모두 채웠습니다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, WHITE, size=64, align='center')
+        pygame.display.flip()
+        wait_for_key()
+        # 화면 전체 페이드 효과-검은색->흰색, 0.4초간 점점 빠르게
+        for flash_frame in range(160):
+            screen.fill((flash_frame**2//100, flash_frame**2//100, flash_frame**2//100))  # 흰색으로 페이드
+            pygame.display.flip()
+            pygame.time.wait(2)  # 0.01초 대기
+
         play_music("../music/ending.wav")
+        screen.fill(WHITE)
+        draw_text(screen, f"{player.name}은/는 최종 학점 {player.calcGPA(2)}로 졸업했다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, BLACK, WHITE, 64, 'center')
+        pygame.display.flip()
+        wait_for_key()
+
+        # 엔딩 화면 = Graduation.jpg * 8배 사이즈
+        graduation_image = pygame.image.load("../img/Graduation.png")
+        graduation_image = pygame.transform.scale(graduation_image, (graduation_image.get_width() * 8, graduation_image.get_height() * 8))
+        screen.blit(graduation_image, (0, 0))
+        pygame.display.flip()
+        wait_for_key()
+
+        # 엔딩 타입 표시
+        ending = player.get_final_ending()
+        draw_text(screen, f"{ending}", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, LIGHTBLUE, 48, 'center')
+    pygame.display.flip()
+    wait_for_key()
 
     # --- 화면 표시 로직 시작 ---
     screen.fill(WHITE)
     
     # 1. 최종 성적표 그리기
-    y_offset = 100
+    y_offset = 70
     draw_text(screen, "=== 졸업 성적표 ===", SCREEN_WIDTH//2, y_offset, BLACK, size=48, align='center')
     y_offset += 60
     pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
@@ -1069,7 +1120,7 @@ def show_final_result(player, screen):
         if Semestername != current:
             current = Semestername
             oneSemMonsters = 0
-            y_offset += 40
+            y_offset += 32
             pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
             y_offset += 10
             draw_text(screen, f"{current}", SCREEN_WIDTH//2 - 450 - 20, y_offset, BLACK, align='center')
@@ -1079,7 +1130,7 @@ def show_final_result(player, screen):
         draw_text(screen,   f"{player.gpas[i][1]}",         SCREEN_WIDTH//2-50 + 40 +(470*(oneSemMonsters%2)), y_offset, gpaColor(player.gpas[i][1]), align='right')
         oneSemMonsters += 1
 
-    y_offset += 40    
+    y_offset += 32    
     pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
 
     # 최종 GPA 표시
@@ -1096,13 +1147,14 @@ def show_final_result(player, screen):
     # 비고란 표시
     draw_text(screen, "비고", SCREEN_WIDTH//2, y_offset, BLACK, size=32, align='center')
     y_offset += 40
-    draw_text(screen, f"이름: {player.name}", SCREEN_WIDTH//2-450, y_offset, BLACK)
+    draw_text(screen, f"이름: {player.name}", SCREEN_WIDTH//2-500, y_offset, BLACK)
     draw_text(screen, f"최종 레벨: {player.level}", SCREEN_WIDTH//2, y_offset, BLACK, align='center')
-    draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2+450, y_offset, BLACK, align='right')
-    y_offset += 60 # 다음 텍스트를 위한 추가 간격
+    draw_text(screen, f"딘즈 달성: {player.deans_count}회", SCREEN_WIDTH//2+500, y_offset, BLACK, align='right')
+    
+    y_offset += 60
 
     # 2. 게임 결과 (졸업/게임 오버 사유)를 성적표 아래에 추가
-    if is_game_over:
+    if player.gameover() or player.ending_type == "프밍기 패배":
         # 게임 오버 사유 표시
         if player.ending_type == "프밍기 패배":
             draw_text(screen, "프로그래밍 기초한테 졌습니다. 전산과로 진학하지 못했습니다.", SCREEN_WIDTH//2, y_offset, RED, size=32, align='center')
@@ -1116,7 +1168,7 @@ def show_final_result(player, screen):
         ending = player.get_final_ending()
         draw_text(screen, f"{player.name}은(는) 최종 학점 {player.calcGPA(2)}로 졸업했습니다.", SCREEN_WIDTH//2, y_offset, BLACK, size=32, align='center')
         y_offset += 40
-        draw_text(screen, f"엔딩: {ending}", SCREEN_WIDTH//2, y_offset, BLUE, size=32, align='center')
+        draw_wrapped_text(screen, f"{ending}", SCREEN_WIDTH//2, y_offset, BLUE, 1000, font_size=32, align='center')
         
     # --- 화면 표시 로직 종료 ---
 
@@ -1128,16 +1180,16 @@ def show_final_result(player, screen):
         if page_id:
             # 1. 가장 이상적인 성공 사례
             logger.info(f"Notion 기록 저장 성공. Page ID: {page_id}")
-            draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
+            draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2, SCREEN_HEIGHT - 120, GREEN, align='center')
         else:
             # 2. API는 성공했으나 ID를 받지 못한 예외 사례
             logger.warning("Notion API는 성공을 반환했으나 Page ID를 얻지 못했습니다. 확인이 필요합니다.")
             # 사용자에게는 성공으로 보이되, 개발자는 로그를 보고 문제를 인지할 수 있음
-            draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2 - 144, SCREEN_HEIGHT - 120, GREEN)
+            draw_text(screen, "O 결과가 저장되었습니다", SCREEN_WIDTH//2, SCREEN_HEIGHT - 120, GREEN, align='center')
     else:
         # 3. 명백한 실패 사례
         logger.error("Notion 기록 저장에 실패했습니다.")
-        draw_text(screen, "X 저장 실패", SCREEN_WIDTH//2 - 72, SCREEN_HEIGHT - 120, RED)
+        draw_text(screen, "X 저장 실패", SCREEN_WIDTH//2, SCREEN_HEIGHT - 120, RED, align='center')
     
     draw_text(screen, "아무 키나 눌러 다음으로...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, BLACK, align='center')
     
@@ -1177,9 +1229,15 @@ def show_final_result(player, screen):
         prefix="transcript"
     )
     wait_for_key()
+    screen.fill(WHITE)
+    draw_text(screen, "저장중.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
 
     # 2. 딘즈 리스트 화면 표시 (계산된 통계 정보 전달)
     show_deans_list(player, screen, leaderboard, stats)
+    screen.fill(WHITE)
+    draw_text(screen, "저장중..", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
     
     # 3. 딘즈 리스트 화면 이미지 저장 (QR/업로드 없이 로컬에만 임시 저장)
     deans_list_path = save_cropped_and_return_path(
@@ -1189,12 +1247,18 @@ def show_final_result(player, screen):
         out_dir="results/screenshots/temp_images",
         prefix="deans_list"
     )
-    
+    screen.fill(WHITE)
+    draw_text(screen, "저장중...", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
+
     # 4. 두 이미지를 배경에 합성하여 최종 이미지 생성
     background_image_path = "../img/instagram_background.png"
     final_combined_path = combine_for_share(background_image_path, transcript_path, deans_list_path, player.name)
     logger.info(f"최종 합성 이미지 경로: {final_combined_path}")
-
+    screen.fill(WHITE)
+    draw_text(screen, "저장중....", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
+    
     # 5. 합성에 사용된 임시 이미지 파일 삭제
     try:
         if os.path.exists(transcript_path): os.remove(transcript_path)
@@ -1202,12 +1266,18 @@ def show_final_result(player, screen):
         logger.debug("Debug: 임시 이미지 파일 삭제 완료.")
     except OSError as e:
         logger.error(f"Debug: 임시 파일 삭제 실패: {e.filename}")
-
+    screen.fill(WHITE)
+    draw_text(screen, "저장중.....", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
+    
     # 6. 최종 합성 이미지를 Dropbox에 업로드하고 QR 코드 생성
     upload_url = upload_to_dropbox(
         file_path=final_combined_path, 
         dropbox_folder_path=DROPBOX_UPLOAD_FOLDER
     )
+    screen.fill(WHITE)
+    draw_text(screen, "저장중......", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
     
     # 6.5. 업로드 성공 시, 받아온 페이지 ID를 이용해 Notion 페이지 업데이트
     if success_notion and page_id and upload_url:
@@ -1217,7 +1287,10 @@ def show_final_result(player, screen):
             logger.error("Debug: Notion 페이지 ID가 없어 업데이트를 건너뜁니다.")
         if not upload_url:
             logger.error("Debug: 업로드 URL이 없어 Notion 업데이트를 건너뜁니다.")
-
+    screen.fill(WHITE)
+    draw_text(screen, "저장중.......", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
+    
 
     if upload_url:
         logger.info(f"업로드 완료! 공유 URL: {upload_url}")
@@ -1228,6 +1301,12 @@ def show_final_result(player, screen):
     else:
         logger.error("Debug: 업로드에 실패했습니다.")
         qr_path = None # 업로드 실패 시 QR 경로 없음
+
+    screen.fill(WHITE)
+    draw_text(screen, "완료!", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    draw_text(screen, "아무 키나 눌러 다음으로...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, BLACK, align='center')
+    pygame.display.flip()
+    wait_for_key()
 
     # 7. QR 링크 화면 표시
     screen.fill(WHITE)
@@ -1250,71 +1329,107 @@ def show_final_result(player, screen):
 
     pygame.display.flip()
     wait_for_key()
+
 def get_player_info(screen, prompts):
     """
-    pygame에서 이름과 인스타그램 ID 입력을 함께 받는 함수.
+    닉네임(모든 문자 허용)과 인스타그램 ID(영문/숫자/기호만 허용) 입력을 받는 함수.
+    출력: (A, B) = (닉네임, 인스타그램ID)
     """
-    inputs = [""] * len(prompts)
+    inputs = ["", ""]
     active_field = 0
     font_size = 32
+    max_lengths = [10, 30]  # 닉네임, 인스타그램ID 최대 길이
+
+    box_name = HangulInputBox('../neodgm.ttf', font_size, 10, 'white', 'black')
+    box_name.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 70)
+    box_instagram = HangulInputBox('../neodgm.ttf', font_size, 15, 'white', 'black')
+    box_instagram.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 70)
 
     while True:
+        keyevent = None
+        text = ""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return (None,) * len(prompts) # 종료 시 None 튜플 반환
+                return None, None
             if event.type == pygame.KEYDOWN:
+                keyevent = event
                 if event.key == pygame.K_ESCAPE:
-                    return (None,) * len(prompts)
+                    return None, None
                 elif event.key == pygame.K_RETURN:
-                    if inputs[0].strip():  # 이름은 필수 항목
-                        return tuple(i.strip() for i in inputs)
+                    if inputs[0].strip():
+                        return inputs[0].strip(), inputs[1].strip()
                 elif event.key in (pygame.K_UP, pygame.K_TAB):
-                    active_field = (active_field - 1) % len(prompts)
+                    active_field = (active_field - 1) % 2
                 elif event.key == pygame.K_DOWN:
-                    active_field = (active_field + 1) % len(prompts)
+                    active_field = (active_field + 1) % 2
                 elif event.key == pygame.K_BACKSPACE:
-                    inputs[active_field] = inputs[active_field][:-1]
-                elif event.unicode.isprintable():
-                    # 필드별 글자 수 제한
-                    if active_field == 0 and len(inputs[active_field]) < 10: # 이름
-                        inputs[active_field] += event.unicode
-                    elif active_field == 1 and len(inputs[active_field]) < 30: # 인스타그램 ID
-                        inputs[active_field] += event.unicode
+                    if active_field == 0:
+                        box_name.update(keyevent)
+                        text = box_name.text + HangulInputBox.engkor(box_name.hanText)
+                        inputs[0] = text
+                    elif active_field == 1:
+                        box_instagram.update(keyevent)
+                        inputs[1] = inputs[1][:-1]
+                else:
+                    # 입력 처리
+                    if active_field == 0 and event.unicode:
+                        box_name.update(keyevent, max_length=max_lengths[0])
+                        if len(box_name.text + HangulInputBox.engkor(box_name.hanText)) <= max_lengths[0]:
+                            text = box_name.text + HangulInputBox.engkor(box_name.hanText)
+                            inputs[0] = text
+                        else:
+                            if box_name.hanMode and len(box_name.hanText) > 0:
+                                box_name.hanText = box_name.hanText[:-1]
+                            elif len(box_name.text) > 0:
+                                box_name.text = box_name.text[:-1]
+                            
+                    else:
+                        box_name.update(None)
+                    if active_field == 1 and event.unicode and len(inputs[1]) < max_lengths[1] and event.unicode.isascii() and (event.unicode.isalnum() or event.unicode in "_-."):
+                        inputs[1] += event.unicode
+                        box_instagram.update(keyevent)
+                    else:
+                        box_instagram.update(None)
+
+            if event.type == pygame.USEREVENT:
+                if event.name == 'enterEvent':
+                    if active_field == 0:
+                        text = box_name.text + HangulInputBox.engkor(box_name.hanText)
+                        if len(text) <= max_lengths[0]:
+                            inputs[0] = text
+                    elif active_field == 1:
+                        text = box_instagram.text + HangulInputBox.engkor(box_instagram.hanText)
+                        filtered = ''.join([c for c in text if c.isascii() and (c.isalnum() or c in "_-.")])
+                        if len(filtered) <= max_lengths[1]:
+                            inputs[1] = filtered
 
         screen.fill(BLACK)
         draw_text(screen, "플레이어 정보를 입력하세요", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 200, WHITE, size=40, align='center')
+        draw_text(screen, prompts[0], SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 140, WHITE, size=font_size, align='center')
+        draw_text(screen, prompts[1], SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, WHITE, size=font_size, align='center')
 
-        box_width = 400
-        box_height = 40
-        start_y = SCREEN_HEIGHT // 2 - 100
+        screen.blit(box_name.image, box_name.rect)
+        screen.blit(box_instagram.image, box_instagram.rect)
 
-        for i, prompt in enumerate(prompts):
-            is_active = (i == active_field)
-            prompt_y = start_y + i * 100
-            box_y = prompt_y + 30
+        # 박스 테두리 파란색으로 그리기
+        boxnamerect = pygame.Surface((box_name.rect.width+20, box_name.rect.height+20))
+        instagramrect = pygame.Surface((box_instagram.rect.width+20, box_instagram.rect.height+20))
+        pygame.draw.rect(screen, (0, 120, 255), boxnamerect.get_rect(center=box_name.rect.center), 4)
+        pygame.draw.rect(screen, (0, 120, 255), instagramrect.get_rect(center=box_instagram.rect.center), 4)
 
-            # 프롬프트 텍스트
-            draw_text(screen, prompt, SCREEN_WIDTH // 2, prompt_y, WHITE, size=font_size, align='center')
+        # # 입력값 표시
+        # draw_text(screen, f"입력: {inputs[0]}", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 10, WHITE, size=font_size, align='center')
+        # draw_text(screen, f"입력: {inputs[1]}", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 90, WHITE, size=font_size, align='center')
+        
+        # 인스타 아이디가 비어있을 때 박스에 '선택사항' 회색 표시
+        if not inputs[1]:
+            font = pygame.font.Font('../neodgm.ttf', font_size)
+            text_surface = font.render("선택사항", True, (128, 128, 128))
+            text_rect = text_surface.get_rect(center=box_instagram.rect.center)
+            screen.blit(text_surface, text_rect)
 
-            # 입력 박스
-            box_x = SCREEN_WIDTH // 2 - box_width // 2
-            border_color = BLUE if is_active else WHITE
-            pygame.draw.rect(screen, WHITE, (box_x, box_y, box_width, box_height))
-            pygame.draw.rect(screen, border_color, (box_x, box_y, box_width, box_height), 2)
-
-            # 입력된 텍스트와 커서
-            text_to_show = inputs[i]
-            if is_active:
-                text_to_show += "_"
-            
-            if text_to_show:
-                draw_text(screen, text_to_show, box_x + 8, box_y + (box_height - font_size)//2 + 2, BLACK, size=font_size)
-            elif not is_active and i == 1: # 인스타그램 필드가 비활성 상태일 때
-                 draw_text(screen, "선택사항", box_x + 8, box_y + (box_height - font_size)//2 + 2, GRAY, size=font_size)
-
-        draw_text(screen, "방향키(혹은 Tab)로 이동, Enter로 확인, ESC로 뒤로가기", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100, GRAY, size=24, align='center')
+        draw_text(screen, "방향키(혹은 Tab)로 이동, Enter로 확인, ESC로 뒤로가기, Shift+Spacebar로 한영 전환(한영키 불가)", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100, GRAY, size=24, align='center')
         pygame.display.flip()
-        pygame.time.wait(30)
 
 def _remove_cleared_entry(player, monster_name):
     # 같은 과목이 중복으로 들어간 경우까지 안전하게 모두 제거
@@ -1349,8 +1464,8 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
             debug: bool
             damage: bool
             skip: bool
-        debug_config = DebugConfig(debug=False, damage=True, skip=False)
-    
+        debug_config = DebugConfig(debug=False, damage=True, skip=True)
+   
     # 이름 입력
     prompts = ["이름 (최대 10자)", "인스타그램 ID (선택사항)"]
     newname, instagram_id = get_player_info(screen, prompts)
@@ -1394,7 +1509,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
             # 몬스터 생성
             if monster_name in monsters:
                 enemy_monster = copy.deepcopy(monsters[monster_name])
-                enemy_monster.level = random.randint(player.level-1+player.level//10, player.level+1+(player.level//10)*2) - mol_lev
+                enemy_monster.level = random.randint(monsters[monster_name].level-(1*player.level//10), monsters[monster_name].level+2*(player.level//10)) - mol_lev
                 enemy_monster.update_fullreset()
             else:
                 # 기본 몬스터 생성
@@ -1409,14 +1524,14 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                 player.ending_type = "프밍기 패배"
                 game_running = False
                 break
-        
-
+            
+            need_skill_change = False  # 각 전투 후에 초기화
             if battle_result == 1:  # 승리
                 if monster_name in player.clearedMonsters:
                     _remove_cleared_entry(player, monster_name)
                 _add_cleared_entry(player, monster_name, player.current_semester, gpa)
                 player.thisSemesterGpas.append(gpa)
-                need_skill_change = player.complete_monster(monster_name)
+                need_skill_change = player.complete_monster(monster_name, enemy_monster.drop_exp)
                 addSeonSus(player, enemy_monster)
 
             elif battle_result == 2:  # P (패스)
@@ -1424,7 +1539,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                     _remove_cleared_entry(player, monster_name)
                 _add_cleared_entry(player, monster_name, player.current_semester, gpa)
                 player.thisSemesterGpas.append(gpa)
-                need_skill_change = player.complete_monster(monster_name)
+                need_skill_change = player.complete_monster(monster_name, enemy_monster.drop_exp)
                 addSeonSus(player, enemy_monster)
 
             elif battle_result == 3:  # 드랍
@@ -1432,9 +1547,10 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                 player.thisSemesterGpas.append(gpa)
 
             elif battle_result == 4:  # 이벤트
+                player.update_fullreset()
                 player.thisSemesterGpas.append(gpa)
                 if gpa[1] == "성공!":
-                    need_skill_change = player.complete_monster(monster_name)
+                    need_skill_change = player.complete_monster(monster_name, enemy_monster.drop_exp)
 
             elif battle_result == 5:  # NR
                 player.canBeMetMonsters.append(monster_name)
@@ -1462,10 +1578,15 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
         logger.info(f"Debug: 현재 진행도 {player.semester_progress}/{len(player.semester_order)}")
         
         # 남은 몬스터 수가 0인 경우
-        if len(player.clearedMonsters) >= 14:
-            if player.current_semester in ["4-1", "4-여름방학", "4-2"]:
+        # gpa 중 f가 있으면 clearedMonsters가 14개라도 졸업 불가
+        if len(player.clearedMonsters) >= 14 and "F" not in [gpa[1] for gpa in player.gpas]:
+            if player.current_semester in ["4-여름방학", "4-2"]:
                 logger.info("Debug: 모든 학점 취득 완료. 정상 졸업.")
                 break # 게임 루프 종료
+            elif player.current_semester in ["5-1", "5-2", "6-1", "6-2"]:
+                player.ending_type = "연차초과"
+                logger.info("Debug: 모든 학점 취득 완료. 연차초과 졸업.")
+                break
             else:
                 logger.info("Debug: 모든 학점 취득 완료. 조기 졸업!")
                 player.ending_type = "조기"
@@ -1476,10 +1597,9 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
             # 모든 학기(4-2) 완료 후에도 몬스터가 남았을 때
             if len(player.canBeMetMonsters) > 0:
                 logger.info("Debug: 연차초과! 추가 학기 시작.")
-                player.ending_type = "연차초과"
                 # 추가 학기 로직을 여기에 구현
                 # 예: 5-1, 5-2, 6-1, 6-2 학기를 직접 추가
-                player.semester_order = player.semester_order + ["5-1", "5-2", "6-1", "6-2"]
+                player.semester_order = player.semester_order + ["5-1", "5-2", "6-1", "6-2", "졸업"]
                 player.current_semester = player.semester_order[-4] # 5-1 학기로 설정
                 continue
             else:
@@ -1489,7 +1609,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
         # 6-2 학기까지 왔는데도 몬스터가 남았을 경우 제적
         if player.current_semester == "졸업" and len(player.canBeMetMonsters) > 0:
             logger.info("Debug: 모든 추가 학기 실패. 제적!")
-            player.warning_count = 3 # 제적 조건 충족
+            player.warning_count = 7 # 제적 조건 충족
             break # 게임 루프 종료
     
     # 음악 정지
@@ -1571,8 +1691,7 @@ def show_skill_change(screen, player):
         display_status(screen)
 
         player.current_skills[replace_skill['type']] = 0
-
-    
+   
 def display_skill_change(screen, newskill, player):
     current_index = 0
 
