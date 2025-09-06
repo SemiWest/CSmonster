@@ -4,17 +4,10 @@ from ForGrd.playerForGrd import *
 from ForGrd.itemForGrd import get_item_color_by_grade
 import logging
 import time
+import random
 
 logger = logging.getLogger(__name__)
 
-def is_invulnerable(target):
-    """디버그 모드 무적 상태 확인 헬퍼 함수"""
-    dbg = getattr(target, "debug_config", None)
-    if dbg and dbg.debug:
-        return dbg.damage  # True => 무적, False => 데미지 받음
-    return getattr(target, "cheatmode", False)
-
-''' 전역변수 설정 '''
 hap_num = 0
 item_num = 0
 player = None
@@ -22,10 +15,6 @@ enemy = None
 enemyCSmon = None
 battle_end = False
 startBattleHp = 0
-BASIC_PNR_SUCCESS_RATE = 0.7
-# 난이도 조절을 위한 전역 변수
-# 1~100 사이의 값으로 설정. 값이 높을수록 더 지능적인 선택을 함.
-INTELLIGENCE_LEVEL = 80
 
 # 기존 좌표 및 이미지 로드는 그대로 유지
 sX, sY = 32, 32
@@ -33,6 +22,9 @@ stX = sX+42
 stY = sY+575
 esX, esY = sX+20, sY+36
 psX, psY = sX+582, sY+346
+
+BASIC_PNR_SUCCESS_RATE = 0.7
+INTELLIGENCE_LEVEL = 80
 HPLEN = 64
 
 # 기존 이미지들 그대로 유지
@@ -54,18 +46,8 @@ SPATK = pygame.image.load("../img/SP.ATK.png")
 ETC = pygame.image.load("../img/ETC.png")
 SPEC_TEXT = pygame.image.load("../img/special_txt.png")
 SKILL = pygame.image.load("../img/skill.png")
-
-BACKGROUND = pygame.transform.scale_by(BACKGROUND, 11)
-TEXT = pygame.transform.scale_by(TEXT, 5)
-SKILL = pygame.transform.scale_by(SKILL, 4)
-ME = pygame.transform.scale_by(ME, 10)
-CT = pygame.transform.scale_by(CT, 4)
-DS = pygame.transform.scale_by(DS, 4)
-AI = pygame.transform.scale_by(AI, 4)
-PS = pygame.transform.scale_by(PS, 4)
-SYS = pygame.transform.scale_by(SYS, 4)
-EVENT = pygame.transform.scale_by(EVENT, 4)
-STAR = pygame.transform.scale_by(STAR, 4)
+SHIELD = pygame.image.load("../img/animations/items/shield.png")
+MIRROR = pygame.image.load("../img/animations/items/mirror.png")
 
 BUFF = []
 path = "../img/animations/buff"
@@ -86,293 +68,25 @@ for i in range(len(os.listdir(path))):
     img = pygame.transform.scale_by(img, 10)
     HEAL.append(img)
 
-# 반사 스킬용 이미지 로드
-SHIELD = pygame.image.load("../img/animations/items/shield.png")
+BACKGROUND = pygame.transform.scale_by(BACKGROUND, 11)
+TEXT = pygame.transform.scale_by(TEXT, 5)
+SKILL = pygame.transform.scale_by(SKILL, 4)
+ME = pygame.transform.scale_by(ME, 10)
+CT = pygame.transform.scale_by(CT, 4)
+DS = pygame.transform.scale_by(DS, 4)
+AI = pygame.transform.scale_by(AI, 4)
+PS = pygame.transform.scale_by(PS, 4)
+SYS = pygame.transform.scale_by(SYS, 4)
+EVENT = pygame.transform.scale_by(EVENT, 4)
+STAR = pygame.transform.scale_by(STAR, 4)
 SHIELD = pygame.transform.scale_by(SHIELD, 8)
-MIRROR = pygame.image.load("../img/animations/items/mirror.png")
 MIRROR = pygame.transform.scale_by(MIRROR, 8)
 
-def comp(atskilltype, tgtype):
-    """
-    공격 타입(atskilltype)과 방어 타입(tgtypes: str 또는 list)을 받아 상성 배율을 반환.
-    - 방어 타입이 여러 개인 경우 배율을 곱셈으로 적용.
-    - 존재하지 않는 키가 오면 기본 1.0 처리.
-    """
-    return TYPE_EFFECTIVENESS[atskilltype][tgtype]
+def is_invulnerable(target):
+    if getattr(target, 'cheatmode', False):
+        return True
 
-def Damage(target, attacker, skilldict):
-    basedmg = ((2*attacker.level + 10)/250) * attacker.CATK / max(1, target.CDEF)  # ✅ max(1, ...)
-    multiplier = comp(skilldict["type"], target.type[0])
-    Jasok = 1.5 if attacker.type[0] == skilldict["type"] else 1.0
-    return int(multiplier * (basedmg*skilldict["skW"] + 2) * Jasok * random.uniform(0.85, 1.00)), multiplier
-
-import random
-
-# 가정: Enemy와 Player 객체가 각각 `nowhp`, `HP` 등의 속성을 가지고 있음
-# player_used_skill: 플레이어가 최근에 사용한 스킬. (예: "Pdamage")
-
-def get_best_enemy_skill(enemy, player):
-    # selected_skill 객체가 딕셔너리 형태가 아닐 경우를 대비해 effect_type을 추출
-    enemy_skills = getattr(enemy, 'skills', {})
-    if not enemy_skills:
-        return None
-
-    skill_scores = {}
-
-    # 몬스터의 스킬 딕셔너리에서 스킬 객체들을 순회
-    for skill_name, skill_data in enemy_skills.items():
-        score = 0
-        
-        # Skill 객체의 속성에 직접 접근
-        skill_type = skill_data.effect_type
-        
-        # 1. 자신의 현재 HP를 기반으로 점수 계산
-        if enemy.nowhp < enemy.HP * 0.3 and skill_type == "heal":
-            score += 50
-            
-        # 2. 상대방의 HP를 기반으로 점수 계산
-        if player.nowhp < player.HP * 0.5 and skill_type in ["Pdamage", "Sdamage", "halve_hp"]:
-            score += 30
-
-        # 3. 자신의 스탯 버프 필요성에 따라 점수 계산
-        if skill_type == "buff":
-            if enemy.Rank[0] < 2:
-                if isinstance(skill_data.skW, tuple):
-                    if 0 in [b % 3 for b in skill_data.skW]:
-                        score += 20
-                else:
-                    if skill_data.skW % 3 == 0:
-                        score += 20
-            if enemy.Rank[1] < 2:
-                if isinstance(skill_data.skW, tuple):
-                    if 1 in [b % 3 for b in skill_data.skW]:
-                        score += 20
-                else:
-                    if skill_data.skW % 3 == 1:
-                        score += 20
-            if enemy.Rank[2] < 2:
-                if isinstance(skill_data.skW, tuple):
-                    if 2 in [b % 3 for b in skill_data.skW]:
-                        score += 20
-                else:
-                    if skill_data.skW % 3 == 2:
-                        score += 20
-        # 4. 자신의 스탯이 최대치면 가중치 제거
-            if enemy.Rank[0] == 6:
-                if not isinstance(skill_data.skW, tuple):
-                    if 0 in [b % 3 for b in skill_data.skW]:
-                        score -= 3
-                else:
-                    if skill_data.skW % 3 == 0:
-                        score = -10
-            if enemy.Rank[1] == 6:
-                if isinstance(skill_data.skW, tuple):
-                    if 1 in [b % 3 for b in skill_data.skW]:
-                        score -= 3
-                else:
-                    if skill_data.skW % 3 == 1:
-                        score = -10
-            if enemy.Rank[2] == 6:
-                if isinstance(skill_data.skW, tuple):
-                    if 2 in [b % 3 for b in skill_data.skW]:
-                        score -= 3
-                else:
-                    if skill_data.skW % 3 == 2:
-                        score = -10
-
-        skill_scores[skill_name] = score + 10 # 기본 점수 추가
-        
-    total_score = sum(skill_scores.values())
-    
-    if total_score == 0:
-        return random.choice(list(enemy_skills.values()))
-
-    # 지능 지수에 따라 무작위 또는 점수 기반 선택
-    if random.randint(1, 100) > INTELLIGENCE_LEVEL:
-        return random.choice(list(enemy_skills.values()))
-    else:
-        skill_list = list(skill_scores.keys())
-        probabilities = [score / total_score for score in skill_scores.values()]
-        
-        selected_skill_name = random.choices(skill_list, weights=probabilities, k=1)[0]
-        return enemy_skills[selected_skill_name]
-
-def play_reflect_animation(screen, user, skill):
-    """'reflect' 타입 스킬 사용 시 방패 또는 거울 이미지를 사용자 앞에 표시합니다."""
-    # 1. 사용할 원본 이미지 결정
-    reflect_img_original = SHIELD if skill["skW"] == 0 else MIRROR
-
-    # 2. 이미지 최적화 및 크기 조절
-    # 화면에 맞게 최적화한 후, 요청하신 대로 20% 크기로 줄입니다.
-    reflect_img = reflect_img_original.convert_alpha()
-    reflect_img = pygame.transform.scale_by(reflect_img, 0.20) # <-- 크기를 55%로 수정
-
-    # 3. 이미지 표시 기준점 (캐릭터의 발밑 중앙) 좌표 설정
-    anchor_x, anchor_y = 0, 0
-    if user == player:
-        # 플레이어의 기준점 (sX + 320, sY + 536)
-        anchor_x, anchor_y = sX + 320, sY + 536
-    else: # 몬스터일 경우
-        # 몬스터의 기준점 (esX + 900, esY + 305)
-        anchor_x, anchor_y = esX + 900, esY + 305
-
-    # 4. 기준점을 바탕으로 방패/거울 이미지의 최종 위치 계산
-    # X축: 기준점(anchor_x)을 중앙으로 하여 이미지 너비의 절반만큼 왼쪽으로 이동
-    img_pos_x = anchor_x - reflect_img.get_width() // 2
-    # Y축: 기준점(anchor_y)에서 이미지의 높이만큼 위로 이동시키고, 10픽셀 아래로 내립니다.
-    img_pos_y = anchor_y - reflect_img.get_height() + 10 # <-- 10픽셀 아래로 내리기 위해 +10 추가
-
-    # 5. 애니메이션 루프 (0.8초 동안 표시)
-    duration = 800
-    start_time = pygame.time.get_ticks()
-
-    while pygame.time.get_ticks() - start_time < duration:
-        display_status(screen, detail=True) # 배경과 캐릭터를 계속 다시 그림
-        screen.blit(reflect_img, (img_pos_x, img_pos_y)) # 계산된 위치에 방패/거울 표시
-        pygame.display.flip()
-        pygame.time.Clock().tick(60)
-
-def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
-    # --- 1. 초기 설정: 변수 준비 ---
-    if playerskill is None:
-        playerskill_dict = None
-    else:
-        playerskill_dict = {
-            "type": playerskill["type"],
-            "effect_type": playerskill["effect_type"],
-            "skW": playerskill["skW"],
-            "animation": playerskill["animation"]
-        }
-    if monsterskill is None:
-        monsterskill_dict = None
-    else:
-        monsterskill_dict = {
-            "type": monsterskill.skill_type,
-            "effect_type": monsterskill.effect_type,
-            "skW": monsterskill.skW,
-            "animation": monsterskill.animation
-        }
-
-    if attackerType == "monster":
-        user, target, skill, counter_skill = monster, player, monsterskill_dict, playerskill_dict
-    else:  # player
-        user, target, skill, counter_skill = player, monster, playerskill_dict, monsterskill_dict
-
-    # 스킬이 없는 경우(버그 방지)
-    if not skill:
-        return False, 0, False
-        
-    effect = skill["effect_type"]
-
-    # --- 2. 스킬 효과별 로직 분기 ---
-
-    # A. 데미지를 주거나 체력을 직접 변경하는 스킬 (Damage, Halve HP)
-    if effect in ["Pdamage", "Sdamage", "halve_hp"]:
-        old_hp = target.nowhp
-        new_hp = old_hp
-        damage = 0
-        Mul = 1
-
-        if effect in ["Pdamage", "Sdamage"]:
-            damage, Mul = Damage(target, user, skill)
-            if not (attackerType == "monster" and is_invulnerable(target)):
-                new_hp = max(0, int(old_hp - damage))
-        
-        elif effect == "halve_hp":
-            damage = old_hp // 2
-            if not (attackerType == "monster" and is_invulnerable(target)):
-                new_hp = old_hp - damage
-        
-        # 애니메이션을 먼저 재생
-        play_damage_sequence(screen, skill, user, target, old_hp, new_hp)
-        
-        # 애니메이션 종료 후 실제 데이터 반영
-        target.nowhp = new_hp
-        
-        return False, damage, Mul
-
-    # B. 회복 스킬 (Heal)
-    elif effect == "heal":
-        old_hp = user.nowhp
-        heal_amount = int(skill["skW"] * user.HP)
-        new_hp = min(user.HP, old_hp + heal_amount)
-        
-        Heal() # 회복 사운드 재생
-        play_damage_sequence(screen, skill, target, user, old_hp, new_hp)
-
-        user.nowhp = new_hp
-        return False, 0, False
-
-    # C. 버프/디버프 스킬 (Buff)
-    elif effect == "buff":
-        if isinstance(skill["skW"], tuple):
-            for B in skill["skW"]:
-                user.Rank[B % 3] = max(-6, min(6, user.Rank[B % 3] + B // 3 + 1))
-        else:
-            user.Rank[skill["skW"] % 3] = max(-6, min(6, user.Rank[skill["skW"] % 3] + skill["skW"] // 3 + 1))
-        
-        user.update_battle()
-
-        return False, 0, False
-        
-    # D. 반사 스킬 (Reflect) - <<수정된 부분>>
-    elif effect == "reflect":
-        # 1. 애니메이션을 재생하는 대신, 캐릭터에게 '방어 중' 상태를 부여합니다.
-        stance = 'shield' if skill["skW"] == 0 else 'mirror'
-        setattr(user, 'defensive_stance', stance)
-        # play_reflect_animation(screen, user, skill)  <- 이 줄은 삭제되었습니다.
-
-        # 2. 상대방이 공격 스킬을 사용했는지 확인
-        if counter_skill is None or counter_skill["effect_type"] not in ["Pdamage", "Sdamage"]:
-            # 공격을 받지 않았으므로 아무 일도 일어나지 않고 턴이 종료됩니다.
-            # 메시지 출력을 위해 damage 값을 -121(실패)로 설정합니다.
-            return False, -121, False
-
-        # 3. 스킬 효과 분기: 방어(skW=0) 또는 반사(skW>0)
-        if skill["skW"] == 0:  # 방어 (shield)
-            # 이제 공격 애니메이션은 play_damage_sequence에서 방패와 '함께' 재생됩니다.
-            # 데미지는 주지 않으므로 old_hp와 new_hp를 같게 전달합니다.
-            play_damage_sequence(screen, counter_skill, target, user, user.nowhp, user.nowhp)
-            
-            # 공격을 막았다는 메시지를 출력합니다.
-            display_status(screen, True)
-            draw_text(screen, f"  {user.name}이(가) 공격을 막아냈다!", stX, stY, WHITE)
-            pygame.display.flip()
-            wait_for_key()
-            
-            return True, 0, 1 # 상대 턴 종료
-        else:  # 반사 (mirror)
-            cur_rate = getattr(user, "reflect_success_rate", 1.0)
-            if random.random() > cur_rate:
-                # 반사 실패: 데미지를 받음
-                old_hp = user.nowhp
-                damage, Mul = Damage(user, target, counter_skill)
-                new_hp = max(0, old_hp - damage)
-                play_damage_sequence(screen, counter_skill, target, user, old_hp, new_hp)
-                user.reflect_success_rate = cur_rate * 0.5 
-                
-                return False, -121, False
-            else:
-                # 반사 성공: 상대에게 데미지를 줌
-                damage, Mul = Damage(target, user, counter_skill)
-                damage = int(damage * skill["skW"])
-                
-                old_hp = target.nowhp
-                new_hp = max(0, old_hp - damage)
-
-                # 반사 데미지 애니메이션 재생 (이제 거울과 함께 표시됩니다)
-                play_damage_sequence(screen, counter_skill, user, target, old_hp, new_hp)
-                
-                target.nowhp = new_hp
-
-                user.reflect_success_rate = cur_rate * 0.5 
-                return True, damage, Mul # 상대 턴 종료
-
-    # E. 그 외 모든 스킬
-    else:
-        return False, 0, False
-
-# 기존 함수들 그대로 유지
+# 디스플레이 함수
 def display_type(screen, y, x, type):
     """타입 표시 (pygame)"""
     if type == "CT":
@@ -389,7 +103,145 @@ def display_type(screen, y, x, type):
         screen.blit(AI, (x, y))
     elif type == "EVENT":
         screen.blit(EVENT, (x, y))
+            
+def display_status(screen, detail=True, skill_frame_to_draw=None):
+    """상태 화면 표시 - 플레이어 직접 전투용으로 수정 (스킬 레이어 처리 기능 추가)"""
+    screen.fill((113,113,113))
+    screen.blit(BACKGROUND, (sX, sY))
 
+    # 스킬 프레임이 전달된 경우, 배경 위에 먼저 그립니다.
+    if skill_frame_to_draw:
+        screen.blit(skill_frame_to_draw, (sX, sY))
+    
+    # 배틀 정보 출력
+    draw_text(screen, f"플레이어: {player.name}", sX, sY+820, VIOLET)
+    draw_text(screen, f"현재 학기: {player.current_semester}", sX, sY+860, BLUE)
+    draw_text(screen, f"턴 {hap_num}", sX, sY+900, CYAN)
+    gpa = gpaCalculator(enemyCSmon, hap_num, item_num)[1]
+    draw_text(screen, f"현재 성적: ", sX, sY+940, GREEN)
+    draw_text(screen, f"{gpa}", sX+200, sY+940, gpaColor(gpa))
+    
+    # 적 스프라이트
+    if hasattr(enemyCSmon, 'is_defeated') and enemyCSmon.is_defeated:
+        if hasattr(enemyCSmon, 'image'):
+            enemy_img = pygame.image.load(enemyCSmon.image).convert_alpha()
+            silhouette = pygame.transform.scale_by(enemy_img, 10)
+            dark_fill = (30, 30, 30)
+            silhouette.fill(dark_fill, special_flags=pygame.BLEND_RGB_MULT)
+            screen.blit(silhouette, (esX+900-silhouette.get_width()//2, esY+305-silhouette.get_height()))
+    elif hasattr(enemyCSmon, 'image'):
+        image = pygame.image.load(enemyCSmon.image).convert_alpha()
+        image = pygame.transform.scale_by(image, 10)
+        screen.blit(image, (esX+900-image.get_width()//2, esY+305-image.get_height()))
+
+    # 내 스프라이트 그리기
+    if hasattr(player, 'is_defeated') and player.is_defeated:
+        silhouette = ME.copy()
+        dark_fill = (30, 30, 30)
+        silhouette.fill(dark_fill, special_flags=pygame.BLEND_RGB_MULT)
+        screen.blit(silhouette, (sX+320-ME.get_width()//2, sY+536-ME.get_height()))
+    else:
+        screen.blit(ME, (sX+320-ME.get_width()//2, sY+536-ME.get_height()))
+    
+    # 적 상태
+    screen.blit(STAT, (esX, esY))
+    draw_text(screen, f"{enemyCSmon.name}", esX+64, esY+70, WHITE)
+    draw_text(screen, f"lv {enemyCSmon.level}", esX+384, esY+70, WHITE)
+    animate_health_bar(screen, esY+121, esX+122, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
+
+    # 적 타입 표시
+    enemy_types = getattr(enemyCSmon, 'type', ['전산이론'])
+    if isinstance(enemy_types, str):
+        enemy_types = [enemy_types]
+    for i, enemy_type in enumerate(enemy_types[:2]):
+        display_type(screen, esY, esX+470+i*124, enemy_type)
+    
+    # 디버그/치트모드 시 상대 능력치 표시
+    dbg = getattr(player, "debug_config", None)
+    show_debug_overlay = player.cheatmode or (dbg and dbg.debug)
+    
+    if show_debug_overlay:
+        draw_text(screen, f"{getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))}/{getattr(enemyCSmon, 'HP', 100)}", esX+445, esY+100, WHITE, highlight=VIOLET)
+        draw_text(screen, f"ATK {getattr(enemyCSmon, 'CATK', 10)}/{getattr(enemyCSmon, 'ATK', 10)}", esX+610, esY+16, WHITE, highlight=RED)
+        draw_text(screen, f"DEF {getattr(enemyCSmon, 'CDEF', 10)}/{getattr(enemyCSmon, 'DEF', 10)}", esX+610, esY+56, WHITE, highlight=RED)
+        draw_text(screen, f"SPD {getattr(enemyCSmon, 'CSPD', 10)}/{getattr(enemyCSmon, 'SPD', 10)}", esX+610, esY+96, WHITE, highlight=RED)
+        
+        if dbg and dbg.debug:
+            draw_text(screen, "DEBUG", 50, 50, YELLOW, size=24)
+            
+    # 플레이어 상태 (하단)
+    screen.blit(STAT, (psX, psY))
+    
+    draw_text(screen, f"{player.name}", psX+64, psY+70, WHITE)
+    draw_text(screen, f"lv {player.level}", psX+384, psY+70, WHITE)
+
+    # 플레이어 타입 표시
+    display_type(screen, psY, psX+470, player.type[0])
+    
+    # 플레이어 체력바
+    animate_health_bar(screen, psY+121, psX+122, player.nowhp, player.nowhp, player.HP)
+
+    if detail:
+        display_player_details(screen, player, sX+1264)
+
+    screen.blit(TEXT, (sX+11, sY+535))
+    draw_text(screen, "Enter를 눌러 확인", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, LIGHTGRAY, align='center')
+
+def display_player_details(screen, player, x):
+    """플레이어 상세 정보 출력"""
+
+    # [True, False, False, False, False, False] 형식
+    current_skill_boolean = [player.current_skills[t] > 0 for t in ["*", "CT", "DS", "PS", "SYS", "AI"]]
+
+    def get_color_by_level_skill(current_skill_boolean, type_index = 0):
+
+        type  = ["*", "CT", "DS", "PS", "SYS", "AI"][type_index]
+
+        if not current_skill_boolean[type_index]:
+            return GRAY
+        else:
+            if player.learned_skills[type] == 0:
+                return GRAY
+            elif player.learned_skills[type] < 2:
+                return WHITE
+            elif player.learned_skills[type] < 4:
+                return YELLOW
+            elif player.learned_skills[type] < 5:
+                return ORANGE
+            else:
+                return RED
+
+    details = [
+        (("이름", 0, WHITE), (f"{player.name}", 228, CYAN)),
+        (("레벨", 0, WHITE), (f"{player.level}", 228, CYAN)),
+        (("다음 레벨까지", 0, WHITE), (f"{player.max_exp - player.exp}", 228, BLUE), ("경험치 남음", 352, WHITE)),
+        "",
+        (("체력", 0, WHITE), (f"{player.nowhp}"+"/"+f"{player.HP}", 228, CYAN)),
+        (("공격", 0, WHITE), (f"{player.CATK}", 228, GREEN if player.CATK > player.ATK else RED if player.CATK < player.ATK else WHITE), None if player.Rank[0]==0 else ((("+" if player.Rank[0]>0 else "-") + f"{abs(player.Rank[0])}랭크"), 292, RED if player.Rank[0]<0 else GREEN)),
+        (("방어", 0, WHITE), (f"{player.CDEF}", 228, GREEN if player.CDEF > player.DEF else RED if player.CDEF < player.DEF else WHITE), None if player.Rank[1]==0 else ((("+" if player.Rank[1]>0 else "-") + f"{abs(player.Rank[1])}랭크"), 292, RED if player.Rank[1]<0 else GREEN)),
+        (("속도", 0, WHITE), (f"{player.CSPD}", 228, GREEN if player.CSPD > player.SPD else RED if player.CSPD < player.SPD else WHITE), None if player.Rank[2]==0 else ((("+" if player.Rank[2]>0 else "-") + f"{abs(player.Rank[2])}랭크"), 292, RED if player.Rank[2]<0 else GREEN)),
+        "",
+        (("현재 학기", 0, WHITE), (f"{player.current_semester}", 228, WHITE)),
+        "",
+        (("스킬 별 레벨", 0, WHITE), ("", 0, WHITE)),
+        (("  *   ", 0 , STARC if current_skill_boolean[0] else GRAY), (f"Level {player.learned_skills['*']}", 228, get_color_by_level_skill(current_skill_boolean, 0))),
+        (("  CT  ", 0 , CTC if current_skill_boolean[1] else GRAY), (f"Level {player.learned_skills['CT']}", 228, get_color_by_level_skill(current_skill_boolean, 1))),
+        (("  DS  ", 0 , DSC if current_skill_boolean[2] else GRAY), (f"Level {player.learned_skills['DS']}", 228, get_color_by_level_skill(current_skill_boolean, 2))),
+        (("  PS  ", 0 , PSC if current_skill_boolean[3] else GRAY), (f"Level {player.learned_skills['PS']}", 228, get_color_by_level_skill(current_skill_boolean, 3))),
+        (("  SYS ", 0 , SYSC if current_skill_boolean[4] else GRAY), (f"Level {player.learned_skills['SYS']}", 228, get_color_by_level_skill(current_skill_boolean, 4))),
+        (("  AI  ", 0 , AIC if current_skill_boolean[5] else GRAY), (f"Level {player.learned_skills['AI']}", 228, get_color_by_level_skill(current_skill_boolean, 5))),
+    ]
+    
+    for i, detail_item in enumerate(details):
+        y_pos = sY + 50 + i * 40
+        if isinstance(detail_item, tuple):
+            for detail in detail_item:
+                if not isinstance(detail, tuple) and not isinstance(detail, str):
+                    continue
+                if isinstance(detail, tuple) and len(detail) >= 3:
+                    draw_text(screen, detail[0], x + detail[1], y_pos, detail[2])
+
+# 체력바 함수
 def get_ratio(hp, max_hp):
     if hp <= 0:
         return 0
@@ -407,18 +259,18 @@ def hpcolor(ratio):
     else: color_pair = BLACK
     return color_pair
 
-def animate_health_bar(screen, y, x, current_hp, target_hp, max_hp):
-    """체력바를 부드럽게 애니메이션으로 업데이트 (pygame)"""
-    current_ratio = get_ratio(current_hp, max_hp)
-    target_ratio = get_ratio(target_hp, max_hp)
-    steps = abs(current_ratio - target_ratio)
-
-    def draw_HP(surface, text, x, y, color, highlight=BLACK):
+def draw_HP(surface, text, x, y, color, highlight=BLACK):
         fontforHP = pygame.font.Font("../neodgm.ttf", 10)
         font_obj = fontforHP
         text_surface = font_obj.render(text, True, color, highlight)
         surface.blit(text_surface, (x, y))
         return text_surface.get_rect(topleft=(x, y))
+
+def animate_health_bar(screen, y, x, current_hp, target_hp, max_hp):
+    """체력바를 부드럽게 애니메이션으로 업데이트 (pygame)"""
+    current_ratio = get_ratio(current_hp, max_hp)
+    target_ratio = get_ratio(target_hp, max_hp)
+    steps = abs(current_ratio - target_ratio)
 
     if steps == 0:
         draw_HP(screen, f"{'█' * current_ratio}{' ' * (HPLEN - current_ratio)}", x, y+10, hpcolor(current_ratio))
@@ -433,6 +285,16 @@ def animate_health_bar(screen, y, x, current_hp, target_hp, max_hp):
         pygame.display.flip()
         time.sleep(0.666/steps)
 
+def draw_health_bar(screen, y, x, current_hp, max_hp):
+    """체력바를 현재 체력 기준으로 그림 (애니메이션 루프 없음)"""
+    current_ratio = get_ratio(current_hp, max_hp)
+    color = hpcolor(current_ratio)
+    bar_text = '█' * current_ratio + ' ' * (HPLEN - current_ratio)
+    draw_HP(screen, bar_text, x, y+10, color)
+    draw_HP(screen, bar_text, x, y+5, color)
+    draw_HP(screen, bar_text, x, y+0, color)
+
+# 애니메이션 함수
 def healAnimation(targettype="player"):
     """회복 애니메이션 재생"""
     if targettype=="player":
@@ -447,7 +309,6 @@ def healAnimation(targettype="player"):
         screen.blit(image, (x-image.get_width()//2, y-image.get_height()))
         pygame.display.flip()
         time.sleep(0.03)
-
 
 def buffAnimation(is_increase, targettype="player"):
     """버프 애니메이션 재생"""
@@ -472,8 +333,6 @@ def buffAnimation(is_increase, targettype="player"):
             screen.blit(image, (x-image.get_width()//2, y-image.get_height()))
             pygame.display.flip()
             time.sleep(0.03)
-
-# useskillAnimation 함수 전체를 이 코드로 교체하세요.
 
 def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp):
     """[최종 수정] 스킬 렌더링 순서 및 변수 할당 오류를 수정한 최종 버전입니다."""
@@ -639,38 +498,6 @@ def play_death_animation(target_character, screen):
         pygame.display.flip()
     # 마지막 프레임을 그리는 부분을 삭제하여 역할을 분리함
 
-def useskillAnimation(skill, old_hp=None, new_hp=None, attacker_type=None): # ◀◀ 여기 인자 이름을 attacker_type으로 수정
-    if skill["animation"]!="none":
-        x, y = sX, sY
-        screen = pygame.display.get_surface()
-        frames = [] 
-        for i in range(len(os.listdir(f"../img/animations/{skill['animation']}"))):
-            img = pygame.image.load(f"../img/animations/{skill['animation']}/{i}.png")
-            img = pygame.transform.scale_by(img, 11/3)
-            frames.append(img)
-        if hasattr(enemyCSmon, 'image'):
-            enemyimage = pygame.image.load(enemyCSmon.image)
-            enemyimage = pygame.transform.scale_by(enemyimage, 10)
-
-        play_effect(f"../sound/skills/{skill['animation']}.mp3")
-
-        anim_start_time = pygame.time.get_ticks()
-        anim_duration = 500  # 체력바 애니메이션 지속 시간 (ms)
-
-        for i in range(len(frames)):
-            display_status(screen, forskill1=True)
-
-            screen.blit(frames[i], (x, y))
-            
-            display_status(screen, forskill=True)
-            pygame.display.flip()
-            time.sleep(0.02)
-        display_status(screen, detail=True)
-        pygame.display.flip()
-        time.sleep(0.3)
-    else:
-        return
-    
 def flash_red(target_character, screen):
     """지정한 캐릭터를 붉은색으로 깜빡이게 만듭니다. ('player' 또는 'monster')"""
     
@@ -710,143 +537,17 @@ def flash_red(target_character, screen):
     # 애니메이션이 끝난 후 화면을 한 번 더 깔끔하게 업데이트
     display_status(screen, detail=True)
     pygame.display.flip()
-            
-def display_status(screen, detail=True, skill_frame_to_draw=None):
-    """상태 화면 표시 - 플레이어 직접 전투용으로 수정 (스킬 레이어 처리 기능 추가)"""
-    screen.fill((113,113,113))
-    screen.blit(BACKGROUND, (sX, sY))
 
-    # 스킬 프레임이 전달된 경우, 배경 위에 먼저 그립니다.
-    if skill_frame_to_draw:
-        screen.blit(skill_frame_to_draw, (sX, sY))
-    
-    # 배틀 정보 출력
-    draw_text(screen, f"플레이어: {player.name}", sX, sY+820, VIOLET)
-    draw_text(screen, f"현재 학기: {player.current_semester}", sX, sY+860, BLUE)
-    draw_text(screen, f"턴 {hap_num}", sX, sY+900, CYAN)
-    gpa = gpaCalculator(enemyCSmon, hap_num, item_num)[1]
-    draw_text(screen, f"현재 성적: ", sX, sY+940, GREEN)
-    draw_text(screen, f"{gpa}", sX+200, sY+940, gpaColor(gpa))
-    
-    # 적 스프라이트
-    if hasattr(enemyCSmon, 'is_defeated') and enemyCSmon.is_defeated:
-        if hasattr(enemyCSmon, 'image'):
-            enemy_img = pygame.image.load(enemyCSmon.image).convert_alpha()
-            silhouette = pygame.transform.scale_by(enemy_img, 10)
-            dark_fill = (30, 30, 30)
-            silhouette.fill(dark_fill, special_flags=pygame.BLEND_RGB_MULT)
-            screen.blit(silhouette, (esX+900-silhouette.get_width()//2, esY+305-silhouette.get_height()))
-    elif hasattr(enemyCSmon, 'image'):
-        image = pygame.image.load(enemyCSmon.image).convert_alpha()
-        image = pygame.transform.scale_by(image, 10)
-        screen.blit(image, (esX+900-image.get_width()//2, esY+305-image.get_height()))
-
-    # 내 스프라이트 그리기
-    if hasattr(player, 'is_defeated') and player.is_defeated:
-        silhouette = ME.copy()
-        dark_fill = (30, 30, 30)
-        silhouette.fill(dark_fill, special_flags=pygame.BLEND_RGB_MULT)
-        screen.blit(silhouette, (sX+320-ME.get_width()//2, sY+536-ME.get_height()))
-    else:
-        screen.blit(ME, (sX+320-ME.get_width()//2, sY+536-ME.get_height()))
-    
-    # 적 상태
-    screen.blit(STAT, (esX, esY))
-    draw_text(screen, f"{enemyCSmon.name}", esX+64, esY+70, WHITE)
-    draw_text(screen, f"lv {enemyCSmon.level}", esX+384, esY+70, WHITE)
-    animate_health_bar(screen, esY+121, esX+122, enemyCSmon.nowhp, enemyCSmon.nowhp, enemyCSmon.HP)
-
-    # 적 타입 표시
-    enemy_types = getattr(enemyCSmon, 'type', ['전산이론'])
-    if isinstance(enemy_types, str):
-        enemy_types = [enemy_types]
-    for i, enemy_type in enumerate(enemy_types[:2]):
-        display_type(screen, esY, esX+470+i*124, enemy_type)
-    
-    # 디버그/치트모드 시 상대 능력치 표시
-    dbg = getattr(player, "debug_config", None)
-    show_debug_overlay = player.cheatmode or (dbg and dbg.debug)
-    
-    if show_debug_overlay:
-        draw_text(screen, f"{getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))}/{getattr(enemyCSmon, 'HP', 100)}", esX+445, esY+100, WHITE, highlight=VIOLET)
-        draw_text(screen, f"ATK {getattr(enemyCSmon, 'CATK', 10)}/{getattr(enemyCSmon, 'ATK', 10)}", esX+610, esY+16, WHITE, highlight=RED)
-        draw_text(screen, f"DEF {getattr(enemyCSmon, 'CDEF', 10)}/{getattr(enemyCSmon, 'DEF', 10)}", esX+610, esY+56, WHITE, highlight=RED)
-        draw_text(screen, f"SPD {getattr(enemyCSmon, 'CSPD', 10)}/{getattr(enemyCSmon, 'SPD', 10)}", esX+610, esY+96, WHITE, highlight=RED)
-        
-        if dbg and dbg.debug:
-            draw_text(screen, "DEBUG", 50, 50, YELLOW, size=24)
-            
-    # 플레이어 상태 (하단)
-    screen.blit(STAT, (psX, psY))
-    
-    draw_text(screen, f"{player.name}", psX+64, psY+70, WHITE)
-    draw_text(screen, f"lv {player.level}", psX+384, psY+70, WHITE)
-
-    # 플레이어 타입 표시
-    display_type(screen, psY, psX+470, player.type[0])
-    
-    # 플레이어 체력바
-    animate_health_bar(screen, psY+121, psX+122, player.nowhp, player.nowhp, player.HP)
-
-    if detail:
-        display_player_details(screen, player, sX+1264)
-
-    screen.blit(TEXT, (sX+11, sY+535))
-    draw_text(screen, "Enter를 눌러 확인", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, LIGHTGRAY, align='center')
-
-def display_player_details(screen, player, x):
-    """플레이어 상세 정보 출력"""
-
-    # [True, False, False, False, False, False] 형식
-    current_skill_boolean = [player.current_skills[t] > 0 for t in ["*", "CT", "DS", "PS", "SYS", "AI"]]
-
-    def get_color_by_level_skill(current_skill_boolean, type_index = 0):
-
-        type  = ["*", "CT", "DS", "PS", "SYS", "AI"][type_index]
-
-        if not current_skill_boolean[type_index]:
-            return GRAY
-        else:
-            if player.learned_skills[type] == 0:
-                return GRAY
-            elif player.learned_skills[type] < 2:
-                return WHITE
-            elif player.learned_skills[type] < 4:
-                return YELLOW
-            elif player.learned_skills[type] < 5:
-                return ORANGE
-            else:
-                return RED
-
-    details = [
-        (("이름", 0, WHITE), (f"{player.name}", 228, CYAN)),
-        (("레벨", 0, WHITE), (f"{player.level}", 228, CYAN)),
-        (("다음 레벨까지", 0, WHITE), (f"{player.max_exp - player.exp}", 228, BLUE), ("경험치 남음", 352, WHITE)),
-        "",
-        (("체력", 0, WHITE), (f"{player.nowhp}"+"/"+f"{player.HP}", 228, CYAN)),
-        (("공격", 0, WHITE), (f"{player.CATK}", 228, GREEN if player.CATK > player.ATK else RED if player.CATK < player.ATK else WHITE), None if player.Rank[0]==0 else ((("+" if player.Rank[0]>0 else "-") + f"{abs(player.Rank[0])}랭크"), 292, RED if player.Rank[0]<0 else GREEN)),
-        (("방어", 0, WHITE), (f"{player.CDEF}", 228, GREEN if player.CDEF > player.DEF else RED if player.CDEF < player.DEF else WHITE), None if player.Rank[1]==0 else ((("+" if player.Rank[1]>0 else "-") + f"{abs(player.Rank[1])}랭크"), 292, RED if player.Rank[1]<0 else GREEN)),
-        (("속도", 0, WHITE), (f"{player.CSPD}", 228, GREEN if player.CSPD > player.SPD else RED if player.CSPD < player.SPD else WHITE), None if player.Rank[2]==0 else ((("+" if player.Rank[2]>0 else "-") + f"{abs(player.Rank[2])}랭크"), 292, RED if player.Rank[2]<0 else GREEN)),
-        "",
-        (("현재 학기", 0, WHITE), (f"{player.current_semester}", 228, WHITE)),
-        "",
-        (("스킬 별 레벨", 0, WHITE), ("", 0, WHITE)),
-        (("  *   ", 0 , STARC if current_skill_boolean[0] else GRAY), (f"Level {player.learned_skills['*']}", 228, get_color_by_level_skill(current_skill_boolean, 0))),
-        (("  CT  ", 0 , CTC if current_skill_boolean[1] else GRAY), (f"Level {player.learned_skills['CT']}", 228, get_color_by_level_skill(current_skill_boolean, 1))),
-        (("  DS  ", 0 , DSC if current_skill_boolean[2] else GRAY), (f"Level {player.learned_skills['DS']}", 228, get_color_by_level_skill(current_skill_boolean, 2))),
-        (("  PS  ", 0 , PSC if current_skill_boolean[3] else GRAY), (f"Level {player.learned_skills['PS']}", 228, get_color_by_level_skill(current_skill_boolean, 3))),
-        (("  SYS ", 0 , SYSC if current_skill_boolean[4] else GRAY), (f"Level {player.learned_skills['SYS']}", 228, get_color_by_level_skill(current_skill_boolean, 4))),
-        (("  AI  ", 0 , AIC if current_skill_boolean[5] else GRAY), (f"Level {player.learned_skills['AI']}", 228, get_color_by_level_skill(current_skill_boolean, 5))),
-    ]
-    
-    for i, detail_item in enumerate(details):
-        y_pos = sY + 50 + i * 40
-        if isinstance(detail_item, tuple):
-            for detail in detail_item:
-                if not isinstance(detail, tuple) and not isinstance(detail, str):
-                    continue
-                if isinstance(detail, tuple) and len(detail) >= 3:
-                    draw_text(screen, detail[0], x + detail[1], y_pos, detail[2])
+# 행동 선택 함수
+def get_color_by_effectiveness(effectiveness):
+    if effectiveness > 1.5:             # 2배
+        return RED
+    elif 0.4 <= effectiveness < 0.8:    # 0.5배
+        return LIGHTGRAY
+    elif effectiveness < 0.4:           # 0배
+        return GRAY
+    else:                               # 1배
+        return WHITE
 
 def select_action(screen):
     """행동 선택 메뉴 - PNR 버튼 포함"""
@@ -901,16 +602,6 @@ def select_action(screen):
         elif key == 'right' and (current_index % 2 == 0 and current_index < len(options) and current_index >= 0 and current_index != len(options)-1):
             current_index += 1
             option_change_sound()
-
-def get_color_by_effectiveness(effectiveness):
-    if effectiveness > 1.5:             # 2배
-        return RED
-    elif 0.4 <= effectiveness < 0.8:    # 0.5배
-        return LIGHTGRAY
-    elif effectiveness < 0.4:           # 0배
-        return GRAY
-    else:                               # 1배
-        return WHITE
 
 def select_player_skill(screen):
     """플레이어 스킬 선택"""
@@ -1011,6 +702,126 @@ def select_player_skill(screen):
             current_index += 1
             option_change_sound()
 
+def select_item(screen, temp=None):
+    """아이템 선택 - 플레이어용"""
+
+    # 빈 슬롯을 맨 뒤로 보내기 위해 정렬
+    sorted_items = sorted(player.items, key=lambda x: x.name == "빈 슬롯")
+    player.items = sorted_items  # 플레이어 아이템 순서도 변경
+    descriptions = [i.description for i in sorted_items]
+    coloring = [False]*len(sorted_items)
+
+    for i in range(len(sorted_items)):
+        if sorted_items[i].name == "빈 슬롯":
+            coloring[i] = CYAN
+        else:
+            coloring[i] = get_item_color_by_grade(sorted_items[i].grade)
+
+    display_status(screen)
+    current_index = 0
+    
+    while True:
+        display_status(screen)
+        
+        for i, item in enumerate(sorted_items):
+            x_pos = stX + (200 * (i % 3))
+            y_pos = stY + int(i / 3) * 64
+
+            color = coloring[i] if coloring[i] else WHITE
+            
+            # 스킬 표시
+            prefix = "> " if i == current_index else "  "
+            prefix_color = WHITE if i == current_index else GRAY  # 원하는 색상 지정
+            draw_text(screen, prefix, x_pos, y_pos, prefix_color)
+            draw_text(screen, f"{item.name}", x_pos + 32, y_pos, color)
+            infoY = sY+536
+            if i == current_index:
+                draw_wrapped_text(
+                    screen,
+                    descriptions[i],
+                    sX+660,
+                    infoY + 20,
+                    WHITE,
+                    font_size=32,
+                    max_width= 560 # 원하는 최대 너비 지정
+                )
+        
+        pygame.display.flip()
+        
+        key = wait_for_key()
+        if key == 'enter':
+            if player.items[current_index].name == "빈 슬롯":
+                display_status(screen)
+                draw_text(screen, "  빈 슬롯이다!", stX, stY, WHITE)
+                pygame.display.flip()
+                wait_for_key()
+                continue
+            return current_index
+        elif key == 'escape':
+            option_escape_sound()
+            return -1
+        elif len(player.items) == 1:
+            current_index = 0
+        elif key == 'up' and (current_index > 2 and current_index < len(player.items)):
+            current_index -= 3
+            option_change_sound()
+        elif key == 'down' and (current_index >= 0 and current_index < len(player.items)-3):
+            current_index += 3
+            option_change_sound()
+        elif key == 'left' and (current_index % 3 != 0 and current_index < len(player.items) and current_index >= 0):
+            current_index -= 1
+            option_change_sound()
+        elif key == 'right' and (current_index % 3 != 2 and current_index < len(player.items) and current_index >= 0 and current_index != len(player.items)-1):
+            current_index += 1
+            option_change_sound()
+
+def select_reward_item(screen, items):
+    """승리 후 아이템 선택 UI"""
+    current_index = 0
+    while True:
+
+        display_status(screen)
+        # dark_overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+        # dark_overlay.fill((0, 0, 0, 180))  # 마지막 값(120)은 투명도, 0~255
+        # screen.blit(dark_overlay, (0, 0))
+
+        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 221))
+
+        
+        draw_text(screen, "  승리 보상! 아이템을 선택하자.", stX, stY, YELLOW)
+
+        for i, item in enumerate(items):
+            name_color = get_item_color_by_grade(item.grade)  # 등급별 색상 함수 사용
+
+            prefix = "> " if i == current_index else "  "
+            # 이름만 색상 적용, 설명은 그대로 WHITE
+            draw_text(screen, f"{prefix}", stX, stY-400+i*100, WHITE)
+            draw_text(screen, f"{item.name}", stX+30, stY-400+i*100, name_color)
+            draw_text(screen, f"{item.gradeSymbol}{item.grade}", stX+30, stY-400+i*100+40, name_color, size=16)
+            draw_wrapped_text(
+                screen,
+                item.description,
+                stX+300,
+                stY-400+i*100,
+                WHITE,
+                max_width= psX - sX + 300 # 원하는 최대 너비 지정
+            )
+        pygame.display.flip()
+        key = wait_for_key()
+        if key == 'enter':
+            return items[current_index]
+        elif key == 'up' and current_index > 0:
+            current_index -= 1
+            option_change_sound()
+        elif key == 'down' and current_index < len(items)-1:
+            current_index += 1
+            option_change_sound()
+
+        # Esc 누르면 아이템 획득 안함
+        elif key == 'escape':
+            return None
+
+# 유틸리티 함수
 def show_pnr_result(screen, success):
     """PNR 사용 결과 표시"""
     screen.fill(WHITE)
@@ -1055,6 +866,7 @@ def gpaCalculator(enemy, hap_num, item_num, first_time=True):
     else: gpa = "C-"
     return (enemy.credit, gpa)
 
+# 스킬 관련 함수
 def skill_phase(screen):
     selected_skill = select_player_skill(screen)
     if selected_skill == -1:
@@ -1121,7 +933,7 @@ def skill_message(screen, AttackerType, player, enemyCSmon, Pskill, Mskill, dama
         if damage == -121:
             draw_text(screen, "  하지만 실패했다!", stX, stY, WHITE)
         elif counter_skill is not None:
-            if counter_skill["effect_type"] == "Pdamage" or counter_skill["effect_type"] == "Sdamage":
+            if counter_skill["effect_type"] == "damage":
                 if skill["skW"] == 0:
                     draw_text(screen, f"  {user.name}이/가 {target.name}의 {counter_skill['name']}을/를 방어했다.", stX, stY, WHITE)
                 else:
@@ -1151,7 +963,7 @@ def skill_message(screen, AttackerType, player, enemyCSmon, Pskill, Mskill, dama
         else:
             draw_text(screen, "  그러나 아무 일도 일어나지 않았다!", stX, stY, WHITE)
 
-    elif skill["effect_type"] == "Pdamage" or skill["effect_type"] == "Sdamage":
+    elif skill["effect_type"] == "damage":
         if damage  == False:
             if Mul == 0:
                 draw_text(screen, "  효과가 없는 것 같다...", stX, stY, WHITE)
@@ -1244,79 +1056,226 @@ def enemy_attack_phase(screen, selected_skill, enemy_skill):
 
     return stop
 
-def select_item(screen, temp=None):
-    """아이템 선택 - 플레이어용"""
+def comp(atskilltype, tgtype):
+    """
+    공격 타입(atskilltype)과 방어 타입(tgtypes: str 또는 list)을 받아 상성 배율을 반환.
+    - 방어 타입이 여러 개인 경우 배율을 곱셈으로 적용.
+    - 존재하지 않는 키가 오면 기본 1.0 처리.
+    """
+    return TYPE_EFFECTIVENESS[atskilltype][tgtype]
 
-    # 빈 슬롯을 맨 뒤로 보내기 위해 정렬
-    sorted_items = sorted(player.items, key=lambda x: x.name == "빈 슬롯")
-    player.items = sorted_items  # 플레이어 아이템 순서도 변경
-    descriptions = [i.description for i in sorted_items]
-    coloring = [False]*len(sorted_items)
+def Damage(target, attacker, skilldict):
+    basedmg = ((2*attacker.level + 10)/250) * attacker.CATK / max(1, target.CDEF)  # ✅ max(1, ...)
+    multiplier = comp(skilldict["type"], target.type[0])
+    Jasok = 1.5 if attacker.type[0] == skilldict["type"] else 1.0
+    return int(multiplier * (basedmg*skilldict["skW"] + 2) * Jasok * random.uniform(0.85, 1.00)), multiplier
 
-    for i in range(len(sorted_items)):
-        if sorted_items[i].name == "빈 슬롯":
-            coloring[i] = CYAN
-        else:
-            coloring[i] = get_item_color_by_grade(sorted_items[i].grade)
+def get_best_enemy_skill(enemy, player):
+    # selected_skill 객체가 딕셔너리 형태가 아닐 경우를 대비해 effect_type을 추출
+    enemy_skills = getattr(enemy, 'skills', {})
+    if not enemy_skills:
+        return None
 
-    display_status(screen)
-    current_index = 0
+    skill_scores = {}
+
+    # 몬스터의 스킬 딕셔너리에서 스킬 객체들을 순회
+    for skill_name, skill_data in enemy_skills.items():
+        score = 0
+        
+        # Skill 객체의 속성에 직접 접근
+        skill_type = skill_data.effect_type
+        
+        # 1. 자신의 현재 HP를 기반으로 점수 계산
+        if skill_type == "heal":
+            score += 30
+            if enemy.nowhp > enemy.HP * 0.9:
+                score = 0  # 체력이 90% 이상이면 회복 스킬 사용 안 함
+            if enemy.nowhp < enemy.HP * 0.3 :
+                score += 20
+                    
+        # 2. 상대방의 HP를 기반으로 점수 계산
+        if skill_type in ["damage", "halve_hp"]:
+            score += 20
+            if player.nowhp < player.HP * 0.5:
+                score += 10
+
+        # 3. 자신의 스탯 버프 필요성에 따라 점수 계산
+        if skill_type == "buff":
+            for i in range(3):
+                if enemy.Rank[i] < 2:
+                    if isinstance(skill_data.skW, tuple):
+                        if 0 in [b % 3 for b in skill_data.skW]:
+                            score += 20
+                    else:
+                        if skill_data.skW % 3 == i:
+                            score += 20
+                if enemy.Rank[i] == 6:
+                    if isinstance(skill_data.skW, tuple):
+                        if 0 in [b % 3 for b in skill_data.skW]:
+                            score -= 10
+                    else:
+                        if skill_data.skW % 3 == i:
+                            score = 0
+
+        if skill_type == "reflect":
+            score += 20
     
-    while True:
-        display_status(screen)
-        
-        for i, item in enumerate(sorted_items):
-            x_pos = stX + (200 * (i % 3))
-            y_pos = stY + int(i / 3) * 64
+    total_score = sum(skill_scores.values())
+    
+    if total_score == 0:
+        return random.choice(list(enemy_skills.values()))
 
-            color = coloring[i] if coloring[i] else WHITE
+    # 지능 지수에 따라 무작위 또는 점수 기반 선택
+    if random.randint(1, 100) > INTELLIGENCE_LEVEL:
+        return random.choice(list(enemy_skills.values()))
+    else:
+        skill_list = list(skill_scores.keys())
+        probabilities = [score / total_score for score in skill_scores.values()]
+        
+        selected_skill_name = random.choices(skill_list, weights=probabilities, k=1)[0]
+        return enemy_skills[selected_skill_name]
+
+def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
+    # return: (stop, damage, Mul), stop: 상대 턴 실행할지 여부, damage: 입힌 데미지 실패는 -121, Mul: 상성 배율, 보너스 효과 있으면 튜플로
+        
+    # --- 1. 초기 설정: 변수 준비 ---
+    if playerskill is None:
+        playerskill_dict = None
+    else:
+        playerskill_dict = {
+            "type": playerskill["type"],
+            "effect_type": playerskill["effect_type"],
+            "skW": playerskill["skW"],
+            "animation": playerskill["animation"]
+        }
+    if monsterskill is None:
+        monsterskill_dict = None
+    else:
+        monsterskill_dict = {
+            "type": monsterskill.skill_type,
+            "effect_type": monsterskill.effect_type,
+            "skW": monsterskill.skW,
+            "animation": monsterskill.animation
+        }
+
+    if attackerType == "monster":
+        user, target, skill, counter_skill = monster, player, monsterskill_dict, playerskill_dict
+    else:  # player
+        user, target, skill, counter_skill = player, monster, playerskill_dict, monsterskill_dict
+
+    # 스킬이 없는 경우(버그 방지)
+    if not skill:
+        return False, 0, False
+    
+    effect = skill["effect_type"]
+    print(f"반사 성공률: {getattr(user, 'reflect_success_rate', 1.0)}")  # 디버그 출력
+    if effect == "reflect":
+        print(f"반사 스킬 사용: {skill['name']} (skW={skill['skW']})")  # 디버그 출력
+        # 1. 애니메이션을 재생하는 대신, 캐릭터에게 '방어 중' 상태를 부여합니다.
+        stance = 'shield' if skill["skW"] == 0 else 'mirror'
+        setattr(user, 'defensive_stance', stance)
+        # play_reflect_animation(screen, user, skill)  <- 이 줄은 삭제되었습니다.
+        
+        cur_rate = getattr(user, "reflect_success_rate", 1.0)
+        is_success = random.random()
+        print(f"반사 확률: {cur_rate}, 난수: {is_success}")  # 디버그 출력
+        if is_success > cur_rate:
+            # 반사 실패: 데미지를 받음
+            old_hp = user.nowhp
+            damage, Mul = Damage(user, target, counter_skill)
+            new_hp = max(0, old_hp - damage)
+            play_damage_sequence(screen, counter_skill, target, user, old_hp, new_hp)
+            user.reflect_success_rate = 1
             
-            # 스킬 표시
-            prefix = "> " if i == current_index else "  "
-            prefix_color = WHITE if i == current_index else GRAY  # 원하는 색상 지정
-            draw_text(screen, prefix, x_pos, y_pos, prefix_color)
-            draw_text(screen, f"{item.name}", x_pos + 32, y_pos, color)
-            infoY = sY+536
-            if i == current_index:
-                draw_wrapped_text(
-                    screen,
-                    descriptions[i],
-                    sX+660,
-                    infoY + 20,
-                    WHITE,
-                    font_size=32,
-                    max_width= 560 # 원하는 최대 너비 지정
-                )
-        
-        pygame.display.flip()
-        
-        key = wait_for_key()
-        if key == 'enter':
-            if player.items[current_index].name == "빈 슬롯":
-                display_status(screen)
-                draw_text(screen, "  빈 슬롯이다!", stX, stY, WHITE)
+            return False, -121, False
+        else:
+            # 2. 상대방이 공격 스킬을 사용했는지 확인
+            if counter_skill is None or counter_skill["effect_type"] not in ["damage"]:
+                return False, -121, False
+            
+            user.reflect_success_rate *= 0.5  # 방어 성공 시 성공 확률 절반으로 감소
+            
+            # 3. 스킬 효과 분기: 방어(skW=0) 또는 반사(skW>0)
+            if skill["skW"] == 0:  # 방어 (shield)
+                play_damage_sequence(screen, counter_skill, target, user, user.nowhp, user.nowhp)
+                
+                # 공격을 막았다는 메시지를 출력합니다.
+                display_status(screen, True)
+                draw_text(screen, f"  {user.name}이(가) 공격을 막아냈다!", stX, stY, WHITE)
                 pygame.display.flip()
                 wait_for_key()
-                continue
-            return current_index
-        elif key == 'escape':
-            option_escape_sound()
-            return -1
-        elif len(player.items) == 1:
-            current_index = 0
-        elif key == 'up' and (current_index > 2 and current_index < len(player.items)):
-            current_index -= 3
-            option_change_sound()
-        elif key == 'down' and (current_index >= 0 and current_index < len(player.items)-3):
-            current_index += 3
-            option_change_sound()
-        elif key == 'left' and (current_index % 3 != 0 and current_index < len(player.items) and current_index >= 0):
-            current_index -= 1
-            option_change_sound()
-        elif key == 'right' and (current_index % 3 != 2 and current_index < len(player.items) and current_index >= 0 and current_index != len(player.items)-1):
-            current_index += 1
-            option_change_sound()
+                
+                return True, 0, 1 # 상대 턴 종료
+            else:  # 반사 (mirror)
+                # 반사 성공: 상대에게 데미지를 줌
+                damage, Mul = Damage(target, user, counter_skill)
+                damage = int(damage * skill["skW"])
+                
+                old_hp = target.nowhp
+                new_hp = max(0, old_hp - damage)
 
+                # 반사 데미지 애니메이션 재생 (이제 거울과 함께 표시됩니다)
+                play_damage_sequence(screen, counter_skill, user, target, old_hp, new_hp)
+                
+                target.nowhp = new_hp
+
+                user.reflect_success_rate = cur_rate * 0.5 
+                return True, damage, Mul # 상대 턴 종료
+    else: user.reflect_success_rate = 1.0  # 반사 스킬이 아닐 때는 성공 확률 초기화
+
+    if effect in ["damage", "halve_hp"]:
+        old_hp = target.nowhp
+        new_hp = old_hp
+        damage = 0
+        Mul = 1
+
+        if effect in ["damage"]:
+            damage, Mul = Damage(target, user, skill)
+            if not (attackerType == "monster" and is_invulnerable(target)):
+                new_hp = max(0, int(old_hp - damage))
+        
+        elif effect == "halve_hp":
+            damage = old_hp // 2
+            if not (attackerType == "monster" and is_invulnerable(target)):
+                new_hp = old_hp - damage
+        
+        # 애니메이션을 먼저 재생
+        play_damage_sequence(screen, skill, user, target, old_hp, new_hp)
+        
+        # 애니메이션 종료 후 실제 데이터 반영
+        target.nowhp = new_hp
+        
+        return False, damage, Mul
+
+    # B. 회복 스킬 (Heal)
+    elif effect == "heal":
+        old_hp = user.nowhp
+        heal_amount = int(skill["skW"] * user.HP)
+        new_hp = min(user.HP, old_hp + heal_amount)
+        
+        Heal() # 회복 사운드 재생
+        play_damage_sequence(screen, skill, target, user, old_hp, new_hp)
+
+        user.nowhp = new_hp
+        return False, 0, False
+
+    # C. 버프/디버프 스킬 (Buff)
+    elif effect == "buff":
+        if isinstance(skill["skW"], tuple):
+            for B in skill["skW"]:
+                user.Rank[B % 3] = max(-6, min(6, user.Rank[B % 3] + B // 3 + 1))
+        else:
+            user.Rank[skill["skW"] % 3] = max(-6, min(6, user.Rank[skill["skW"] % 3] + skill["skW"] // 3 + 1))
+        
+        user.update_battle()
+
+        return False, 0, False
+    
+    # E. 그 외 모든 스킬
+    else:
+        return False, 0, False
+
+# 아이템 함수
 def item_phase(screen):
     """아이템 사용 단계 - 플레이어용"""
     global item_num
@@ -1482,54 +1441,7 @@ def get_random_reward_items(num_items):
             
     return reward_pool
 
-def select_reward_item(screen, items):
-    """승리 후 아이템 선택 UI"""
-    current_index = 0
-    while True:
-
-        display_status(screen)
-        # dark_overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
-        # dark_overlay.fill((0, 0, 0, 180))  # 마지막 값(120)은 투명도, 0~255
-        # screen.blit(dark_overlay, (0, 0))
-
-        apply_alpha_overlay(screen, (sX, sY, 2*psX + 4, 2*psY - 221))
-
-        
-        draw_text(screen, "  승리 보상! 아이템을 선택하자.", stX, stY, YELLOW)
-
-        for i, item in enumerate(items):
-            name_color = get_item_color_by_grade(item.grade)  # 등급별 색상 함수 사용
-
-            prefix = "> " if i == current_index else "  "
-            # 이름만 색상 적용, 설명은 그대로 WHITE
-            draw_text(screen, f"{prefix}", stX, stY-400+i*100, WHITE)
-            draw_text(screen, f"{item.name}", stX+30, stY-400+i*100, name_color)
-            draw_text(screen, f"{item.gradeSymbol}{item.grade}", stX+30, stY-400+i*100+40, name_color, size=16)
-            draw_wrapped_text(
-                screen,
-                item.description,
-                stX+300,
-                stY-400+i*100,
-                WHITE,
-                max_width= psX - sX + 300 # 원하는 최대 너비 지정
-            )
-        pygame.display.flip()
-        key = wait_for_key()
-        if key == 'enter':
-            return items[current_index]
-        elif key == 'up' and current_index > 0:
-            current_index -= 1
-            option_change_sound()
-        elif key == 'down' and current_index < len(items)-1:
-            current_index += 1
-            option_change_sound()
-
-        # Esc 누르면 아이템 획득 안함
-        elif key == 'escape':
-            return None
-
-# 메인 전투 함수 수정
-# 기존의 battle 함수를 아래 코드로 교체하세요.
+# 이벤트 함수
 def option_accept_challenge_molcamp(screen, options, y_offset = 30):
     current_index = 0
     while True:
@@ -1690,30 +1602,7 @@ def display_molcamp_quiz(screen, quizes):
 
     return result
 
-def draw_health_bar(screen, y, x, current_hp, max_hp):
-    """체력바를 현재 체력 기준으로 그림 (애니메이션 루프 없음)"""
-    def get_ratio(hp, max_hp):
-        if hp <= 0:
-            return 0
-        ratio = int(hp * HPLEN / max_hp)
-        return max(1, ratio) if hp > 0 else 0
-
-    def draw_HP(surface, text, x, y, color, highlight=BLACK):
-        fontforHP = pygame.font.Font("../neodgm.ttf", 10)
-        font_obj = fontforHP
-        text_surface = font_obj.render(text, True, color, highlight)
-        surface.blit(text_surface, (x, y))
-        return text_surface.get_rect(topleft=(x, y))
-
-    current_ratio = get_ratio(current_hp, max_hp)
-    color = hpcolor(current_ratio)
-    bar_text = '█' * current_ratio + ' ' * (HPLEN - current_ratio)
-    draw_HP(screen, bar_text, x, y+10, color)
-    draw_HP(screen, bar_text, x, y+5, color)
-    draw_HP(screen, bar_text, x, y+0, color)
-
-    
-
+# 메인 전투 함수
 def battle(getplayer, getenemy, screen=None):
     global player, enemy, enemyCSmon, battle_end, startBattleHp
     player = getplayer

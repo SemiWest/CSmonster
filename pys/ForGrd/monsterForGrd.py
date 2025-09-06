@@ -116,7 +116,7 @@ class Monster:
         def __init__(self, name, effect_type, type, skW, priority=0, description=""):
             self.description = description
             self.name = name
-            self.effect_type = effect_type  # 스킬 효과 타입 (Pdamage, Sdamage, heal, buff, reflect, halve_hp 등)
+            self.effect_type = effect_type  # 스킬 효과 타입 (damage, heal, buff, reflect, halve_hp 등)
             self.skill_type = type 
             self.skW = skW # 위력
             self.priority = priority # 우선도
@@ -142,7 +142,7 @@ cs101 = Monster(
 cs101.skills = {
     'Hello, World!': Monster.Skill(
         name='Hello, World!', 
-        effect_type="Pdamage",
+        effect_type="damage",
         type="CT",
         skW=30, 
         priority=0, 
@@ -156,14 +156,14 @@ cs101.skills = {
         description="휴보에게서 에너지가 가득 담긴 비퍼를 받는다. 공격력을 크게 올린다."),
     'CSV 접근': Monster.Skill(
         name='CSV 접근', 
-        effect_type="Sdamage", 
+        effect_type="damage", 
         type="DS",
         skW=50,
         priority=1, 
         description="CSV 파일에 접근하여 상대의 구조를 파헤친다."),
     '나는야 시간표 브레이커': Monster.Skill(
         name='나는야 시간표 브레이커', 
-        effect_type="Sdamage", 
+        effect_type="damage", 
         type="DS",
         skW=30,
         priority=1, 
@@ -182,14 +182,14 @@ cs204 = Monster(
 cs204.skills = {
     'Modus Ponens': Monster.Skill(
         name='Modus Ponens', 
-        effect_type="Sdamage",
+        effect_type="damage",
         type="DS",
         skW=40,
         priority=-1, 
         description="만약 내가 나중에 공격한다면, 공격은 명중한다. 반드시 나중에 공격한다. 반드시 명중한다."),
     '삼단논법': Monster.Skill(
         name='삼단논법', 
-        effect_type="Pdamage",
+        effect_type="damage",
         type="CT",
         skW=60, 
         priority=0,
@@ -221,7 +221,7 @@ cs206 = Monster(
 cs206.skills = {
     ''''StackOverflow': Monster.Skill(
         name='StackOverflow', 
-        effect_type="Sdamage",
+        effect_type="damage",
         type="CT",
         skW=100,
         priority=1,
@@ -240,7 +240,7 @@ cs206.skills = {
 '''
     '트리 파괴': Monster.Skill(
         name='트리 파괴', 
-        effect_type="Sdamage",
+        effect_type="damage",
         type="DS",
         skW=50,
         priority=1,
@@ -265,21 +265,21 @@ cs230 = Monster(
 cs230.skills = {
     'BufferOverflow': Monster.Skill(
         name='BufferOverflow', 
-        effect_type="Sdamage",
+        effect_type="damage",
         type="SYS",
         skW=100,
         priority=1,
         description="버퍼 오버플로우를 일으켜 공격한다."),
     '페이지 폴트': Monster.Skill(
         name='페이지 폴트', 
-        effect_type="Sdamage", 
+        effect_type="damage", 
         type="PS",
         skW=70,
         priority=2,
         description="상대가 사용중인 페이지를 페이징 파일로 옮겨버린다."),
     'Disassemble': Monster.Skill(
         name='Disassemble', 
-        effect_type="Sdamage", 
+        effect_type="damage", 
         type="PS",
         skW=50,
         priority=1,
@@ -310,14 +310,14 @@ cs330.skills = {
         description="내 아까운 메모리...해결했다."),
     '과제': Monster.Skill(
         name='과제', 
-        effect_type="Sdamage", 
+        effect_type="damage", 
         type="PS",
         skW=130,
         priority=1,
         description="과제가 나왔다. 큰일났다;; 명중률이 낮다."),
     '커널 패닉': Monster.Skill(
         name='커널 패닉', 
-        effect_type="Sdamage", 
+        effect_type="damage", 
         type="PS",
         skW=70,
         priority=2,
@@ -348,7 +348,7 @@ cs300.skills = {
         description="빠르게 정렬해 방어를 크게 올린다."),
     '빅O': Monster.Skill(
         name='빅O', 
-        effect_type="Pdamage",
+        effect_type="damage",
         type="CT",
         skW=60, 
         priority=2,
@@ -387,7 +387,7 @@ cs311.skills = {
         description="CPU 파이프라인을 최적화해 방어력과 속도를 상승시킨다"),
     'MultiThread': Monster.Skill(
         name='MultiThread', 
-        effect_type="Pdamage",
+        effect_type="damage",
         type="CT",
         skW=70, 
         priority=2,
@@ -412,7 +412,7 @@ cs320 = Monster(
 cs320.skills = {
     'PPAP': Monster.Skill(
         name='PPAP', 
-        effect_type="Pdamage",
+        effect_type="damage",
         type="CT",
         skW=60,
         priority=2,
@@ -452,7 +452,7 @@ cs341 = Monster(
 cs341.skills = {
     'DDoS': Monster.Skill(
         name='DDOS', 
-        effect_type="Pdamage", 
+        effect_type="damage", 
         type="SYS", 
         skW=70, 
         description="다수의 공격을 여러 차례 퍼부어 데미지를 높인다."),
@@ -468,7 +468,7 @@ cs360 = Monster(
 cs360.skills = {
     'SQL Injection': Monster.Skill(
         name='SQL Injection',
-        effect_type="Pdamage",
+        effect_type="damage",
         type="DS",
         skW=85,
         description="데이터베이스에 강력한 공격을 가한다."
@@ -501,7 +501,7 @@ cs202 = Monster(
 cs202.skills = {
     'Dynamic Programming': Monster.Skill(
         name='Dynamic Programming',
-        effect_type="Pdamage",
+        effect_type="damage",
         type="PS",
         skW=70, 
         description="동적 할당 기법으로 공격을 최적화시킨다."),
@@ -524,13 +524,13 @@ cs371 = Monster(
 cs371.skills = {
     'Backpropagation': Monster.Skill(
         name='Backpropagation', 
-        effect_type="Pdamage",
+        effect_type="damage",
         type="AI",
         skW=70,
         description="지속적으로 학습하며 강력한 공격을 가한다."),
     'Overfitting': Monster.Skill(
         name='Overfitting',
-        effect_type="Pdamage",
+        effect_type="damage",
         type="AI",
         skW=100,
         description="한 차례 강력한 공격을 가하지만 이후 가하는 공격이 크게 약해진다."), 
@@ -548,7 +548,7 @@ cs376 = Monster(
 cs376.skills = {
     'Gradient descent': Monster.Skill(
         name='Gradient descent',
-        effect_type="Pdamage",
+        effect_type="damage",
         type="AI",
         skW=70,
         description="경사하강법으로 최적의 공격을 찾아낸다."),
@@ -571,13 +571,13 @@ cs220 = Monster(
 cs220.skills = {
     '이해의 공격': Monster.Skill(
         name='이해의 공격', 
-        effect_type="Pdamage",
+        effect_type="damage",
         type="PS",
         skW=70,
         description="이해한다."),
     'F#': Monster.Skill(
         name='F#', 
-        effect_type="Pdamage",
+        effect_type="damage",
         type="PS",
         skW=70,
         description="F#으로 공격한다."),
@@ -596,13 +596,13 @@ coop = Monster(
 coop.skills = {
     '업무 공격': Monster.Skill(
         name='업무 공격',
-        effect_type="Pdamage",
+        effect_type="damage",
         type="*",
         skW=30,
         description="과다한 업무를 투척해 공격한다."),
     '개발의 지옥': Monster.Skill(
         name='개발의 지옥',
-        effect_type="Pdamage",
+        effect_type="damage",
         type="*",
         skW=30,
         description="상대를 개발 지옥에 빠뜨려 공격한다."),
@@ -632,13 +632,13 @@ study = Monster(
 study.skills = {
     '논문 공격': Monster.Skill(
         name='논문 공격', 
-        effect_type="Pdamage",
+        effect_type="damage",
         type="*",
         skW=30,
         description="논문으로 공격한다."),
     '랩미팅': Monster.Skill(
         name='랩미팅', 
-        effect_type="Pdamage",
+        effect_type="damage",
         type="*",
         skW=30,
         description="랩미팅으로 공격한다."),
