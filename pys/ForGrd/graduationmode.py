@@ -1509,7 +1509,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
             # 몬스터 생성
             if monster_name in monsters:
                 enemy_monster = copy.deepcopy(monsters[monster_name])
-                enemy_monster.level = random.randint(monsters[monster_name].level-(1*player.level//10), monsters[monster_name].level+2*(player.level//10)) - mol_lev
+                enemy_monster.level = random.randint(monsters[monster_name].level-(1*player.level//10), monsters[monster_name].level+2*(player.level//10))
                 enemy_monster.update_fullreset()
             else:
                 # 기본 몬스터 생성
