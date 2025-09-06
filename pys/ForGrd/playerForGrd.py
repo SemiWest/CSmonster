@@ -259,6 +259,7 @@ class Player:
         self.Rank = [0]*3
         self.mylevelup = 0
         self.skilllevelup = [False, False, False, False, False, False]  # CT, DS, SYS, PS, AI
+        self.tutorial = [True, True]
         
         # PNR 시스템
         self.pnr_available = True
@@ -304,7 +305,7 @@ class Player:
         
         # 아이템 인벤토리
         self.items = [
-            copy.deepcopy(Noneitem), 
+            copy.deepcopy(Google), 
             copy.deepcopy(Noneitem), 
             copy.deepcopy(Noneitem), 
             copy.deepcopy(Noneitem), 

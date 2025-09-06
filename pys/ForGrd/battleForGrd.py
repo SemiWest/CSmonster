@@ -625,9 +625,7 @@ def select_action(screen):
     display_status(screen, detail=True)
     
     # 기본 옵션들
-    options = ["스킬 사용", "아이템 사용", "도망가기"]
-    if player.current_semester == "새터":
-        options = ["스킬 사용"]
+    options = ["스킬 사용", "아이템 사용", "드랍하기"]
     
     # PNR 버튼 추가 (조건부)
     if player.can_use_pnr():
@@ -722,11 +720,11 @@ def select_player_skill(screen):
                 
                 display_type(screen, infoY, infoX, skill['type'])
                 screen.blit(SKILL, (infoX+160, infoY))
-                draw_text(screen, "타입", infoText - 25, infoY+30, WHITE)
-                draw_text(screen, f"{type_dict[skill['type']]}", infoText+344, infoY+24, typecolor_dict[skill['type']], align='right')
-                
-                draw_text(screen, "위력", infoText - 25, infoY+70, WHITE)
-                draw_text(screen,f"{skill['skW']}", infoText+344, infoY+64, WHITE, align='right')
+                draw_text(screen, "위력", infoText - 25, infoY+30, WHITE)
+                draw_text(screen,f"{skill['skW']}", infoText+376, infoY+30, WHITE, align='right')
+                if skill['beDescip']:
+                    draw_text(screen, "부가효과", infoText - 25, infoY+70, WHITE)
+                    draw_text(screen, f"{skill['beDescip']}", infoText+376, infoY+70, WHITE, align='right')
                 draw_wrapped_text(
                     screen,
                     skill['description'],
@@ -734,7 +732,7 @@ def select_player_skill(screen):
                     infoY + 115,
                     WHITE,
                     font_size=16,
-                    max_width= 344 # 원하는 최대 너비 지정
+                    max_width= 376 # 원하는 최대 너비 지정
                 )
         if i < 3:
             for j in range(i+1, 4):
@@ -1128,10 +1126,18 @@ def enemy_attack_phase(screen, selected_skill, enemy_skill):
     wait_for_key(False)
 
     # 스킬 효과 적용
-    display_status(screen, True)
     stop, damage, Mul = use_skill("monster", player, enemyCSmon, selected_skill, enemy_skill, screen)
-    skill_message(screen, "monster", player, enemyCSmon, selected_skill, enemy_skill, damage, Mul)
-
+    if isinstance(Mul, tuple):
+        skill_message(screen, "monster", player, enemyCSmon, selected_skill, enemy_skill, damage, Mul[0])
+        bonusskilldict = {
+            "name": enemy_skill.name,
+            "type": enemy_skill.skill_type,
+            "effect_type": enemy_skill.bonus_effect[0],
+            "skW": enemy_skill.bonus_effect[1] if not isinstance(enemy_skill.bonus_effect[1], str) else enemy_skill.bonus_effect[2]
+        }
+        skill_message(screen, "monster", player, enemyCSmon, selected_skill, bonusskilldict, None, Mul[0])
+    else: skill_message(screen, "monster", player, enemyCSmon, selected_skill, enemy_skill, damage, Mul)
+    option_select_sound()
     return stop
 
 def comp(atskilltype, tgtype):
@@ -1221,6 +1227,7 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         playerskill_dict = None
     else:
         playerskill_dict = {
+            "name": playerskill["name"],
             "type": playerskill["type"],
             "effect_type": playerskill["effect_type"],
             "skW": playerskill["skW"],
@@ -1230,6 +1237,7 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         monsterskill_dict = None
     else:
         monsterskill_dict = {
+            "name": monsterskill.name,
             "type": monsterskill.skill_type,
             "effect_type": monsterskill.effect_type,
             "skW": monsterskill.skW,
@@ -1786,12 +1794,14 @@ def battle(getplayer, getenemy, screen=None):
 
         if player.current_semester == "새터":
             display_status(screen, detail=True)
-            draw_text(screen, f"* 스킬을 사용해 적을 쓰러뜨리자!", stX, stY, WHITE)
+            draw_text(screen, f"* 스킬과 아이템을 사용해 적을 쓰러뜨리자!", stX, stY, WHITE)
             pygame.display.flip()
             wait_for_key()
-        if player.current_semester ==  "1-1":
+        
+        if player.current_semester == "1-1":
             display_status(screen, detail=True)
-            draw_text(screen, f"* 스킬과 아이템을 적절히 활용해 휼륭한 성적으로 졸업해보자!", stX, stY, WHITE)
+            draw_text(screen, f"* 1-1과 1-2에는 각각 한 번 pnr을 사용할 수 있다.", stX, stY, WHITE)
+            draw_text(screen, f"* 상대 체력을 많이 깎아 놓을수록 성공률이 높아진다.", stX, stY + 40, WHITE)
             pygame.display.flip()
             wait_for_key()
 
@@ -1925,8 +1935,6 @@ def battle(getplayer, getenemy, screen=None):
                         return "실패"
                            
         while not battle_end:
-            if enemyCSmon.special:
-                player.update_fullreset()
             if enemyCSmon.Num == 777:     # 몰캠
                 if do_event:
                     lup_amt = molcamp_quiz(screen)
@@ -1961,10 +1969,30 @@ def battle(getplayer, getenemy, screen=None):
                     battle_end = True
                     return "승리"
                 elif action == 0:  # 스킬 사용
+                    if player.current_semester == "새터" and player.tutorial[0]==False and player.tutorial[1]==True:
+                        display_status(screen, detail=True)
+                        draw_text(screen, f"* 아이템을 사용해보자!", stX, stY, WHITE)
+                        pygame.display.flip()
+                        wait_for_key()
+                        continue
+                    if player.tutorial[0]:
+                        display_status(screen, detail=True)
+                        draw_text(screen, f"* 위력이 높고 효과가 뛰어난 스킬을 사용하자.", stX, stY, WHITE)
+                        draw_text(screen, f"* 경우에 따라 부가 효과가 붙어 있는 스킬도 있다!", stX, stY+40, WHITE)
+                        pygame.display.flip()
+                        wait_for_key()
                     esc = skill_phase(screen)
                     if esc == -1:
                         continue
+                    player.tutorial[0] = False
                 elif action == 1:  # 아이템 사용
+                    if player.tutorial[1]:
+                        display_status(screen, detail=True)
+                        draw_text(screen, f"* 아이템을 사용해 체력을 회복하거나 적에게 피해를 줄 수 있다.", stX, stY, WHITE)
+                        draw_text(screen, f"* 버프/디버프 아이템도 존재하니 상황에 맞게 사용하자!", stX, stY+40, WHITE)
+                        pygame.display.flip()
+                        wait_for_key()
+                        display_status(screen, detail=True)
                     if not any(i.name != "빈 슬롯" for i in player.items):
                         display_status(screen, detail=True)
                         draw_text(screen, f"  아이템이 없다!", stX, stY, WHITE)
@@ -1975,7 +2003,14 @@ def battle(getplayer, getenemy, screen=None):
                         esc = item_phase(screen)
                         if esc == -1:
                             continue
+                        player.tutorial[1] = False
                 elif action == 2:  # 드랍
+                    if player.current_semester == "새터":
+                        display_status(screen, detail=True)
+                        draw_text(screen, f"* 이미 학인시를 치고 있어 드랍할 수 없다!", stX, stY, WHITE)
+                        pygame.display.flip()
+                        wait_for_key()
+                        continue
                     display_status(screen, detail=True)
                     draw_text(screen, f"  과목을 드랍했다!", stX, stY, WHITE)
                     pygame.display.flip()
@@ -1983,8 +2018,7 @@ def battle(getplayer, getenemy, screen=None):
                     return "드랍"
                 elif action == 3 and player.can_use_pnr():  # PNR 사용
                     player.pnr_used = True
-                
-                    
+
                     # 몬스터의 현재 HP와 최대 HP를 가져옵니다.
                     enemy_current_hp = getattr(enemyCSmon, 'nowhp', getattr(enemyCSmon, 'HP', 100))
                     enemy_max_hp = getattr(enemyCSmon, 'HP', 100)
