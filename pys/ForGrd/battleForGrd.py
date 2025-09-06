@@ -76,6 +76,7 @@ for i in range(len(HEAL)):
 
 BACKGROUND = pygame.transform.scale_by(BACKGROUND, 11)
 TEXT = pygame.transform.scale_by(TEXT, 5)
+SPEC_TEXT = pygame.transform.scale_by(SPEC_TEXT, 5)
 SKILL = pygame.transform.scale_by(SKILL, 4)
 ME = pygame.transform.scale_by(ME, 10)
 CT = pygame.transform.scale_by(CT, 4)
@@ -1225,30 +1226,32 @@ def get_best_enemy_skill(enemy, player):
         return enemy_skills[selected_skill_name]
 
 def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
-    # return: (stop, damage, Mul), stop: 상대 턴 실행할지 여부, damage: 입힌 데미지 실패는 -121, Mul: 상성 배율, 보너스 효과 있으면 튜플로
-        
     # --- 1. 초기 설정: 변수 준비 ---
     if playerskill is None:
         playerskill_dict = None
     else:
         playerskill_dict = {
-            "name": playerskill["name"],
             "type": playerskill["type"],
             "effect_type": playerskill["effect_type"],
             "skW": playerskill["skW"],
-            "animation": playerskill["animation"]
+            "animation": playerskill["animation"],
+            "bonus_effect": playerskill.get("bonus_effect", None)
         }
     if monsterskill is None:
         monsterskill_dict = None
     else:
         monsterskill_dict = {
-            "name": monsterskill.name,
             "type": monsterskill.skill_type,
             "effect_type": monsterskill.effect_type,
             "skW": monsterskill.skW,
-            "animation": monsterskill.animation
+            "animation": monsterskill.animation,
+            "bonus_effect": getattr(monsterskill, "bonus_effect", None)
         }
-
+        if isinstance(monsterskill.skW, str):
+            if monsterskill.skW == "DEF":
+                monsterskill_dict["skW"] = 10+40*(max(1, monster.Rank[1]))
+            elif monsterskill.skW == "SPD":
+                monsterskill_dict["skW"] = 10+50*(max(1, monster.Rank[2]))
     if attackerType == "monster":
         user, target, skill, counter_skill = monster, player, monsterskill_dict, playerskill_dict
     else:  # player
@@ -1258,13 +1261,8 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
     if not skill:
         return False, 0, False
     
-    if isinstance(skill["skW"], str):
-        if skill["skW"] == "DEF":
-            skill["skW"] = 10+40*(max(1, target.Rank[1]))
-        elif skill["skW"] == "SPD":
-            skill["skW"] = 10+50*(max(1, target.Rank[2]))
-    
     effect = skill["effect_type"]
+    print(effect)
     print(f"반사 성공률: {getattr(user, 'reflect_success_rate', 1.0)}")  # 디버그 출력
     if effect == "reflect":
         print(f"반사 스킬 사용: {skill['name']} (skW={skill['skW']})")  # 디버그 출력
@@ -1326,7 +1324,7 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         damage = 0
         Mul = 1
 
-        if effect in ["damage"]:
+        if effect=="damage":
             damage, Mul = Damage(target, user, skill)
             if not (attackerType == "monster" and is_invulnerable(target)):
                 new_hp = max(0, int(old_hp - damage))
@@ -1337,11 +1335,33 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
                 new_hp = old_hp - damage
         
         # 애니메이션을 먼저 재생
-        play_damage_sequence(screen, skill, user, target, old_hp, new_hp)
+        play_damage_sequence(screen, skill, user, target, old_hp, new_hp, Mul)
         
         # 애니메이션 종료 후 실제 데이터 반영
         target.nowhp = new_hp
-        
+
+        if skill["bonus_effect"] != None:
+            if skill["bonus_effect"][0] == "buff":
+                if isinstance(skill["bonus_effect"][1], tuple):
+                    for B in skill["bonus_effect"][1]:
+                        user.Rank[B % 3] = max(-6, min(6, user.Rank[B % 3] + B // 3 + 1))
+                else:
+                    user.Rank[skill["bonus_effect"][1] % 3] = max(-6, min(6, user.Rank[skill["bonus_effect"][1] % 3] + skill["bonus_effect"][1] // 3 + 1))
+                
+                user.update_battle()
+            elif skill["bonus_effect"][0] == "heal":
+                if skill["bonus_effect"][1] =="absorb":
+                    heal_amount = int(damage * skill["bonus_effect"][2])
+                else:
+                    heal_amount = int(skill["bonus_effect"][1] * user.HP)
+                new_user_hp = min(user.HP, user.nowhp + heal_amount)
+
+                healAnimation("player" if attackerType == "player" else "enemy")
+                animate_health_bar(screen, psY + 121 if attackerType == "player" else esY+121, psX+122 if attackerType == "player" else esX+122, user.nowhp, new_user_hp, user.HP)
+                user.nowhp = new_user_hp
+            
+            return False, damage, (Mul, skill["bonus_effect"])
+
         return False, damage, Mul
 
     # B. 회복 스킬 (Heal)
@@ -1350,12 +1370,11 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
         heal_amount = int(skill["skW"] * user.HP)
         new_hp = min(user.HP, old_hp + heal_amount)
         
-        Heal() # 회복 사운드 재생
-        healAnimation(attackerType)
-        animate_health_bar(screen, (psY+121 if attackerType=="player" else esY+121), (psX+122 if attackerType=="player" else esX+122), old_hp, new_hp, user.HP)
-        
+        healAnimation("player" if attackerType == "player" else "enemy")
+        animate_health_bar(screen, psY + 121 if attackerType == "player" else esY+121, psX+122 if attackerType == "player" else esX+122, old_hp, new_hp, user.HP)
         user.nowhp = new_hp
         return False, 0, False
+
 
     # C. 버프/디버프 스킬 (Buff)
     elif effect == "buff":
