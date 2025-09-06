@@ -43,7 +43,7 @@ GPACOLOR = {
 PLAYER_SKILLS = {
     "*": [
         {"name": "타자치기",           
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 25,  
          "type": "*",  
          "description": "한글은 100타, 영어는 독수리타법",  
@@ -51,7 +51,7 @@ PLAYER_SKILLS = {
          "priority": 0,  
          "animation": "none"},
         {"name": "파이썬",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 35,  
          "type": "*",  
          "description": "프밍기를 수강한 당신, 이제 파이썬을 다룰 줄 안다",  
@@ -61,7 +61,7 @@ PLAYER_SKILLS = {
     ],
     "PS": [
         {"name": "논리왕",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 45,  
          "type": "PS",  
          "description": "상대를 논리로 누른다. 공격력이 1랭크 오른다.",  
@@ -70,7 +70,7 @@ PLAYER_SKILLS = {
          "animation": "none",  
          "bonus_effect": ["buff", 0]},
         {"name": "Master Theorem",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 55,  
          "type": "PS",  
          "description": "상대의 복잡도를 분석한다. 공격력이 2랭크 오른다.",  
@@ -79,7 +79,7 @@ PLAYER_SKILLS = {
          "animation": "none",  
          "bonus_effect": ["buff", 3]},
         {"name": "P/NP",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 75,  
          "type": "PS",  
          "description": "P/NP문제를 해결해 수학계의 역사에 남는다. 공격력이 3랭크 오른다.",  
@@ -90,7 +90,7 @@ PLAYER_SKILLS = {
     ],
     "CT": [
         {"name": "논증",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 40,  
          "type": "CT",  
          "description": "상대의 약함을 논리적으로 증명한다.",  
@@ -98,7 +98,7 @@ PLAYER_SKILLS = {
          "priority": 0,  
          "animation": "none"},
         {"name": "비트 연산",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 50,  
          "type": "CT",  
          "description": "비트 연산으로 상대를 공격한다. 스피드가 1랭크 오른다.",  
@@ -107,7 +107,7 @@ PLAYER_SKILLS = {
          "animation": "none",
          "bonus_effect": ["buff", 2]},
         {"name": "RUST",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 65,  
          "type": "CT",  
          "description": "순수 함수로 상대를 공격한다. 스피드가 2랭크 오른다.",  
@@ -116,7 +116,7 @@ PLAYER_SKILLS = {
          "animation": "none",
          "bonus_effect": ["buff", 5]},
         {"name": "팬파인애플애플팬",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 80,  
          "type": "CT",  
          "description": "학부장님에게 도움을 청한다. 스피드가 최대로 오른다.",  
@@ -127,7 +127,7 @@ PLAYER_SKILLS = {
     ],
     "SYS": [
         {"name": "스택오버플로우",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 45,  
          "type": "SYS",  
          "description": "스택오버플로우를 유발해 과부화시킨다. 가한 피해량의 1/4을 회복한다.",  
@@ -136,7 +136,7 @@ PLAYER_SKILLS = {
          "animation": "none",  
          "bonus_effect": ["heal", "absorb", 0.25]},
         {"name": "CTRL^C",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 50,  
          "type": "SYS",  
          "description": "상대 쉘을 다운시킨다. 가한 피해량의 절반을 회복한다.",  
@@ -145,7 +145,7 @@ PLAYER_SKILLS = {
          "animation": "none",  
          "bonus_effect": ["heal", "absorb", 0.5]},
         {"name": "디도스",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 60,  
          "type": "SYS",  
          "description": "상대에게 무한한 공격 요청을 보내 다운시킨다. 가한 피해량의 절반을 회복한다.",  
@@ -154,7 +154,7 @@ PLAYER_SKILLS = {
          "animation": "none",  
          "bonus_effect": ["heal", "absorb", 0.5]},
         {"name": "핀토스",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 75,  
          "type": "SYS",  
          "description": "핀토스를 끝낸 자, 어떤 과제가 와도 이겨낸다. 가한 피해량만큼 회복한다.",  
@@ -165,7 +165,7 @@ PLAYER_SKILLS = {
     ],
     "DS": [
         {"name": "OOP",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 45,  
          "type": "DS",  
          "description": "상대를 객체화시켜 취약점을 노린다. 방어력도 1랭크 오른다.",  
@@ -174,7 +174,7 @@ PLAYER_SKILLS = {
          "animation": "none",  
          "bonus_effect": ["buff", 1]},
         {"name": "SQL 인젝션",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 70,  
          "type": "DS",  
          "description": "SQL 인젝션 공격을 가한다. 방어력도 2랭크 오른다.",  
@@ -185,7 +185,7 @@ PLAYER_SKILLS = {
     ],
     "AI": [
         {"name": "오버피팅",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 70,  
          "type": "AI",  
          "description": "상대를 과적합 학습해 완벽하게 공격한다",  
@@ -193,7 +193,7 @@ PLAYER_SKILLS = {
          "priority": 2,  
          "animation": "none"},
         {"name": "샘 올트먼",  
-         "effect_type": "Sdamage",  
+         "effect_type": "damage",  
          "skW": 80,  
          "type": "AI",  
          "description": "상대에게 특화된 GPT를 만든다",  
@@ -259,6 +259,7 @@ class Player:
         self.Rank = [0]*3
         self.mylevelup = 0
         self.skilllevelup = [False, False, False, False, False, False]  # CT, DS, SYS, PS, AI
+        self.tutorial = [True, True]
         
         # PNR 시스템
         self.pnr_available = True
@@ -304,7 +305,7 @@ class Player:
         
         # 아이템 인벤토리
         self.items = [
-            copy.deepcopy(Noneitem), 
+            copy.deepcopy(Google), 
             copy.deepcopy(Noneitem), 
             copy.deepcopy(Noneitem), 
             copy.deepcopy(Noneitem), 
@@ -320,6 +321,8 @@ class Player:
         # 몰캠용
         self.molcam = None      # None / 0 / 1 / 2 / 3
         self.event_success = False  # 코옵 / 개별 True / False (성공하면 true)
+
+        self.reflect_success_rate = 1.0
 
     
     def playertype(self):
