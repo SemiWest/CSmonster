@@ -434,7 +434,7 @@ cs320.skills = {
         description="함수형 프로그래밍이 나를 거부한다. "),
     '타입 에러': Monster.Skill(
        name='타입 에러', 
-       effect_type="Sdamage",
+       effect_type="damage",
        type="CT",
        skW=80, 
        priority=0,
@@ -458,7 +458,7 @@ cs341.skills = {
         description="다수의 공격을 여러 차례 퍼부어 데미지를 높인다."),
     'ARP 스푸핑': Monster.Skill(
         name='ARP 스푸핑',
-        effect_type="Sdamage",
+        effect_type="damage",
         type="SYS",
         skW=50,
         description="상대의 구조를 파헤쳐 공격한다."),
@@ -508,7 +508,7 @@ cs360.skills = {
     ),
     '조인': Monster.Skill(
         name='조인',
-        effect_type="Sdamage",
+        effect_type="damage",
         type="DS",
         skW=60,
         description="두 개 이상의 테이블을 조인하여 공격한다."
@@ -538,7 +538,7 @@ cs202.skills = {
         description="그리디 알고리즘을 사용해 공격력을 크게 높인다."),
     '분할정복': Monster.Skill(
         name='분할정복',
-        effect_type="Sdamage",
+        effect_type="damage",
         type="PS",
         skW=80,
         description="분할 정복 기법으로 상대의 구조를 파헤친다."),
@@ -579,7 +579,7 @@ cs371.skills = {
         description="드롭아웃 기법으로 공격력을 크게 올리고 대신 속도와 방어력을 낮춘다."),
     '컨볼루션': Monster.Skill(
         name='컨볼루션',
-        effect_type="Sdamage",
+        effect_type="damage",
         type="CT", 
         skW=80,
         priority=1,
@@ -615,7 +615,7 @@ cs376.skills = {
         description="서포트 벡터 머신으로 공격한다."),
     'K-평균 군집화': Monster.Skill(
         name='K-평균 군집화',
-        effect_type="Sdamage",
+        effect_type="damage",
         type="CT",
         skW=70,
         description="K-평균 군집화로 상대의 구조를 파헤친다."
