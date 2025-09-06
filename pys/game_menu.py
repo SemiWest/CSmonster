@@ -44,7 +44,7 @@ def get_leaderboard_from_notion_all():
     반환: [{'날짜':..., 'name':..., 'gpa':..., 'level':..., ...}, ...]
     """
     if not all([NOTION_TOKEN, DATABASE_ID]):
-        print("Debug: [Warning!] Notion 토큰 또는 DB ID가 설정되지 않았습니다.")
+        logger.debug("Debug: [Warning!] Notion 토큰 또는 DB ID가 설정되지 않았습니다.")
         return []
 
     url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
@@ -105,7 +105,7 @@ def get_leaderboard_from_notion_all():
         return results_all
 
     except requests.exceptions.RequestException as e:
-        print(f"Debug: 조회 오류: Notion API 조회 실패 - {e}")
+        logger.error(f"Debug: 조회 오류: Notion API 조회 실패 - {e}")
         return []
 
 def init_pygame_screen():

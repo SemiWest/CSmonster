@@ -1235,11 +1235,6 @@ def show_final_result(player, screen):
 
     # 2. 딘즈 리스트 화면 표시 (계산된 통계 정보 전달)
     show_deans_list(player, screen, leaderboard, stats)
-    screen.fill(WHITE)
-    draw_text(screen, "저장중..", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
-    pygame.display.flip()
-    
-    # 3. 딘즈 리스트 화면 이미지 저장 (QR/업로드 없이 로컬에만 임시 저장)
     deans_list_path = save_cropped_and_return_path(
         screen,
         player.name,
@@ -1247,6 +1242,11 @@ def show_final_result(player, screen):
         out_dir="results/screenshots/temp_images",
         prefix="deans_list"
     )
+    screen.fill(WHITE)
+    draw_text(screen, "저장중..", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
+    
+    # 3. 딘즈 리스트 화면 이미지 저장 (QR/업로드 없이 로컬에만 임시 저장)
     screen.fill(WHITE)
     draw_text(screen, "저장중...", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
     pygame.display.flip()

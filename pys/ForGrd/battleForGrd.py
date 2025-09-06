@@ -1153,6 +1153,7 @@ def Damage(target, attacker, skilldict):
     basedmg = ((2*attacker.level + 10)/250) * attacker.CATK / max(1, target.CDEF)  # ✅ max(1, ...)
     multiplier = comp(skilldict["type"], target.type[0])
     Jasok = 1.5 if attacker.type[0] == skilldict["type"] else 1.0
+    logger.debug("DEBUG Damage:", skilldict)
     return int(multiplier * (basedmg*skilldict["skW"] + 2) * Jasok * random.uniform(0.85, 1.00)), multiplier
 
 def get_best_enemy_skill(enemy, player):
@@ -1253,6 +1254,12 @@ def use_skill(attackerType, player, monster, playerskill, monsterskill, screen):
     # 스킬이 없는 경우(버그 방지)
     if not skill:
         return False, 0, False
+    
+    if isinstance(skill["skW"], str):
+        if skill["skW"] == "DEF":
+            skill["skW"] = 10+40*(max(1, target.Rank[1]))
+        elif skill["skW"] == "SPD":
+            skill["skW"] = 10+50*(max(1, target.Rank[2]))
     
     effect = skill["effect_type"]
     print(f"반사 성공률: {getattr(user, 'reflect_success_rate', 1.0)}")  # 디버그 출력

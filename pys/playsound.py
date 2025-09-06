@@ -49,6 +49,7 @@ EVENTC = (255, 255, 15)
 STARC = (100, 100, 100)
 DARKGRAY = (64, 64, 64)
 
+
 def change_options(BGM, BGMV, ES, ESV, eChannel, mChannel, eChannelAlt):
     """효과음 옵션 변경"""
     global musicOnOff, musicVolume, effectsound, ESVolume, effect_channel, music_channel, effect_channel_alt
@@ -105,7 +106,7 @@ def play_single_music(file_path):
             pygame.mixer.music.load(file_path)
             pygame.mixer.music.play(-1)  # 무한 반복 재생
         except Exception as e:
-            print(f"음악 재생 중 오류 발생: {e}")
+            logger.error(f"음악 재생 중 오류 발생: {e}")
     
     music_thread = threading.Thread(target=music_loop, daemon=True)
     music_thread.start()
