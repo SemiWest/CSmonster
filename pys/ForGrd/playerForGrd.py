@@ -366,7 +366,7 @@ class Player:
         self.DEF = int((self.D * 2 + 16) * (self.level / 100)) + 5
         self.SPD = int((self.SP * 2 + 16) * (self.level / 100)) + 5
         
-        self.max_exp = int((self.level ** 3))  # 경험치 필요량
+        self.max_exp = int((self.level ** 3 * 1.25))  # 경험치 필요량
         self.Rank = [0]*3  # 버프/디버프 랭크 초기화
 
         self.update_battle()

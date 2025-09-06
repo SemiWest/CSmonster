@@ -19,7 +19,7 @@ TYPE_EFFECTIVENESS = {
 }
 
 typecolor_dict = {
-    "AI" : (189, 215, 238),
+    "AI" : (208, 142, 255),
     "SYS" : (57, 36, 214),
     "PS" : (152, 235, 96),
     "DS" : (252, 98, 4),
@@ -229,16 +229,16 @@ cs206.skills = {
         name='FIFO', 
         effect_type="reflect", 
         type="DS",
-        skW=0.5,
+        skW=1,
         priority=4, 
-        description="큐를 U자로 만들어 상대를 향하게 한다. 상대의 공격을 절반의 피해로 상대에게 출력한다."),
+        description="큐를 U자로 만들어 상대를 향하게 한다. 상대의 공격을 상대에게 출력한다."),
     '트리 파괴': Monster.Skill(
         name='트리 파괴', 
         effect_type="Sdamage",
         type="DS",
         skW=50,
         priority=1,
-        description="거대한 트리를 상대에게 쓰러뜨린다. 반드시 명중한다."),
+        description="거대한 트리를 상대에게 쓰러뜨린다. 반드시 선제공격한다."),
     'HashMap': Monster.Skill(
         name='HashMap', 
         effect_type="buff",
@@ -282,14 +282,14 @@ cs230.skills = {
         name='셀프 디버그', 
         effect_type="heal", 
         type="SYS",
-        skW=0.5,
+        skW=0.25,
         priority=0,
         description="자기 자신을 디버깅해 에러를 고친다. 체력을 최대 체력의 절반만큼 회복한다."),
 }
 
 # OS	시 넽	거북왕
 cs330 = Monster(
-    Num = 330, name="운영체제 및 실험", credit = 4, level = 13,
+    Num = 330, name="운영체제 및 실험", credit = 4, level = 16,
     HP =79, ATK = 119, DEF = 117, SPD = 78, 
     type = ["SYS"], SeonSu=[],
     image="../img/monsters/OS.png",  
@@ -365,7 +365,7 @@ cs300.skills = {
 
 # 아키	시 넽	꼬부기
 cs311 = Monster(
-    Num = 311, name="전산기조직", credit = 3, level = 11,
+    Num = 311, name="전산기조직", credit = 3, level = 13,
     HP = 79, ATK = 84, DEF = 103, SPD = 78, 
     type=["SYS"], SeonSu=[330],
     image="../img/monsters/전산기조직.png",
@@ -404,7 +404,7 @@ cs311.skills = {
 
 # PL	전산이론	메타몽
 cs320 = Monster(
-    Num = 320, name="프로그래밍 언어", credit = 3, level = 13,
+    Num = 320, name="프로그래밍 언어", credit = 3, level = 15,
     HP = 85, ATK = 85, DEF = 85, SPD = 85, 
     type=["CT"], SeonSu=[220],
     image="../img/monsters/프로그래밍언어.png",
@@ -443,7 +443,7 @@ cs320.skills = {
 
 # 네떡	시 넽	잠만보
 cs341 = Monster(
-    Num = 341, name="전산망개론", credit = 3, level = 13,
+    Num = 341, name="전산망개론", credit = 3, level = 14,
     HP = 160, ATK = 87, DEF = 87, SPD = 30, 
     type=["SYS"], SeonSu=[],
     image="../img/monsters/전산망개론.png",
@@ -478,7 +478,7 @@ cs341.skills = {
 
 # 디비개	데이터 과학	리자몽
 cs360 = Monster(
-    Num = 360, name="데이타베이스 개론", credit = 3, level = 10,
+    Num = 360, name="데이타베이스 개론", credit = 3, level = 8,
     HP = 78, ATK = 96, DEF = 81, SPD = 100, 
     type=["DS"], SeonSu=[],
     image="../img/monsters/데이터베이스개론.png",

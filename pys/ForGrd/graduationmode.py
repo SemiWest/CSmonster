@@ -818,7 +818,10 @@ def semester_intro_screen(player, screen):
         # 수강신청
         options = player.canBeMetMonsters.copy()
         selected = 0
-        text = "수강할 과목을 선택하세요. \n 최대 두 개의 과목을 선택할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
+        if player.current_semester == "1-1":
+            text = "수강할 과목을 선택하세요. \n 1-1학기에는 한 개의 과목만 선택할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
+        else:
+            text = "수강할 과목을 선택하세요. \n 최대 두 개의 과목을 선택할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
         alartColor = WHITE
         while True:
             screen.fill(BLACK)
@@ -903,7 +906,10 @@ def semester_intro_screen(player, screen):
                 text = "수강할 과목 선택이 완료되었다면 오른쪽 방향키를 입력해주세요."
                 alartColor = GREEN
             else: 
-                text = "수강할 과목을 선택하세요. \n 최대 세 개의 과목을 선택할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
+                if player.current_semester == "1-1":
+                    text = "수강할 과목을 선택하세요. \n 1-1학기에는 한 과목만 수강할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
+                else:
+                    text = "수강할 과목을 선택하세요. \n 최대 두 개의 과목을 선택할 수 있습니다. \n (선택: Enter / 초기화: Esc / 확정: -> / 조작: 방향키)"
                 alartColor = WHITE
 
     screen.fill(WHITE)
@@ -1114,7 +1120,7 @@ def show_final_result(player, screen):
         if Semestername != current:
             current = Semestername
             oneSemMonsters = 0
-            y_offset += 40
+            y_offset += 32
             pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
             y_offset += 10
             draw_text(screen, f"{current}", SCREEN_WIDTH//2 - 450 - 20, y_offset, BLACK, align='center')
@@ -1124,7 +1130,7 @@ def show_final_result(player, screen):
         draw_text(screen,   f"{player.gpas[i][1]}",         SCREEN_WIDTH//2-50 + 40 +(470*(oneSemMonsters%2)), y_offset, gpaColor(player.gpas[i][1]), align='right')
         oneSemMonsters += 1
 
-    y_offset += 40    
+    y_offset += 32    
     pygame.draw.line(screen, BLACK, (SCREEN_WIDTH//2-500, y_offset), (SCREEN_WIDTH//2+500, y_offset), 2)
 
     # 최종 GPA 표시
@@ -1223,9 +1229,15 @@ def show_final_result(player, screen):
         prefix="transcript"
     )
     wait_for_key()
+    screen.fill(WHITE)
+    draw_text(screen, "저장중.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
 
     # 2. 딘즈 리스트 화면 표시 (계산된 통계 정보 전달)
     show_deans_list(player, screen, leaderboard, stats)
+    screen.fill(WHITE)
+    draw_text(screen, "저장중..", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
     
     # 3. 딘즈 리스트 화면 이미지 저장 (QR/업로드 없이 로컬에만 임시 저장)
     deans_list_path = save_cropped_and_return_path(
@@ -1235,12 +1247,18 @@ def show_final_result(player, screen):
         out_dir="results/screenshots/temp_images",
         prefix="deans_list"
     )
-    
+    screen.fill(WHITE)
+    draw_text(screen, "저장중...", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
+
     # 4. 두 이미지를 배경에 합성하여 최종 이미지 생성
     background_image_path = "../img/instagram_background.png"
     final_combined_path = combine_for_share(background_image_path, transcript_path, deans_list_path, player.name)
     logger.info(f"최종 합성 이미지 경로: {final_combined_path}")
-
+    screen.fill(WHITE)
+    draw_text(screen, "저장중....", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
+    
     # 5. 합성에 사용된 임시 이미지 파일 삭제
     try:
         if os.path.exists(transcript_path): os.remove(transcript_path)
@@ -1248,12 +1266,18 @@ def show_final_result(player, screen):
         logger.debug("Debug: 임시 이미지 파일 삭제 완료.")
     except OSError as e:
         logger.error(f"Debug: 임시 파일 삭제 실패: {e.filename}")
-
+    screen.fill(WHITE)
+    draw_text(screen, "저장중.....", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
+    
     # 6. 최종 합성 이미지를 Dropbox에 업로드하고 QR 코드 생성
     upload_url = upload_to_dropbox(
         file_path=final_combined_path, 
         dropbox_folder_path=DROPBOX_UPLOAD_FOLDER
     )
+    screen.fill(WHITE)
+    draw_text(screen, "저장중......", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
     
     # 6.5. 업로드 성공 시, 받아온 페이지 ID를 이용해 Notion 페이지 업데이트
     if success_notion and page_id and upload_url:
@@ -1263,7 +1287,10 @@ def show_final_result(player, screen):
             logger.error("Debug: Notion 페이지 ID가 없어 업데이트를 건너뜁니다.")
         if not upload_url:
             logger.error("Debug: 업로드 URL이 없어 Notion 업데이트를 건너뜁니다.")
-
+    screen.fill(WHITE)
+    draw_text(screen, "저장중.......", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    pygame.display.flip()
+    
 
     if upload_url:
         logger.info(f"업로드 완료! 공유 URL: {upload_url}")
@@ -1274,6 +1301,12 @@ def show_final_result(player, screen):
     else:
         logger.error("Debug: 업로드에 실패했습니다.")
         qr_path = None # 업로드 실패 시 QR 경로 없음
+
+    screen.fill(WHITE)
+    draw_text(screen, "완료!", SCREEN_WIDTH//2, SCREEN_HEIGHT//2, BLACK, size=48, align='center')
+    draw_text(screen, "아무 키나 눌러 다음으로...", SCREEN_WIDTH//2, SCREEN_HEIGHT - 60, BLACK, align='center')
+    pygame.display.flip()
+    wait_for_key()
 
     # 7. QR 링크 화면 표시
     screen.fill(WHITE)
@@ -1432,7 +1465,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
             damage: bool
             skip: bool
         debug_config = DebugConfig(debug=False, damage=True, skip=True)
-    
+   
     # 이름 입력
     prompts = ["이름 (최대 10자)", "인스타그램 ID (선택사항)"]
     newname, instagram_id = get_player_info(screen, prompts)
@@ -1476,7 +1509,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
             # 몬스터 생성
             if monster_name in monsters:
                 enemy_monster = copy.deepcopy(monsters[monster_name])
-                enemy_monster.level = random.randint(monsters[monster_name].level-1+player.level//10, monsters[monster_name].level+1+(player.level//10)*2) - mol_lev
+                enemy_monster.level = random.randint(monsters[monster_name].level-(1*player.level//10), monsters[monster_name].level+2*(player.level//10)) - mol_lev
                 enemy_monster.update_fullreset()
             else:
                 # 기본 몬스터 생성
@@ -1566,8 +1599,8 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
                 logger.info("Debug: 연차초과! 추가 학기 시작.")
                 # 추가 학기 로직을 여기에 구현
                 # 예: 5-1, 5-2, 6-1, 6-2 학기를 직접 추가
-                player.semester_order = player.semester_order + ["5-1", "5-2", "졸업"]
-                player.current_semester = player.semester_order[-2] # 5-1 학기로 설정
+                player.semester_order = player.semester_order + ["5-1", "5-2", "6-1", "6-2", "졸업"]
+                player.current_semester = player.semester_order[-4] # 5-1 학기로 설정
                 continue
             else:
                 logger.info("Debug: 모든 학기 완료!")
