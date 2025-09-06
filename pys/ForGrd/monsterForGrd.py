@@ -395,7 +395,7 @@ cs311.skills = {
         description="XOR 게이트로 상대 공격을 반전시켜 무효화시킨다."),
     'Cache Hit': Monster.Skill(
         name='Cache Hit',
-        effect_type="Pdamage",
+        effect_type="damage",
         type="SYS",
         skW=110,
         priority=-1,
@@ -609,7 +609,7 @@ cs376.skills = {
         description="강화학습으로 공격력을 강화한다."),
     '서포트 벡터 머신': Monster.Skill(
         name='서포트 벡터 머신',
-        effect_type="Pdamage",
+        effect_type="damage",
         type="AI",
         skW=90,
         description="서포트 벡터 머신으로 공격한다."),
@@ -645,7 +645,7 @@ cs220.skills = {
         description="F#으로 공격한다."),
     'C++': Monster.Skill(
         name='C++',
-        effect_type="Pdamage",
+        effect_type="damage",
         type="CT",
         skW=90,
         description="C++으로 공격한다."),
@@ -657,7 +657,7 @@ cs220.skills = {
         description="프밍이를 이해하여 능력치를 올린다."),
     'Ruby': Monster.Skill(
         name='Ruby',
-        effect_type="Pdamage",
+        effect_type="damage",
         type="SYS",
         skW=70,
         description="Ruby로 공격한다."),
