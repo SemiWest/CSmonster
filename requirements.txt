@@ -3,3 +3,6 @@ windows-curses
 qrcode[pil]
 requests
 dropbox
+hangul_utils==0.2
+Pillow
+numpy

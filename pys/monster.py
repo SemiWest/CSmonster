@@ -44,7 +44,7 @@ def comp(atskilltype, tgtype):
     return type_chart[atskilltype][tgtype]/2
 
 class Monster:
-    def __init__(self, dictNo, name, HP, ATK, DEF, SP_ATK, SP_DEF, SPD, type=["전산이론"], evlev=1, evbefore=None, description="", image="../img/monsters/데이타구조.png"):
+    def __init__(self, dictNo, name, HP, ATK, DEF, SP_ATK, SP_DEF, SPD, type=["전산이론"], evlev=1, evbefore=None, description="", image="resources/img/monsters/데이타구조.png"):
         self.dictNo = dictNo  # 몬스터 번호
         self.name = name
         self.level = 5

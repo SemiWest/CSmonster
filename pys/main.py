@@ -1,11 +1,9 @@
 from adventure import *
 import ForGrd.graduationmode as graduationmode
 import option
-import sys
 import argparse
-from typing import NamedTuple
 from logging_setup import init_logging
-import logging
+from typing import NamedTuple
 
 # 명령줄 인수 파서 생성
 parser = argparse.ArgumentParser(description="게임 실행 옵션")
@@ -85,7 +83,6 @@ if logger.isEnabledFor(logging.INFO):
 
 while True:   
     clear_screen()
-    sys.stdin.flush()
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug("메인 메뉴 표시")
     result = main_menu()

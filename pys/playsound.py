@@ -1,9 +1,30 @@
-import pygame
-import sys
-import os
+# 파일 상단에 추가
+import sys, os, pygame
+
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
+def load_image(path):
+    return pygame.image.load(resource_path(path))
+
+def load_font(path, size):
+    return pygame.font.Font(resource_path(path), size)
+
+def load_music(path):
+    pygame.mixer.music.load(resource_path(path))
+
+def queue_music(path):
+    pygame.mixer.music.queue(resource_path(path))
+
+def load_sound(path):
+    return pygame.mixer.Sound(resource_path(path))
+
 import time
 import threading
 import unicodedata
+import logging
 
 # 전역 변수
 musicOnOff = True
@@ -75,9 +96,9 @@ def play_alternating_music(file_list):
         nowfile = 0
         try:
             # 첫 번째 음악 로드 및 재생
-            pygame.mixer.music.load(file_list[nowfile])
+            load_music(file_list[nowfile])
             pygame.mixer.music.play()
-            pygame.mixer.music.queue(file_list[(nowfile+1)%2])
+            queue_music(file_list[(nowfile+1)%2])
             nowfile = (nowfile + 1) % 2
             #우선 3초 대기
             time.sleep(3)
@@ -87,7 +108,7 @@ def play_alternating_music(file_list):
                 time.sleep(0.1)
                 i+=1
                 if i % 320 == 0:
-                    pygame.mixer.music.queue(file_list[(nowfile+1)%2])
+                    queue_music(file_list[(nowfile+1)%2])
                     nowfile = (nowfile + 1) % 2
 
         except Exception as e:
@@ -102,11 +123,8 @@ def play_single_music(file_path):
     global music_thread_running
     music_thread_running = True
     def music_loop():
-        try:
-            pygame.mixer.music.load(file_path)
-            pygame.mixer.music.play(-1)  # 무한 반복 재생
-        except Exception as e:
-            logger.error(f"음악 재생 중 오류 발생: {e}")
+        load_music(file_path)
+        pygame.mixer.music.play(-1)  # 무한 반복 재생
     
     music_thread = threading.Thread(target=music_loop, daemon=True)
     music_thread.start()
@@ -135,7 +153,7 @@ def play_effect(file_path, esp_volume = 100):
     """효과음 재생"""
     global effect_channel, effectsound, ESVolume
     if effectsound:
-        sound = pygame.mixer.Sound(file_path)
+        sound = load_sound(file_path)
         sound.set_volume(ESVolume / esp_volume)  # 볼륨 설정
         effect_channel.play(sound)  # 효과음 재생
 
@@ -143,7 +161,7 @@ def play_effect_alt(file_path, esp_volume = 100):
     """효과음 재생"""
     global effect_channel_alt, effectsound, ESVolume
     if effectsound:
-        sound = pygame.mixer.Sound(file_path)
+        sound = load_sound(file_path)
         sound.set_volume(ESVolume / esp_volume)  # 볼륨 설정
         effect_channel_alt.play(sound)  # 효과음 재생
 
@@ -178,55 +196,55 @@ def wait_for_key(sound = True, Noescape=False):
         pygame.time.wait(10)
 
 def option_select_sound():
-    play_effect("../sound/Option_select.mp3")
+    play_effect("resources/sound/Option_select.mp3")
 
 def option_escape_sound():
-    play_effect("../sound/Option_escape.mp3")
+    play_effect("resources/sound/Option_escape.mp3")
 
 def option_change_sound():
-    play_effect("../sound/Option_change.mp3")
+    play_effect("resources/sound/Option_change.mp3")
 
 def catching():
-    play_effect("../sound/Catch.mp3", 33)
+    play_effect("resources/sound/Catch.mp3", 33)
 
 def caught():
-    play_effect("../sound/Catched.mp3")
+    play_effect("resources/sound/Catched.mp3")
 
 def Critical():
-    play_effect("../sound/Critical.mp3")
+    play_effect("resources/sound/Critical.mp3")
 
 def Effective():
-    play_effect("../sound/Hit Super Effective.mp3")
+    play_effect("resources/sound/Hit Super Effective.mp3")
 
 def NotEffective():
-    play_effect("../sound/Hit Weak Not Very Effective.mp3")
+    play_effect("resources/sound/Hit Weak Not Very Effective.mp3")
 
 def NormalDamage():
-    play_effect("../sound/Hit Normal Damage.mp3")
+    play_effect("resources/sound/Hit Normal Damage.mp3")
 
 def HP_low():
-    play_effect_alt("../sound/HP_low.mp3", 150)
+    play_effect_alt("resources/sound/HP_low.mp3", 150)
 
 def Level_up():
-    play_effect("../sound/Level_up.mp3")
+    play_effect("resources/sound/Level_up.mp3")
 
 def Heal():
-    play_effect("../sound/Heal.mp3")
+    play_effect("resources/sound/Heal.mp3")
 
 def Battle_win():
-    play_effect("../sound/Battle_win.mp3")
+    play_effect("resources/sound/Battle_win.mp3")
 
 def game_started():
-    play_effect("../sound/Game_start.mp3")
+    play_effect("resources/sound/Game_start.mp3")
 
 def Lose():
-    play_effect("../sound/Lose.mp3")
+    play_effect("resources/sound/Lose.mp3")
 
 def Report():
-    play_effect("../sound/report.mp3", 150)
+    play_effect("resources/sound/report.mp3", 150)
 
 def RankUp():
-    play_effect("../sound/Stat Rise Up.mp3")
+    play_effect("resources/sound/Stat Rise Up.mp3")
 
 def RankDown():
-    play_effect("../sound/Stat Fall.mp3")
+    play_effect("resources/sound/Stat Fall.mp3")

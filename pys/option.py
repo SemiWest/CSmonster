@@ -17,7 +17,7 @@ def set(music_volume, music_on, effectsound, ESVolume, difficulty):
             screen.fill(WHITE)
             if music_on:
                 if pygame.mixer.music.get_busy() == 0:
-                    play_music("../music/menu.wav")
+                    play_music("resources/music/menu.wav")
             else:
                 stop_music()
                 if pygame.mixer.music.get_busy() == 1:

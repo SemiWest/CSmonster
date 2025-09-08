@@ -13,20 +13,20 @@ stY = sY+568
 esX, esY = sX+20, sY+36
 psX, psY = sX+460, sY+347
 
-BACKGROUND = pygame.image.load("../img/background.png")
-STAT = pygame.image.load("../img/stat.png")
-TEXT = pygame.image.load("../img/text.png")
-CST = pygame.image.load("../img/CT.png")
-DTS = pygame.image.load("../img/DS.png")
-AI = pygame.image.load("../img/AI.png")
-PS = pygame.image.load("../img/PS.png")
-SYS = pygame.image.load("../img/SYS.png")
-EVENT = pygame.image.load("../img/EVENT.png")
-ME = pygame.image.load("../img/monsters/ME.png")
+BACKGROUND = load_image("resources/img/background.png")
+STAT = load_image("resources/img/stat.png")
+TEXT = load_image("resources/img/text.png")
+CST = load_image("resources/img/CT.png")
+DTS = load_image("resources/img/DS.png")
+AI = load_image("resources/img/AI.png")
+PS = load_image("resources/img/PS.png")
+SYS = load_image("resources/img/SYS.png")
+EVENT = load_image("resources/img/EVENT.png")
+ME = load_image("resources/img/monsters/ME.png")
 ME = pygame.transform.scale_by(ME, 10)  # ME 이미지 크기 조정
-ATK = pygame.image.load("../img/ATK.png")
-SPATK = pygame.image.load("../img/SP.ATK.png")
-ETC = pygame.image.load("../img/ETC.png")
+ATK = load_image("resources/img/ATK.png")
+SPATK = load_image("resources/img/SP.ATK.png")
+ETC = load_image("resources/img/ETC.png")
 
 def display_type(screen, y, x, type):
     """타입 표시 (pygame)"""
@@ -66,7 +66,7 @@ def animate_health_bar(screen, y, x, current_hp, target_hp, max_hp):
     steps = abs(current_ratio-target_ratio)  # 애니메이션 단계 수
 
     def draw_HP(surface, text, x, y, color, highlight=BLACK):
-        fontforHP = pygame.font.Font("../neodgm.ttf", 20)
+        fontforHP = load_font("resources/neodgm.ttf", 20)
         """체력바 텍스트를 그리는 함수"""
         font_obj = fontforHP
         text_surface = font_obj.render(text, True, color, highlight)
@@ -1150,7 +1150,7 @@ def battle(getplayer, getenemy, turn, endturn, screen=None):
             wait_for_key()
             for mymon in player.csMons:
                 mymon.update_fullreset()
-            play_music("../music/bossbattle.wav")
+            play_music("resources/music/bossbattle.wav")
             
         def battle_logic(screen):
             global hap_num, player, enemy, enemyCSmon
@@ -1321,7 +1321,7 @@ def battle(getplayer, getenemy, turn, endturn, screen=None):
                 pygame.display.flip()
                 pygame.time.wait(2)  # 0.01초 대기
 
-            play_music("../music/ending.wav")
+            play_music("resources/music/ending.wav")
             screen.fill((255, 255, 255))
             draw_text(screen, f"{player.name}은/는 최종 학점 {player.gpa}로 졸업했다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, BLACK, WHITE, 64, 'center')
             pygame.display.flip()
@@ -1333,7 +1333,7 @@ def battle(getplayer, getenemy, turn, endturn, screen=None):
             wait_for_key()
 
             # 엔딩 화면 = Graduation.jpg * 8배 사이즈
-            graduation_image = pygame.image.load("../img/Graduation.jpg")
+            graduation_image = load_image("resources/img/Graduation.jpg")
             graduation_image = pygame.transform.scale(graduation_image, (graduation_image.get_width() * 8, graduation_image.get_height() * 8))
             screen.blit(graduation_image, (0, 0))
             pygame.display.flip()

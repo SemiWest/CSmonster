@@ -27,50 +27,50 @@ INTELLIGENCE_LEVEL = 80
 HPLEN = 64
 
 # 기존 이미지들 그대로 유지
-BACKGROUND = pygame.image.load("../img/background.png")
-STAT = pygame.image.load("../img/stat.png")
-TEXT = pygame.image.load("../img/text.png")
-RANK = pygame.image.load("../img/rank.png")
+BACKGROUND = load_image("resources/img/background.png")
+STAT = load_image("resources/img/stat.png")
+TEXT = load_image("resources/img/text.png")
+RANK = load_image("resources/img/rank.png")
 
-CT = pygame.image.load("../img/CT.png")
-DS = pygame.image.load("../img/DS.png")
-AI = pygame.image.load("../img/AI.png")
-PS = pygame.image.load("../img/PS.png")
-SYS = pygame.image.load("../img/SYS.png")
-EVENT = pygame.image.load("../img/EVENT.png")
-STAR = pygame.image.load("../img/STAR.png")
+CT = load_image("resources/img/CT.png")
+DS = load_image("resources/img/DS.png")
+AI = load_image("resources/img/AI.png")
+PS = load_image("resources/img/PS.png")
+SYS = load_image("resources/img/SYS.png")
+EVENT = load_image("resources/img/EVENT.png")
+STAR = load_image("resources/img/STAR.png")
 
-ME = pygame.image.load("../img/monsters/ME.png")
-ATK = pygame.image.load("../img/ATK.png")
-SPATK = pygame.image.load("../img/SP.ATK.png")
-ETC = pygame.image.load("../img/ETC.png")
-SPEC_TEXT = pygame.image.load("../img/spc_text.png")
-SKILL = pygame.image.load("../img/skill.png")
-SHIELD = pygame.image.load("../img/animations/items/shield.png")
-MIRROR = pygame.image.load("../img/animations/items/mirror.png")
+ME = load_image("resources/img/monsters/ME.png")
+ATK = load_image("resources/img/ATK.png")
+SPATK = load_image("resources/img/SP.ATK.png")
+ETC = load_image("resources/img/ETC.png")
+SPEC_TEXT = load_image("resources/img/spc_text.png")
+SKILL = load_image("resources/img/skill.png")
+SHIELD = load_image("resources/img/animations/items/shield.png")
+MIRROR = load_image("resources/img/animations/items/mirror.png")
 
 BUFF = []
-path = "../img/animations/buff"
-for i in range(len(os.listdir(path))):
-    img = pygame.image.load(f"{path}/{i}.png")
+path = "resources/img/animations/buff"
+for i in range(14):
+    img = load_image(f"{path}/{i}.png")
     img = pygame.transform.scale_by(img, 10)
     BUFF.append(img)
 DEBUFF = []
-path = "../img/animations/debuff"
-for i in range(len(os.listdir(path))):
-    img = pygame.image.load(f"{path}/{i}.png")
+path = "resources/img/animations/debuff"
+for i in range(14):
+    img = load_image(f"{path}/{i}.png")
     img = pygame.transform.scale_by(img, 10)
     DEBUFF.append(img)
 HEALFORP = []
 HEALFORE = []
 HEAL = []
-path = "../img/animations/heal"
-for i in range(len(os.listdir(path))):
-    img = pygame.image.load(f"{path}/{i}.png")
+path = "resources/img/animations/heal"
+for i in range(14):
+    img = load_image(f"{path}/{i}.png")
     img = pygame.transform.scale_by(img, 10)
     HEAL.append(img)
 HEALFORE = HEAL
-for i in range(len(HEAL)):
+for i in range(14):
     HEALFORP.append(pygame.transform.scale_by(HEAL[i], 2))
 
 
@@ -276,7 +276,7 @@ def hpcolor(ratio):
     return color_pair
 
 def draw_HP(surface, text, x, y, color, highlight=BLACK):
-        fontforHP = pygame.font.Font("../neodgm.ttf", 10)
+        fontforHP = load_font("resources/neodgm.ttf", 10)
         font_obj = fontforHP
         text_surface = font_obj.render(text, True, color, highlight)
         surface.blit(text_surface, (x, y))
@@ -370,52 +370,52 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp, Mul=1)
         if attacker == enemyCSmon:
             if skill["animation"] != "none":
                 for i in range(14):
-                    img = pygame.image.load(f"../img/animations/skill/{skill['animation']}/{i}.png")
+                    img = load_image(f"resources/img/animations/skill/{skill['animation']}/{i}.png")
                     img = pygame.transform.scale_by(img, 11/3)
                     skill_frames.append(img)
             else:
-                for i in range(len(os.listdir(f"../img/animations/skill/default_player"))):
-                    img = pygame.image.load(f"../img/animations/skill/default_player/{i}.png")
+                for i in range(len(os.listdir(f"resources/img/animations/skill/default_player"))):
+                    img = load_image(f"resources/img/animations/skill/default_player/{i}.png")
                     img = pygame.transform.scale_by(img, 11/3)
                     skill_frames.append(img)
-            for i in range(len(os.listdir(f"../img/animations/skill/default_enemy"))):
-                img = pygame.image.load(f"../img/animations/skill/default_enemy/{i}.png")
+            for i in range(len(os.listdir(f"resources/img/animations/skill/default_enemy"))):
+                img = load_image(f"resources/img/animations/skill/default_enemy/{i}.png")
                 img = pygame.transform.scale_by(img, 11/3)
                 skill_frames.append(img)
         else:
-            for i in range(len(os.listdir(f"../img/animations/skill/default_enemy"))):
-                img = pygame.image.load(f"../img/animations/skill/default_enemy/{i}.png")
+            for i in range(len(os.listdir(f"resources/img/animations/skill/default_enemy"))):
+                img = load_image(f"resources/img/animations/skill/default_enemy/{i}.png")
                 img = pygame.transform.scale_by(img, 11/3)
                 skill_frames.append(img)
-            for i in range(len(os.listdir(f"../img/animations/skill/default_player"))):
-                img = pygame.image.load(f"../img/animations/skill/default_player/{i}.png")
+            for i in range(len(os.listdir(f"resources/img/animations/skill/default_player"))):
+                img = load_image(f"resources/img/animations/skill/default_player/{i}.png")
                 img = pygame.transform.scale_by(img, 11/3)
                 skill_frames.append(img)
     elif skill["animation"] != "none":    
-        for i in range(len(os.listdir(f"../img/animations/skill/{skill['animation']}"))):
-            img = pygame.image.load(f"../img/animations/skill/{skill['animation']}/{i}.png")
+        for i in range(len(os.listdir(f"resources/img/animations/skill/{skill['animation']}"))):
+            img = load_image(f"resources/img/animations/skill/{skill['animation']}/{i}.png")
             img = pygame.transform.scale_by(img, 11/3)
             skill_frames.append(img)
     elif active_stance == "shield":
         if attacker == enemyCSmon:
-            for i in range(len(os.listdir(f"../img/animations/skill/default_player"))):
-                img = pygame.image.load(f"../img/animations/skill/default_player/{i}.png")
+            for i in range(len(os.listdir(f"resources/img/animations/skill/default_player"))):
+                img = load_image(f"resources/img/animations/skill/default_player/{i}.png")
                 img = pygame.transform.scale_by(img, 11/3)
                 skill_frames.append(img)
         else:
-            for i in range(len(os.listdir(f"../img/animations/skill/default_enemy"))):
-                img = pygame.image.load(f"../img/animations/skill/default_enemy/{i}.png")
+            for i in range(len(os.listdir(f"resources/img/animations/skill/default_enemy"))):
+                img = load_image(f"resources/img/animations/skill/default_enemy/{i}.png")
                 img = pygame.transform.scale_by(img, 11/3)
                 skill_frames.append(img)
     else:
         if attacker == player:
-            for i in range(len(os.listdir(f"../img/animations/skill/default_player"))):
-                img = pygame.image.load(f"../img/animations/skill/default_player/{i}.png")
+            for i in range(len(os.listdir(f"resources/img/animations/skill/default_player"))):
+                img = load_image(f"resources/img/animations/skill/default_player/{i}.png")
                 img = pygame.transform.scale_by(img, 11/3)
                 skill_frames.append(img)
         else:
-            for i in range(len(os.listdir(f"../img/animations/skill/default_enemy"))):
-                img = pygame.image.load(f"../img/animations/skill/default_enemy/{i}.png")
+            for i in range(len(os.listdir(f"resources/img/animations/skill/default_enemy"))):
+                img = load_image(f"resources/img/animations/skill/default_enemy/{i}.png")
                 img = pygame.transform.scale_by(img, 11/3)
                 skill_frames.append(img)
     
@@ -432,8 +432,8 @@ def play_damage_sequence(screen, skill, attacker, target, old_hp, new_hp, Mul=1)
     
     start_time = pygame.time.get_ticks()
     hurt_sound_played = False
-    if skill["animation"] != "none": play_effect(f"../sound/skills/{skill['animation']}.mp3")
-    else: play_effect("../sound/skills/default.mp3")
+    if skill["animation"] != "none": play_effect(f"resources/sound/skills/{skill['animation']}.mp3")
+    else: play_effect("resources/sound/skills/default.mp3")
     print(active_stance, attacker, target)
         
     # --- 3. 통합 애니메이션 루프 ---

@@ -28,7 +28,7 @@ GPACOLOR = {
 }
 
 
-import os, requests, datetime, csv
+import requests, datetime, csv
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +119,7 @@ def init_pygame_screen():
         pygame.display.set_caption("전산몬스터")
         
         # 폰트 설정
-        font = pygame.font.Font("../neodgm.ttf", 32)
+        font = load_font("resources/neodgm.ttf", 32)
 
 def show_deans_list_from_notion(player=None):
     """Notion DB 기반 Deans List 화면"""
@@ -217,7 +217,7 @@ def draw_text(surface, text, x, y, color=BLACK, highlight=None, size=32, align='
     """pygame 화면에 텍스트를 그리는 함수"""
     font_obj = font
     if size != 32:
-        font_obj = pygame.font.Font("../neodgm.ttf", size)
+        font_obj = load_font("resources/neodgm.ttf", size)
     
     # 여기서 폰트 객체에 볼드체 속성을 설정합니다.
     font_obj.set_bold(bold)
@@ -238,7 +238,7 @@ def draw_wrapped_text(surface, text, x, y, color, max_width, font_size=32, line_
     """설명 텍스트가 max_width를 넘지 않게 자동 줄바꿈해서 출력"""
     font_obj = font
     if font_size != 32:
-        font_obj = pygame.font.Font("../neodgm.ttf", font_size)
+        font_obj = load_font("resources/neodgm.ttf", font_size)
     words = text.split(' ')
     lines = []
     current_line = ""
@@ -276,7 +276,7 @@ def apply_alpha_overlay(screen, rect, alpha=180, color=(0,0,0)):
 def load_title_image():
     """타이틀 이미지를 로드하는 함수"""
     # 상대경로로 이미지 로드
-    image = pygame.image.load("../img/전산몬스터.PNG")
+    image = load_image("resources/img/전산몬스터.PNG")
     # 이미지 크기 조정 (화면 크기에 맞게)
     image_width = SCREEN_WIDTH # 화면 너비의 절반 또는 600px 중 작은 값
     image_height = int(image.get_height() * (image_width / image.get_width()))
@@ -375,7 +375,7 @@ def main_menu():
         running = True
         pygame.event.clear()
         global font
-        font = pygame.font.Font("../neodgm.ttf", 32)
+        font = load_font("resources/neodgm.ttf", 32)
 
         while running:
             if main_menu_reload:
@@ -385,7 +385,7 @@ def main_menu():
             
             if musicOnOff:
                 if pygame.mixer.music.get_busy() == 0:
-                    play_music("../music/menu.wav")
+                    play_music("resources/music/menu.wav")
             else:
                 stop_music()
                 if pygame.mixer.music.get_busy() == 1:

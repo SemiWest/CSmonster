@@ -3,13 +3,12 @@ from ForGrd.battleForGrd import *
 import copy
 import logging
 # [수정] datetime에서 필요한 클래스를 직접 가져옵니다.
-import os, pygame, hashlib, time
+import hashlib, time
 from datetime import datetime, timezone, timedelta 
 import qrcode
 from typing import Optional
 import requests
 import json
-import os
 import dropbox
 import numpy as np
 from hangulInputBox import *
@@ -1078,14 +1077,14 @@ def show_final_result(player, screen):
             pygame.display.flip()
             pygame.time.wait(2)  # 0.01초 대기
 
-        play_music("../music/ending.wav")
+        play_music("resources/music/ending.wav")
         screen.fill(WHITE)
         draw_text(screen, f"{player.name}은/는 최종 학점 {player.calcGPA(2)}로 졸업했다.", SCREEN_WIDTH//2, SCREEN_HEIGHT//2-32, BLACK, WHITE, 64, 'center')
         pygame.display.flip()
         wait_for_key()
 
         # 엔딩 화면 = Graduation.jpg * 8배 사이즈
-        graduation_image = pygame.image.load("../img/Graduation.png")
+        graduation_image = load_image("resources/img/Graduation.png")
         graduation_image = pygame.transform.scale(graduation_image, (graduation_image.get_width() * 8, graduation_image.get_height() * 8))
         screen.blit(graduation_image, (0, 0))
         pygame.display.flip()
@@ -1173,7 +1172,7 @@ def show_final_result(player, screen):
     # --- 화면 표시 로직 종료 ---
 
     # 3. 결과 저장 및 다음 단계 안내
-    success, message = save_game_log_csv("../results/graduation/graduation_results.csv", player)
+    success, message = save_game_log_csv("resources/results/graduation/graduation_results.csv", player)
     success_notion, page_id = save_game_log_to_notion(player)
     if success_notion:
         # [수정됨] success가 True일 때, page_id 유무를 추가로 확인
@@ -1252,7 +1251,7 @@ def show_final_result(player, screen):
     pygame.display.flip()
 
     # 4. 두 이미지를 배경에 합성하여 최종 이미지 생성
-    background_image_path = "../img/instagram_background.png"
+    background_image_path = "resources/img/instagram_background.png"
     final_combined_path = combine_for_share(background_image_path, transcript_path, deans_list_path, player.name)
     logger.info(f"최종 합성 이미지 경로: {final_combined_path}")
     screen.fill(WHITE)
@@ -1340,9 +1339,9 @@ def get_player_info(screen, prompts):
     font_size = 32
     max_lengths = [10, 30]  # 닉네임, 인스타그램ID 최대 길이
 
-    box_name = HangulInputBox('../neodgm.ttf', font_size, 10, 'white', 'black')
+    box_name = HangulInputBox('resources/neodgm.ttf', font_size, 10, 'white', 'black')
     box_name.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 70)
-    box_instagram = HangulInputBox('../neodgm.ttf', font_size, 15, 'white', 'black')
+    box_instagram = HangulInputBox('resources/neodgm.ttf', font_size, 15, 'white', 'black')
     box_instagram.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 70)
 
     while True:
@@ -1423,7 +1422,7 @@ def get_player_info(screen, prompts):
         
         # 인스타 아이디가 비어있을 때 박스에 '선택사항' 회색 표시
         if not inputs[1]:
-            font = pygame.font.Font('../neodgm.ttf', font_size)
+            font = pygame.font.Font('resources/neodgm.ttf', font_size)
             text_surface = font.render("선택사항", True, (128, 128, 128))
             text_rect = text_surface.get_rect(center=box_instagram.rect.center)
             screen.blit(text_surface, text_rect)
@@ -1487,7 +1486,7 @@ def game_start(screen, Me_name="넙죽이", debug_config=None):
     player.name = newname
     
     # 배경음악 재생 시작
-    play_music(["../music/Im_a_kaist_nonmelody.wav", "../music/Im_a_kaist_melody.wav"])
+    play_music(["resources/music/Im_a_kaist_nonmelody.wav", "resources/music/Im_a_kaist_melody.wav"])
     
     # 메인 게임 루프
     game_running = True

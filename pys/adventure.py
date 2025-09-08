@@ -166,7 +166,7 @@ def game_start(screen, endturn, Me_name="넙죽이"):
     turn = 1
     
     # 배경음악 재생 시작
-    play_music(["../music/Im_a_kaist_nonmelody.wav", "../music/Im_a_kaist_melody.wav"])
+    play_music(["resources/music/Im_a_kaist_nonmelody.wav", "resources/music/Im_a_kaist_melody.wav"])
     
     while turn <= endturn:
         if turn == endturn:

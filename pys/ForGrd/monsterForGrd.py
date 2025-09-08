@@ -46,7 +46,7 @@ def NumToName(mon_num):
         return "error"
 
 class Monster:
-    def __init__(self, Num, name, credit, level, HP, ATK, DEF, SPD, type=["CT"], SeonSu = [], image="../img/monsters/데이타구조.png", description="", reward="", special = False, re = False):
+    def __init__(self, Num, name, credit, level, HP, ATK, DEF, SPD, type=["CT"], SeonSu = [], image="resources/img/monsters/데이타구조.png", description="", reward="", special = False, re = False):
         self.reward = reward
         self.Num = Num  # 몬스터 번호
         self.name = name
@@ -128,7 +128,7 @@ Nonemonster = Monster(
     Num = -1, name="빈 슬롯", credit = 3, level = 3,
     HP = 0, ATK = 0, DEF = 0, SPD = 0,
     type=["CT"], SeonSu=[],
-    image="../img/monsters/데이타구조.png",
+    image="resources/img/monsters/데이타구조.png",
     description="빈 슬롯입니다. 몬스터를 선택하세요.")
 
 # 프밍기	전산이론	팽도리
@@ -136,7 +136,7 @@ cs101 = Monster(
     Num = 101, name="프로그래밍 기초", credit= 3, level = 3,
     HP = 53, ATK = 55, DEF = 54, SPD = 40, 
     type=["CT"], SeonSu=[206, 204, 230], 
-    image="../img/monsters/프밍기.png", 
+    image="resources/img/monsters/프밍기.png", 
     description="카이스트 입학 후 가장 먼저 듣게 되는 전산과 기필 과목이다. 시간표 브레이커로 유명하다."
 )
 cs101.skills = {
@@ -176,7 +176,7 @@ cs204 = Monster(
     Num = 204, name="이산구조", credit = 3, level = 6,
     HP = 45, ATK = 57, DEF = 57, SPD = 45, 
     type=["CT"], SeonSu=[300, 320],
-    image="../img/monsters/이산구조.png",
+    image="resources/img/monsters/이산구조.png",
     description="이산구조설명"
 )
 cs204.skills = {
@@ -215,7 +215,7 @@ cs206 = Monster(
     Num = 206, name="데이타구조", credit = 3,  level = 6,
     HP = 39, ATK = 58, DEF = 47, SPD = 65, 
     type=["DS"], SeonSu=[360],
-    image="../img/monsters/데이타구조.png",
+    image="resources/img/monsters/데이타구조.png",
     description="데이타구조설명"
 )
 cs206.skills = {
@@ -253,7 +253,7 @@ cs230 = Monster(
     Num = 230, name="시스템 프로그래밍", credit = 3, level = 8,
     HP = 65, ATK = 70, DEF = 77, SPD = 75, 
     type=["SYS"], SeonSu=[311, 341],
-    image="../img/monsters/시프.png",
+    image="resources/img/monsters/시프.png",
     description="시프설명"
 )
 cs230.skills = {
@@ -292,7 +292,7 @@ cs330 = Monster(
     Num = 330, name="운영체제 및 실험", credit = 4, level = 16,
     HP =79, ATK = 119, DEF = 117, SPD = 78, 
     type = ["SYS"], SeonSu=[],
-    image="../img/monsters/OS.png",  
+    image="resources/img/monsters/OS.png",  
     description="전산과 과목 중 가장 악명이 높다. 자전거를 손을 놓고 타게 만드는 과목이다.")
 cs330.skills = {
     '메모리 누수 해결': Monster.Skill(
@@ -330,7 +330,7 @@ cs300 = Monster(
     Num = 300, name = "알고리즘 개론", credit = 3, level = 9,
     HP = 45, ATK = 77, DEF = 55, SPD = 120, 
     type = ["PS"], SeonSu=[202],
-    image="../img/monsters/알고개.png",
+    image="resources/img/monsters/알고개.png",
     description="알고리즘과 문제해결 능력을 기르는 과목이다. 알고리즘의 기초를 다진다.")
 cs300.skills = {
     '퀵소트': Monster.Skill(
@@ -368,7 +368,7 @@ cs311 = Monster(
     Num = 311, name="전산기조직", credit = 3, level = 13,
     HP = 79, ATK = 84, DEF = 103, SPD = 78, 
     type=["SYS"], SeonSu=[330],
-    image="../img/monsters/전산기조직.png",
+    image="resources/img/monsters/전산기조직.png",
     description="시프를 수강한 후에 들어야 하는 과목이다. 컴퓨터의 하드웨어적인 구조를 배운다."
 )
 cs311.skills = {
@@ -407,7 +407,7 @@ cs320 = Monster(
     Num = 320, name="프로그래밍 언어", credit = 3, level = 15,
     HP = 85, ATK = 85, DEF = 85, SPD = 85, 
     type=["CT"], SeonSu=[220],
-    image="../img/monsters/프로그래밍언어.png",
+    image="resources/img/monsters/프로그래밍언어.png",
     description="프로그래밍언어의 본질적인 요소를 배우는 과목이다. 난해한 수업 내용과 펜파인애플팬이라는 비유로 유명하다."
 )
 cs320.skills = {
@@ -446,7 +446,7 @@ cs341 = Monster(
     Num = 341, name="전산망개론", credit = 3, level = 14,
     HP = 160, ATK = 87, DEF = 87, SPD = 30, 
     type=["SYS"], SeonSu=[],
-    image="../img/monsters/전산망개론.png",
+    image="resources/img/monsters/전산망개론.png",
     description="컴퓨터 네트워크와 관련된 기본적인 이론을 배우는 과목이다."
 )
 cs341.skills = {
@@ -481,7 +481,7 @@ cs360 = Monster(
     Num = 360, name="데이타베이스 개론", credit = 3, level = 8,
     HP = 78, ATK = 96, DEF = 81, SPD = 100, 
     type=["DS"], SeonSu=[],
-    image="../img/monsters/데이터베이스개론.png",
+    image="resources/img/monsters/데이터베이스개론.png",
     description="데이터베이스의 기초를 넓고 얕게 배우는 과목이다. SQL과 컴퓨터의 데이터 저장 방식, 데이터베이스 구조를 주로 다룬다."
 )
 cs360.skills = {
@@ -520,7 +520,7 @@ cs202 = Monster(
     Num = 202, name="문제해결기법", credit = 3, level = 11,
     HP = 190, ATK = 33, DEF = 58, SPD = 33, 
     type=["PS"], SeonSu=[],
-    image="../img/monsters/문제해결기법.png",
+    image="resources/img/monsters/문제해결기법.png",
     description="문제해결기법"
 )
 cs202.skills = {
@@ -555,7 +555,7 @@ cs371 = Monster(
     Num = 371, name="딥러닝개론", credit = 3, level = 12,
     HP = 91, ATK = 117, DEF = 97, SPD = 80, 
     type=["AI"], SeonSu=[],
-    image="../img/monsters/딥러닝개론.png",
+    image="resources/img/monsters/딥러닝개론.png",
     description="딥러닝개론설명"
 )
 cs371.skills = {
@@ -591,7 +591,7 @@ cs376 = Monster(
     Num = 376, name="기계학습", credit = 3, level = 11,
     HP = 80, ATK = 110, DEF = 95, SPD = 110, 
     type=["AI"], SeonSu=[371],
-    image="../img/monsters/기계학습.png",
+    image="resources/img/monsters/기계학습.png",
     description="기계학습설명"
 )
 cs376.skills = {
@@ -627,7 +627,7 @@ cs220 = Monster(
     Num = 220, name="프로그래밍의 이해", credit = 3, level = 12,
     HP = 80, ATK = 82, DEF = 100, SPD = 80, 
     type=["PS"], SeonSu=[],
-    image="../img/monsters/프로그래밍의이해.png",
+    image="resources/img/monsters/프로그래밍의이해.png",
     description="프로그래밍의 이해 설명"
 )
 cs220.skills = {
@@ -668,7 +668,7 @@ coop = Monster(
     Num = 888, name="Co-op", credit = 123123, level = 20,
     HP = 100, ATK = 100, DEF = 60, SPD = 100, 
     type=["EVENT"], SeonSu=[],
-    image="../img/monsters/코옵.png",
+    image="resources/img/monsters/코옵.png",
     description="코옵설명",
     reward = "기업인의 길 해금",
     special=True
@@ -693,7 +693,7 @@ madcamp = Monster(
     Num = 777, name="몰입 캠프", credit = 234234, level = 20,
     HP = 110, ATK = 100, DEF = 90, SPD = 80, 
     type=["EVENT"], SeonSu=[],
-    image="../img/monsters/몰입캠프.png",
+    image="resources/img/monsters/몰입캠프.png",
     description="몰입캠프설명",
     reward = "멘트 변동 예정",  # 실패시 멘트
     special=True
@@ -704,7 +704,7 @@ study = Monster(
     Num = 999, name="개별 연구", credit = 345345, level = 20,
     HP = 100, ATK = 100, DEF = 60, SPD = 100, 
     type=["EVENT"], SeonSu=[],
-    image="../img/monsters/개별연구.png",
+    image="resources/img/monsters/개별연구.png",
     description="개별연구설명",
     reward = "연구자의 길 해금",
     special=True
